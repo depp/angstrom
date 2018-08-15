@@ -15,12 +15,13 @@ LENGTH_CELT = [round(ms*48) for ms in [2.5, 5, 10, 20]]
 RATE_CELT = [8, 16, 24, 48]
 
 class OpusPacket:
-    def __init__(self, mode, rate, length, stereo, frames):
+    def __init__(self, mode, rate, length, stereo, frames, data):
         self.mode = mode
         self.rate = rate
         self.length = length
         self.stereo = stereo
         self.frames = frames
+        self.data = data
 
     @classmethod
     def decode(class_, data):
@@ -68,7 +69,7 @@ class OpusPacket:
             frames = [data[fpos:fpos+flen], data[fpos+flen:]]
         else:
             raise NotImplementedError("code 3 packets not supported")
-        return class_(mode, rate, length, stereo, frames)
+        return class_(mode, rate, length, stereo, frames, data)
 
 class OpusFile:
     def __init__(self, *, packets, vendor_string, comment_strings,
@@ -199,6 +200,25 @@ class OpusFile:
             fp.write(cstring)
         pages.append(ogg.OggPage(0, [fp.getvalue()]))
 
+        pos = 0
+        packets = self.packets
+        i = 0
+        n = len(packets)
+        page_size = 48000 * 4 # Usually 48000
+        while i < n:
+            ppk = []
+            size = 0
+            while size < page_size and i < n:
+                print(size, i, n)
+                pk = packets[i]
+                size += pk.length
+                i += 1
+                ppk.append(pk.data)
+            pos += size
+            pages.append(ogg.OggPage(pos, ppk))
+
+        return ogg.OggStream(0, pages)
+
     def to_bytes(self):
         return self.to_ogg().to_bytes()
 
@@ -212,6 +232,9 @@ def main():
         data = fp.read()
     opus = OpusFile.decode_ogg(data)
     opus.dump()
+    opus.vendor_string = ""
+    opus.comment_strings = []
+    opus.rate = 0
     with open(args.output, "wb") as fp:
         fp.write(opus.to_bytes())
 

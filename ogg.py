@@ -1,5 +1,10 @@
 import argparse
+import io
 import struct
+import zlib
+
+REVERSE_BITS = bytes(int("{:08b}".format(n)[::-1], 2)
+                     for n in range(256))
 
 class OggError(ValueError):
     def __init__(self, msg):
@@ -12,10 +17,43 @@ class OggStream:
         self.serno = serno
         self.pages = pages
 
+    def to_bytes(self):
+        return b"".join([
+            page.to_bytes(self.serno, n, n == 0, n == len(self.pages) - 1)
+            for n, page in enumerate(self.pages)])
+
 class OggPage:
     def __init__(self, pos, packets):
         self.pos = pos
         self.packets = packets
+
+    def to_bytes(self, serno, seqno, bos, eos):
+        fp = io.BytesIO()
+        fp.write(b"OggS\0")
+        htype = 0
+        if bos:
+            htype |= 2
+        if eos:
+            htype |= 1
+        segs = []
+        for packet in self.packets:
+            n = len(packet)
+            while n >= 255:
+                segs.append(255)
+                n -= 255
+            segs.append(n)
+        fp.write(
+            struct.pack("<BQIIIB", htype, self.pos, serno, seqno, 0, len(segs)))
+        fp.write(bytes(segs))
+        for packet in self.packets:
+            fp.write(packet)
+        cksum = zlib.crc32(fp.getvalue().translate(REVERSE_BITS), -1)
+        cksum, = struct.unpack(
+            "<I", struct.pack(">I", ~cksum & 0xffffffff)
+            .translate(REVERSE_BITS))
+        fp.seek(22)
+        fp.write(struct.pack("<I", cksum))
+        return fp.getvalue()
 
 def parse_ogg(data):
     i = 0
@@ -70,6 +108,15 @@ def parse_ogg(data):
                     pk_start = i
             if plen == 255:
                 raise OggError("incomplete packet")
+            got_cksum = zlib.crc32(data[pg_start:pg_start+22]
+                                   .translate(REVERSE_BITS), -1)
+            got_cksum = zlib.crc32(b"\0\0\0\0", got_cksum)
+            got_cksum = zlib.crc32(data[pg_start+26:i]
+                                   .translate(REVERSE_BITS), got_cksum)
+            got_cksum, = struct.unpack(
+                "<I", struct.pack(">I", ~got_cksum & 0xffffffff)
+                .translate(REVERSE_BITS))
+            print("{:032b} {:032b}".format(cksum, got_cksum))
             stream.append(OggPage(pos, packets))
     except OggError as ex:
         ex.page_offset = pg_start
@@ -84,7 +131,7 @@ def main():
     p.add_argument("input", help="input Ogg file")
     args = p.parse_args()
 
-    with open(args.input, 'rb') as fp:
+    with open(args.input, "rb") as fp:
         data = fp.read()
     for stream in parse_ogg(data):
         print("Stream serno={0.serno}".format(stream))
