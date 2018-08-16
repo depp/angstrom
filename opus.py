@@ -1,6 +1,7 @@
 import argparse
 import io
 import struct
+import sys
 
 import ogg
 
@@ -225,6 +226,8 @@ def main():
     p = argparse.ArgumentParser(allow_abbrev=False)
     p.add_argument("-input", help="input Opus file", required=True)
     p.add_argument("-output", help="output Opus file", required=True)
+    p.add_argument("-decimate", type=int,
+                   help="keep only 1 out of every N packets", metavar="N")
     args = p.parse_args()
 
     with open(args.input, "rb") as fp:
@@ -233,6 +236,17 @@ def main():
     opus.vendor_string = ""
     opus.comment_strings = []
     opus.rate = 0
+    if args.decimate is not None:
+        packets = []
+        m = args.decimate
+        pcount = 0
+        for n, packet in enumerate(opus.packets):
+            if (n % m) == (m - 1) // 2:
+                pcount += 1
+                packets.extend([packet] * m)
+        print("Decimated {} packets down to {}"
+              .format(len(opus.packets), pcount), file=sys.stderr)
+        opus.packets = packets
     with open(args.output, "wb") as fp:
         fp.write(opus.to_bytes())
 
