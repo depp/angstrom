@@ -116,7 +116,6 @@ def parse_ogg(data):
             got_cksum, = struct.unpack(
                 "<I", struct.pack(">I", ~got_cksum & 0xffffffff)
                 .translate(REVERSE_BITS))
-            print("{:032b} {:032b}".format(cksum, got_cksum))
             stream.append(OggPage(pos, packets))
     except OggError as ex:
         ex.page_offset = pg_start

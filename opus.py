@@ -209,7 +209,6 @@ class OpusFile:
             ppk = []
             size = 0
             while size < page_size and i < n:
-                print(size, i, n)
                 pk = packets[i]
                 size += pk.length
                 i += 1
@@ -231,7 +230,6 @@ def main():
     with open(args.input, "rb") as fp:
         data = fp.read()
     opus = OpusFile.decode_ogg(data)
-    opus.dump()
     opus.vendor_string = ""
     opus.comment_strings = []
     opus.rate = 0
