@@ -3,7 +3,7 @@ import io
 import struct
 import sys
 
-import ogg
+from . import ogg
 
 class OpusError(ValueError):
     pass
