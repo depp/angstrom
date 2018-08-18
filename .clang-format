@@ -1,0 +1,12 @@
+---
+BasedOnStyle: Google
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+DerivePointerAlignment: false
+IndentCaseLabels: false
+IndentWidth: 4
+PointerAlignment: Right
+SpacesBeforeTrailingComments: 1
+Standard: Cpp11
