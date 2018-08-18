@@ -6,11 +6,26 @@ import flask
 import numpy
 import PIL.Image
 import scipy.signal
+import matplotlib
 
 from . import load
 
+matplotlib.use("svg")
+
+import matplotlib.pyplot as pyplot
+
 app = flask.Flask(__name__)
-app.config["AUDIO_FILE"] = os.environ["AUDIO_FILE"]
+app.config["AUDIO_FILE"] = os.environ.get("AUDIO_FILE")
+
+def round_up_pow2(x):
+    x -= 1
+    x |= x >> 1
+    x |= x >> 2
+    x |= x >> 4
+    x |= x >> 8
+    x |= x >> 16
+    x += 1
+    return x
 
 def get_audio():
     if "audio" not in flask.g:
@@ -52,13 +67,15 @@ def color_ramp():
 @app.route("/spectrogram")
 def spectrogram():
     audio = get_audio()
-    bins = 1024
+    step = round(48000 * 5e-3)
+    nsample = 1024
+    assert nsample >= step
     f, t, s = scipy.signal.spectrogram(
         audio,
         48000,
-        nperseg=bins,
-        noverlap=bins // 2,
-        window=("tukey", 0.5),
+        nperseg=nsample,
+        noverlap=(nsample - step),
+        window="blackman",
         mode='magnitude')
     s = s[::-1]
     min_db = -120
@@ -74,3 +91,113 @@ def spectrogram():
     fp = io.BytesIO()
     img.save(fp, format="png")
     return flask.Response(fp.getvalue(), mimetype="image/png")
+
+def dilate(a, n):
+    c, = a.shape
+    z = numpy.zeros((n+1,), numpy.int32)
+    s = numpy.cumsum(numpy.concatenate([z, a.astype(numpy.int32), z]))
+    return s[1+2*n:1+2*n+c] > s[0:c]
+
+def erode(a, n):
+    return numpy.logical_not(dilate(numpy.logical_not(a), n))
+
+def data_segments(data, step, nsamp):
+    return numpy.lib.stride_tricks.as_strided(
+        data,
+        shape=(data.shape[:-1] +
+               ((data.shape[-1] + step - nsamp) // step, nsamp)),
+        strides=(data.strides[:-1] +
+                 (step * data.strides[-1], data.strides[-1])),
+        writeable=False,
+    )
+
+@app.route("/pitch")
+def pitch():
+    audio = get_audio()
+    # Sample rate
+    fs = 48000
+    # Time step for analysis
+    tstep = 5e-3
+    # Frequency range we care about
+    fmin = 80
+    fmax = 260
+    # Minimum signal level for pitch detection
+    pmin = -30
+    pmin2 = -30
+    # Trigger time for activity detection
+    trig = 20e-3
+
+    step = round(fs * tstep)
+    mag2min = 0.5 * 10**(pmin*0.1)
+
+    # Window size: must be at least one period of lowest frequency we care
+    # about, plus a margin. Then we need an additional number of zeroes equal to
+    # the period of the lowest frequency, for autocorrelation to work.
+    wsize = round(fs * 2 / fmin)
+    nzero = round(fs / fmin)
+    nsamp = wsize + nzero
+    window = scipy.signal.windows.blackman(wsize).astype(numpy.float32)
+    wsum = numpy.sum(window)
+
+    # Calculate the signal level with the same window size we use for pitch
+    # detection.
+    mag2 = scipy.signal.fftconvolve(numpy.square(audio), window)
+    mag2 = mag2[(wsize-1)//2:(wsize-1)//2+audio.shape[0]]
+    mag2 *= 2.0 / wsum
+    level_db = numpy.log(mag2) * (10 / math.log(10))
+    active = level_db >= pmin
+    trig_nsamp = round(trig * fs)
+    active = erode(dilate(active, trig_nsamp), trig_nsamp)
+
+    # Break audio into segments.
+    segments = data_segments(audio, step, nsamp)
+    nseg = segments.shape[0]
+    corr = numpy.empty((nseg, nzero+1), numpy.float32)
+    window = numpy.concatenate([window, numpy.zeros((nzero,), numpy.float32)])
+    for i, seg in enumerate(segments):
+        corr[i] = (scipy.signal.convolve(
+            seg * window, seg[::-1]))[nsamp-1:nsamp+nzero]
+    corr *= 1.0 / wsum
+
+    # Find autocorrelation peaks.
+    i0 = round(fs / fmax)
+    i1 = round(fs / fmin)
+    peakidx = numpy.argmax(corr[:,i0:i1+1], axis=1) + i0
+    peakstr = corr[numpy.arange(corr.shape[0]),peakidx]
+    haspitch = peakstr >= 10**(pmin2 * 0.1)
+
+    # TODO: what we want is autocorrelation of t0 and t1, where we then
+    # divide by the
+
+    pyplot.figure(figsize=(10, 10))
+
+    pyplot.subplot(411)
+    pyplot.plot(segments[30])
+
+    pyplot.subplot(412)
+    for i in range(50, 55):
+        pyplot.plot(corr[i])
+
+    pyplot.subplot(413)
+    pitch = fs / peakidx
+    pitch[numpy.where(numpy.logical_not(haspitch))] = numpy.nan
+    pyplot.plot(pitch)
+    # pyplot.plot(active[::step].astype(numpy.int32) * 200)
+
+    pyplot.subplot(414)
+    pyplot.plot(numpy.log(peakstr) * (10 / math.log(10)))
+    pyplot.plot(haspitch.astype(numpy.int32) * 20 - 40)
+
+    fp = io.StringIO()
+    pyplot.savefig(fp)
+    return flask.Response(
+        fp.getvalue(),
+        mimetype="image/svg+xml")
+
+    fp = io.StringIO()
+    for x in mag2[:,0]:
+        print(x > mag2min, file=fp)
+
+    return flask.Response(
+        fp.getvalue(),
+        mimetype="text/plain;charset=UTF-8")
