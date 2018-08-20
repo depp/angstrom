@@ -486,9 +486,10 @@ static void write_opus_data(ogg_stream_state *os) {
 }
 
 static void write_ogg_page(FILE *fp, ogg_stream_state *os) {
+    int fillbytes = 1 << 15;
     while (true) {
         ogg_page og;
-        int r = ogg_stream_pageout(os, &og);
+        int r = ogg_stream_flush_fill(os, &og, fillbytes);
         if (r == 0) {
             if (ogg_stream_check(os))
                 die(0, "could not create Ogg page");
