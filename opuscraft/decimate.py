@@ -3,10 +3,10 @@ import subprocess
 
 import numpy
 
+from . import audio
 from . import encode
-from . import load
 
-def main():
+def main() -> None:
     p = argparse.ArgumentParser(allow_abbrev=False)
     p.add_argument("input", help="input audio file")
     p.add_argument("output", help="output audio file")
@@ -24,13 +24,14 @@ def main():
                    help="encoding bitrate")
     args = p.parse_args()
 
-    audio = load.load_audio(args.input)
+    clip = audio.Audio.load(args.input)
+    data = clip.data
     packet_length = round(48 * float(args.packet_length))
-    audio = numpy.concatenate(
-        [audio, numpy.zeros((-audio.shape[0] % packet_length,), numpy.float32)])
+    data = numpy.concatenate(
+        [data, numpy.zeros((-len(data) % packet_length,), numpy.float32)])
 
     stream = encode.Stream()
-    packets = numpy.split(audio, audio.shape[0] / packet_length)
+    packets = numpy.split(data, len(data) / packet_length)
     nsamp = 0
     for packet in packets[(args.decimate-1)//2::args.decimate]:
         n = stream.encode_packet(encode.Packet(
