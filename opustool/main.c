@@ -435,7 +435,31 @@ static void write32(char *p, unsigned x) {
     p[3] = x >> 24;
 }
 
-static void write_opus_head(ogg_stream_state *os) {
+static void write_ogg_page(FILE *fp, ogg_stream_state *os, bool flush) {
+    int fillbytes = 1 << 15;
+    while (true) {
+        ogg_page og;
+        int r;
+        if (flush) {
+            r = ogg_stream_flush_fill(os, &og, fillbytes);
+        } else {
+            r = ogg_stream_pageout_fill(os, &og, fillbytes);
+        }
+        if (r == 0) {
+            if (ogg_stream_check(os))
+                die(0, "could not create Ogg page");
+            return;
+        }
+        size_t amt = fwrite(og.header, 1, og.header_len, fp);
+        if (amt != (size_t)og.header_len)
+            die(errno, "could not write Ogg page");
+        amt = fwrite(og.body, 1, og.body_len, fp);
+        if (amt != (size_t)og.body_len)
+            die(errno, "could not write Ogg page");
+    }
+}
+
+static void write_opus_head(FILE *fp, ogg_stream_state *os) {
     char buf[19];
     memcpy(&buf[0], "OpusHead", 8); // Magic
     buf[8] = 1;                     // Version
@@ -452,9 +476,10 @@ static void write_opus_head(ogg_stream_state *os) {
     int r = ogg_stream_packetin(os, &packet);
     if (r != 0)
         die(0, "could not write Opus header");
+    write_ogg_page(fp, os, true);
 }
 
-static void write_opus_tags(ogg_stream_state *os) {
+static void write_opus_tags(FILE *fp, ogg_stream_state *os) {
     char buf[16];
     memcpy(&buf[0], "OpusTags", 8); // Magic
     write32(&buf[8], 0);            // Vendor string length
@@ -466,9 +491,10 @@ static void write_opus_tags(ogg_stream_state *os) {
     int r = ogg_stream_packetin(os, &packet);
     if (r != 0)
         die(0, "could not write Opus comment");
+    write_ogg_page(fp, os, true);
 }
 
-static void write_opus_data(ogg_stream_state *os) {
+static void write_opus_data(FILE *fp, ogg_stream_state *os) {
     int pos = 0;
     for (size_t i = 0; i < gOrderSize; i++) {
         struct packet p = gPacketData[gOrderData[i]];
@@ -483,25 +509,7 @@ static void write_opus_data(ogg_stream_state *os) {
         if (r != 0)
             die(0, "could not write Opus packet");
     }
-}
-
-static void write_ogg_page(FILE *fp, ogg_stream_state *os) {
-    int fillbytes = 1 << 15;
-    while (true) {
-        ogg_page og;
-        int r = ogg_stream_flush_fill(os, &og, fillbytes);
-        if (r == 0) {
-            if (ogg_stream_check(os))
-                die(0, "could not create Ogg page");
-            return;
-        }
-        size_t amt = fwrite(og.header, 1, og.header_len, fp);
-        if (amt != (size_t)og.header_len)
-            die(errno, "could not write Ogg page");
-        amt = fwrite(og.body, 1, og.body_len, fp);
-        if (amt != (size_t)og.body_len)
-            die(errno, "could not write Ogg page");
-    }
+    write_ogg_page(fp, os, true);
 }
 
 static void write_opus(const char *fname) {
@@ -514,12 +522,9 @@ static void write_opus(const char *fname) {
     int r = ogg_stream_init(&os, 1);
     if (r != 0)
         die(0, "could not initialize Ogg stream");
-    write_opus_head(&os);
-    write_ogg_page(fp, &os);
-    write_opus_tags(&os);
-    write_ogg_page(fp, &os);
-    write_opus_data(&os);
-    write_ogg_page(fp, &os);
+    write_opus_head(fp, &os);
+    write_opus_tags(fp, &os);
+    write_opus_data(fp, &os);
     if (fclose(fp) != 0) {
         die(errno, "could not create file");
     }
