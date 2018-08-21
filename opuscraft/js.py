@@ -106,6 +106,7 @@ class Script:
                     mtime = pathlib.Path(ROOT, path).stat().st_mtime
                 inputs.append((path, mtime))
 
+            inputs.append((rollupconfig, mtimes[rollupconfig]))
             cmd = [
                 str(rollup),
                 "--config", str(rollupconfig),
