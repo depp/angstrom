@@ -1,9 +1,8 @@
-function loaded() {
-  alert("Loaded");
-}
+import Vue from "vue";
 
-if (document.readyState == "complete") {
-  loaded();
-} else {
-  window.addEventListener("load", loaded);
-}
+var app = new Vue({
+  el: "#app",
+  data: {
+    message: "Hello",
+  },
+});

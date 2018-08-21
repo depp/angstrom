@@ -1,6 +1,7 @@
 import io
 import math
 import os
+import pathlib
 import sys
 
 import flask
@@ -16,6 +17,8 @@ from typing import Dict, List, Tuple
 matplotlib.use("svg")
 
 import matplotlib.pyplot as pyplot
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 app = flask.Flask(__name__)
 app.config["AUDIO_FILE"] = os.environ.get("AUDIO_FILE")
@@ -57,6 +60,19 @@ def edit_js():
 def edit_js_map():
     script = get_script()
     return flask.Response(script.jsmap, mimetype="application/json")
+
+CONTENT_TYPES = {
+    ".js": "application/javascript",
+}
+
+def serve_node(path):
+    fpath = pathlib.Path(ROOT, "node_modules", path)
+    ctype = CONTENT_TYPES[fpath.suffix]
+    return flask.Response(fpath.read_bytes(), mimetype=ctype)
+
+@app.route("/vue.js")
+def vue_js():
+    return serve_node("vue/dist/vue.js")
 
 def pop_str(args: Dict[str, List[str]], name: str, default: str) -> str:
     s = args.pop(name, None)
