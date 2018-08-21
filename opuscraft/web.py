@@ -70,6 +70,9 @@ CONTENT_TYPES = {
 }
 
 NODE_FILES = {
+    "jquery.js": "jquery/dist/jquery.js",
+    "popper.js": "popper.js/dist/umd/popper.js",
+    "bootstrap.js": "bootstrap/dist/js/bootstrap.js",
     "vue.js": "vue/dist/vue.js",
     "vue-router.js": "vue-router/dist/vue-router.js",
     "bootstrap.css": "bootstrap/dist/css/bootstrap.css",
