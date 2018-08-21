@@ -63,16 +63,24 @@ def edit_js_map():
 
 CONTENT_TYPES = {
     ".js": "application/javascript",
+    ".css": "text/css",
 }
 
-def serve_node(path):
-    fpath = pathlib.Path(ROOT, "node_modules", path)
+NODE_FILES = {
+    "vue.js": "vue/dist/vue.js",
+    "bootstrap.css": "bootstrap/dist/css/bootstrap.css",
+    "bootstrap-vue.css": "bootstrap-vue/dist/bootstrap-vue.css",
+    "bootstrap-vue.js": "bootstrap-vue/dist/bootstrap-vue.js",
+}
+
+@app.route("/node/<path:subpath>")
+def node_file(subpath) -> flask.Response:
+    relpath = NODE_FILES.get(subpath)
+    if relpath is None:
+        raise exceptions.NotFound()
+    fpath = pathlib.Path(ROOT, "node_modules", relpath)
     ctype = CONTENT_TYPES[fpath.suffix]
     return flask.Response(fpath.read_bytes(), mimetype=ctype)
-
-@app.route("/vue.js")
-def vue_js():
-    return serve_node("vue/dist/vue.js")
 
 def pop_str(args: Dict[str, List[str]], name: str, default: str) -> str:
     s = args.pop(name, None)
@@ -123,6 +131,11 @@ def pop_figsize(args: Dict[str, List[str]],
     if wf < 0 or hf < 0:
         raise exceptions.BadRequest("Figsize out of range")
     return wf, hf
+
+@app.route("/data")
+def audiodata() -> flask.Response:
+    audio = get_audio()
+    return flask.Response(audio.tobytes(), mimetype="application/octet-stream")
 
 @app.route("/spectrogram")
 def spectrogram() -> flask.Response:

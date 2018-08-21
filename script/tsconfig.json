@@ -7,6 +7,7 @@
     ]
   },
   "files": [
+    "drag.ts",
     "main.ts"
   ]
 }

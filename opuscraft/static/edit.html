@@ -2,12 +2,49 @@
 <html>
   <head>
     <title>Opuscraft</title>
-    <script src="/vue.js" defer></script>
+    <script src="/node/vue.js" defer></script>
+    <script src="/node/bootstrap-vue.js" defer></script>
     <script src="/edit.js" defer></script>
+    <link rel="stylesheet" type="text/css" href="/node/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/node/bootstrap-vue.css">
+    <style type="text/css">
+     .zr-inner {
+         fill: rgba(255, 255, 255, 0.2);
+     }
+     .zr-outer {
+         fill: rgba(0, 0, 0, 0.2);
+     }
+     .zl-inner {
+         fill: none;
+         stroke: black;
+     }
+     .zl-outer {
+         fill: none;
+         stroke: white;
+     }
+    </style>
   </head>
   <body>
+    <h1>Opuscraft Audio Optimizer</h1>
+    <script type="text/x-template" id="waveform-template">
+      <svg width="800"
+           height="128"
+           xmlns="http://www.w3.org/2000/svg"
+           xmlns:xlink="http://www.w3.org/1999/xlink"
+           @pointerdown="startDrag">
+        <image v-bind="{'xlink:href': url + 'spectrogram?bins=128'}" />
+        <g v-bind="{transform: 'translate(' + x + ' 0)'}">
+          <rect x="200" width="800" height="65" class="zr-outer" />
+          <rect width="200" height="65" class="zr-inner" />
+          <line x1="-0.5" y1="0" x2="-0.5" y2="65" class="zl-outer" />
+          <line x1="0.5" y1="0" x2="0.5" y2="65" class="zl-inner" />
+          <line x1="199.5" y1="0" x2="199.5" y2="65" class="zl-inner" />
+          <line x1="200.5" y1="0" x2="200.5" y2="65" class="zl-outer" />
+        </g>
+      </svg>
+    </script>
     <div id="app">
-      {{ message }}
+      <waveform :url="'/'"></waveform>
     </div>
   </body>
 </html>

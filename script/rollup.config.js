@@ -7,6 +7,7 @@ class ErrorResolver {
 }
 export default {
   external: [
+    "bootstrap-vue",
     "vue",
   ],
   input: "script/main",
