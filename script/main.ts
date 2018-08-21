@@ -136,13 +136,107 @@ class SimpleWaveform {
     this.w = w;
   }
   createSVG(elt: SVGElement, x0: number, x1: number, h: number): void {
-    let arr = this.w.subarray(x0, x1);
-    let p = arrayToPath(arr, h, false, "M", "L");
+    let p = arrayToPath(this.w.subarray(x0, x1), h, false, "M", "L");
     let path = document.createElementNS(SVGNS, "path");
     path.setAttribute("d", p);
-    path.setAttribute("class", "wave-simple");
+    path.setAttribute("class", "wave-line");
     elt.appendChild(path);
   }
+}
+
+class DoubleWaveform {
+  private w0: Float32Array;
+  private w1: Float32Array;
+  constructor(data: Float32Array, zoom: number) {
+    let n = (data.length / zoom) | 0;
+    let w0 = new Float32Array(n);
+    let w1 = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      let p = data[i * zoom];
+      let p0 = p, p1 = p;
+      for (let j = 1; j < zoom; j++) {
+        p = data[i * zoom + j];
+        p0 = Math.min(p0, p);
+        p1 = Math.max(p1, p);
+      }
+      w0[i] = p0;
+      w1[i] = p1;
+    }
+    this.w0 = w0;
+    this.w1 = w1;
+  }
+  createSVG(elt: SVGElement, x0: number, x1: number, h: number): void {
+    let p = arrayToPath(this.w0.subarray(x0, x1), h, false, "M", "L");
+    p += arrayToPath(this.w1.subarray(x0, x1), h, true, "L", "L");
+    p += "Z";
+    let path = document.createElementNS(SVGNS, "path");
+    path.setAttribute("d", p)
+    path.setAttribute("class", "wave-full")
+    elt.appendChild(path);
+  }
+}
+
+class QuadrupleWaveform {
+  private w0: Float32Array;
+  private w1: Float32Array;
+  private w2: Float32Array;
+  private w3: Float32Array;
+  constructor(data: Float32Array, zoom: number) {
+    let n = (data.length / zoom) | 0;
+    let w0 = new Float32Array(n);
+    let w1 = new Float32Array(n);
+    let w2 = new Float32Array(n);
+    let w3 = new Float32Array(n);
+    let scale = 1 / zoom;
+    for (let i = 0; i < n; i++) {
+      let p = data[i * zoom];
+      let p0 = p, p1 = p, pm = p, pv = 0;
+      for (let j = 1; j < zoom; j++) {
+        p = data[i * zoom + j];
+        p0 = Math.min(p0, p);
+        p1 = Math.max(p1, p);
+        pm += p;
+      }
+      pm *= scale;
+      for (let j = 0; j < zoom; j++) {
+        p = data[i * zoom + j] - pm;
+        pv += p * p;
+      }
+      pv = Math.sqrt(pv * scale);
+      w0[i] = p0;
+      w1[i] = pm - pv;
+      w2[i] = pm + pv;
+      w3[i] = p1;
+    }
+    this.w0 = w0;
+    this.w1 = w1;
+    this.w2 = w2;
+    this.w3 = w3;
+  }
+  createSVG(elt: SVGElement, x0: number, x1: number, h: number): void {
+    let p = arrayToPath(this.w0.subarray(x0, x1), h, false, "M", "L");
+    p += arrayToPath(this.w3.subarray(x0, x1), h, true, "L", "L");
+    p += "Z";
+    let p2 = arrayToPath(this.w1.subarray(x0, x1), h, false, "M", "L");
+    p2 += arrayToPath(this.w2.subarray(x0, x1), h, true, "L", "L");
+    p2 += "Z";
+    let path = document.createElementNS(SVGNS, "path");
+    path.setAttribute("d", p)
+    path.setAttribute("class", "wave-outer")
+    let path2 = document.createElementNS(SVGNS, "path");
+    path2.setAttribute("d", p2)
+    path2.setAttribute("class", "wave-inner")
+    elt.appendChild(path);
+    elt.appendChild(path2);
+  }
+}
+
+function makeWaveform(data: Float32Array, zoom: number): Waveform {
+  if (zoom <= 2)
+    return new SimpleWaveform(data, zoom);
+  if (zoom <= 8)
+    return new DoubleWaveform(data, zoom);
+  return new QuadrupleWaveform(data, zoom);
 }
 
 /*
@@ -190,7 +284,7 @@ class WaveformView {
   private data: Float32Array;
   private parent: SVGElement;
   private height: number;
-  private wave: SimpleWaveform | null = null;
+  private wave: Waveform | null = null;
   constructor(data: Float32Array, parent: SVGElement, height: number) {
     this.data = data;
     this.parent = parent
@@ -207,7 +301,7 @@ class WaveformView {
   }
   private rebuild(center: number, zoom: number) {
     if (this.wave === null || this.zoom !== zoom) {
-      this.wave = new SimpleWaveform(this.data, zoom);
+      this.wave = makeWaveform(this.data, zoom);
       this.zoom = zoom;
     }
     const w = 1024;
