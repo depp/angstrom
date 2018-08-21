@@ -11,12 +11,14 @@ export default {
     "vue",
   ],
   input: "script/main",
-  name: "Edit",
   output: {
     file: "edit.js",
     format: "iife",
     name: "Edit",
     sourcemap: true,
+    globals: {
+      "vue": "Vue",
+    },
   },
   plugins: [
     includePaths({
