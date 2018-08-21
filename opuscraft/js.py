@@ -106,9 +106,6 @@ class Script:
                     mtime = pathlib.Path(ROOT, path).stat().st_mtime
                 inputs.append((path, mtime))
 
-            with pathlib.Path(dpath, "script/main.js").open() as fp:
-                import sys
-                sys.stdout.write(fp.read())
             cmd = [
                 str(rollup),
                 "--config", str(rollupconfig),
