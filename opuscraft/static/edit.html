@@ -48,6 +48,13 @@
          fill: #666;
          stroke: none;
      }
+     .iconbutton {
+         width: 48px;
+         height: 48px;
+     }
+     .iconbutton img {
+         fill: black;
+     }
     </style>
   </head>
   <body>
@@ -83,6 +90,24 @@
              :transform="'translate(' + waveX + ' ' +
                   ((waveHeight / 2) | 0) + ')'"/>
         </svg>
+        <div>
+          <button type="button" class="btn btn-light"
+                  @click="stop">
+            <img src="/icon/square">
+          </button>
+          <button type="button" class="btn btn-light"
+                  @click="playPause">
+            <img :src="playing ? '/icon/pause' : '/icon/play'">
+          </button>
+          <button type="button" class="btn btn-light"
+                  @click="zoomIn">
+            <img src="/icon/zoom-in">
+          </button>
+          <button type="button" class="btn btn-light"
+                  @click="zoomOut">
+            <img src="/icon/zoom-out">
+          </button>
+        </div>
       </div>
     </script>
 

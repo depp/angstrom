@@ -1,5 +1,6 @@
 import Vue from "vue";
 
+import { Clip } from "./audio";
 import { drag } from "./drag";
 
 interface Waveform {
@@ -172,7 +173,7 @@ class WaveformView {
   }
   update(w0: number, w1: number, zoom: number): number {
     const margin = 16;
-    if (this.zoom !== this.zoom ||
+    if (this.zoom !== zoom ||
         (this.idx0 != -1 && this.idx0 + margin >= w0) ||
         (this.idx1 != -1 && this.idx1 - margin <= w1)) {
       this.rebuild((w0 + 0.5 * (w1 - w0)) | 0, zoom);
@@ -232,16 +233,24 @@ Vue.component("waveform", {
     zoom: 16,
     w0: 0,
     waveX: 0,
+    clip: <Clip|null> null,
     wave: <WaveformView|null> null,
+    playing: false,
   }),
   created() {
     fetch(this.url + "/data")
       .then((r: Response) => r.arrayBuffer())
       .then((arr: ArrayBuffer) => {
-        this.wave = new WaveformView(new Float32Array(arr),
+        let a = new Float32Array(arr);
+        this.clip = new Clip(a);
+        this.wave = new WaveformView(a,
                                      <SVGElement> this.$refs.wave,
                                      this.waveHeight);
         this.updateWave();
+        this.clip.onupdated = (c: Clip) => {
+          this.playing = c.isplaying;
+        };
+        console.log(this);
       });
   },
   watch: {
@@ -252,30 +261,68 @@ Vue.component("waveform", {
   methods: {
     startDrag(e: PointerEvent): void {
       let curW0 = this.w0;
-      let wmin = 0, wmax = this.length - this.width * this.zoom;
-      if (wmax < 0) {
-        wmax = 0;
-      }
       let scale = this.length / this.width;
       drag(
         this.$el, e,
-        (x: number, y: number): void => {
-          let w0 = curW0 + scale * x;
-          if (w0 < wmin) {
-            w0 = wmin;
-          } else if (w0 > wmax) {
-            w0 = wmax;
-          }
-          this.w0 = w0;
-        },
+        (x: number, y: number): void => this.setWindow(curW0 + scale * x),
         () => {},
       );
+      console.log(this);
     },
     updateWave() {
       if (this.wave !== null) {
         let x0 = (this.w0 / this.zoom) | 0;
         this.waveX = this.wave.update(x0, x0 + this.width, this.zoom);
       }
+    },
+    playPause() {
+      let clip = this.clip;
+      if (clip === null) {
+        return;
+      };
+      if (clip.isplaying) {
+        clip.pause();
+      } else {
+        clip.play();
+      }
+    },
+    stop() {
+      let clip = this.clip;
+      if (clip === null) {
+        return;
+      }
+      clip.stop();
+    },
+    setWindow(w0: number) {
+      let wmax = this.length - this.width * this.zoom;
+      if (wmax < 0) {
+        wmax = 0;
+      }
+      w0 = w0 | 0;
+      if (w0 < 0) {
+        w0 = 0;
+      } else if (w0 > wmax) {
+        w0 = wmax;
+      }
+      this.w0 = w0;
+    },
+    zoomIn() {
+      let z = this.zoom * 0.5;
+      if (z < 1) {
+        return;
+      }
+      let w0 = this.w0 + 0.5 * z * this.width;
+      this.zoom = z;
+      this.setWindow(w0);
+    },
+    zoomOut() {
+      let z = this.zoom * 2;
+      if (z * this.width > this.length || z > 128) {
+        return;
+      }
+      let w0 = this.w0 - 0.5 * this.zoom * this.width;
+      this.zoom = z;
+      this.setWindow(w0);
     },
   },
 });

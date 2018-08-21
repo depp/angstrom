@@ -89,6 +89,12 @@ def node_file(subpath) -> flask.Response:
     ctype = CONTENT_TYPES[fpath.suffix]
     return flask.Response(fpath.read_bytes(), mimetype=ctype)
 
+@app.route("/icon/<path:subpath>")
+def icon(subpath) -> flask.Response:
+    fpath = pathlib.Path(ROOT, "node_modules/feather-icons/dist/icons",
+                         subpath + ".svg")
+    return flask.Response(fpath.read_bytes(), mimetype="image/svg+xml")
+
 def pop_str(args: Dict[str, List[str]], name: str, default: str) -> str:
     s = args.pop(name, None)
     if s is None:
