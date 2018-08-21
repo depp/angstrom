@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "lib": [
+      "DOM",
+      "ES2015",
+    ]
+  },
+  "files": [
+    "main.ts"
+  ]
+}

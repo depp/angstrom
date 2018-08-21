@@ -1,6 +1,7 @@
 import io
 import math
 import os
+import sys
 
 import flask
 import numpy
@@ -8,6 +9,7 @@ import matplotlib
 import werkzeug.exceptions as exceptions
 
 from . import audio
+from . import js
 
 from typing import Dict, List, Tuple
 
@@ -18,14 +20,43 @@ import matplotlib.pyplot as pyplot
 app = flask.Flask(__name__)
 app.config["AUDIO_FILE"] = os.environ.get("AUDIO_FILE")
 
+AUDIO_DATA = None
 def get_audio():
-    if "audio" not in flask.g:
-        flask.g.audio = audio.Audio.load(app.config["AUDIO_FILE"])
-    return flask.g.audio
+    global AUDIO_DATA
+    if AUDIO_DATA is None:
+        AUDIO_DATA = audio.Audio.load(app.config["AUDIO_FILE"])
+    return AUDIO_DATA
+
+SCRIPT_DATA = None
+def get_script(*, rebuild=False):
+    global SCRIPT_DATA
+    if SCRIPT_DATA is not None and rebuild and SCRIPT_DATA.is_outdated():
+        print("Script is outdated", file=sys.stderr)
+        SCRIPT_DATA = None
+    if SCRIPT_DATA is None:
+        print("Compiling script", file=sys.stderr)
+        try:
+            SCRIPT_DATA = js.Script.compile()
+        except js.CompilationError as ex:
+            print("Error:", ex)
+            sys.stderr.write(ex.details)
+            raise exceptions.InternalServerError(str(ex))
+        sys.stderr.write(SCRIPT_DATA.errors)
+    return SCRIPT_DATA
 
 @app.route("/")
 def main():
     return flask.redirect("/static/edit.html")
+
+@app.route("/edit.js")
+def edit_js():
+    script = get_script(rebuild=True)
+    return flask.Response(script.js, mimetype="application/javascript")
+
+@app.route("/edit.js.map")
+def edit_js_map():
+    script = get_script()
+    return flask.Response(script.jsmap, mimetype="application/json")
 
 def pop_str(args: Dict[str, List[str]], name: str, default: str) -> str:
     s = args.pop(name, None)
