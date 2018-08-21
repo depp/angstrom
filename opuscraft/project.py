@@ -4,7 +4,7 @@ import re
 
 from . import audio
 
-from typing import Dict
+from typing import Dict, Optional
 
 NON_URL_CHAR = re.compile("[^-_.a-zA-Z0-9]+")
 def to_url(p: str) -> str:
@@ -26,6 +26,7 @@ class InputClip:
     name: str
     info_path: pathlib.Path
     audio_path: pathlib.Path
+    _audio: Optional[audio.Audio]
 
     def __init__(self,
                  ident: str,
@@ -36,6 +37,14 @@ class InputClip:
         self.name = name
         self.info_path = info_path
         self.audio_path = audio_path
+        self._audio = None
+
+    def audio(self) -> audio.Audio:
+        a = self._audio
+        if a is None:
+            a = audio.Audio.load(self.audio_path)
+            self._audio = a
+        return a
 
 class Project:
     """A project for creating audio files.

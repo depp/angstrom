@@ -26,25 +26,50 @@
          fill: none;
          stroke: white;
      }
+     .wave-bg {
+         fill: lightgray;
+     }
+     .wave-simple {
+         stroke-width: 2px;
+         stroke: black;
+         fill: none;
+     }
     </style>
   </head>
   <body>
+
     <script type="text/x-template" id="waveform-template">
-      <svg width="800"
-           height="128"
-           xmlns="http://www.w3.org/2000/svg"
-           xmlns:xlink="http://www.w3.org/1999/xlink"
-           @pointerdown="startDrag">
-        <image v-bind="{'xlink:href': url + 'spectrogram?bins=128'}" />
-        <g v-bind="{transform: 'translate(' + x + ' 0)'}">
-          <rect x="200" width="800" height="65" class="zr-outer" />
-          <rect width="200" height="65" class="zr-inner" />
-          <line x1="-0.5" y1="0" x2="-0.5" y2="65" class="zl-outer" />
-          <line x1="0.5" y1="0" x2="0.5" y2="65" class="zl-inner" />
-          <line x1="199.5" y1="0" x2="199.5" y2="65" class="zl-inner" />
-          <line x1="200.5" y1="0" x2="200.5" y2="65" class="zl-outer" />
-        </g>
-      </svg>
+      <div>
+        <svg :width="width"
+             :height="spectrumHeight"
+
+             xmlns="http://www.w3.org/2000/svg"
+             xmlns:xlink="http://www.w3.org/1999/xlink"
+             @pointerdown="startDrag">
+          <rect :width="width" :height="spectrumHeight" />
+          <image v-bind="{'xlink:href': spectrogram}" />
+          <g :transform="'translate(' + x0 + ' 0) ' +
+                         'scale(1 ' + spectrumHeight + ')'">
+            <rect :x="-width" :width="width" height="1" class="zr-outer" />
+            <rect :x="wsize" :width="width" height="1" class="zr-outer" />
+            <rect :width="wsize" height="1" class="zr-inner" />
+            <line x1="-0.5" y1="0" x2="-0.5" y2="1" class="zl-outer" />
+            <line x1="0.5" y1="0" x2="0.5" y2="1" class="zl-inner" />
+            <line :x1="wsize-0.5" y1="0" :x2="wsize-0.5" y2="1"
+                  class="zl-inner" />
+            <line :x1="wsize+0.5" y1="0" :x2="wsize+0.5" y2="1"
+                  class="zl-outer" />
+          </g>
+        </svg>
+        <svg :width="width"
+             :height="waveHeight"
+             xmlns="http://www.w3.org/2000/svg">
+          <rect :width="width" :height="waveHeight" class="wave-bg" />
+          <g ref="wave"
+             :transform="'translate(' + waveX + ' ' +
+                  ((waveHeight / 2) | 0) + ')'"/>
+        </svg>
+      </div>
     </script>
 
     <script type="text/x-template" id="inputlist-template">
@@ -81,6 +106,12 @@
             </li>
           </ul>
           <h2>{{item.name}}</h2>
+          <waveform :url="'/input/' + item.url + '/audio'"
+                    :bins="128"
+                    :length="item.length"
+                    :wave-height="200"
+                    :width="Math.min(1000, item.length/60)">
+          </waveform>
         </template>
       </div>
     </script>
@@ -98,8 +129,10 @@
         </ul>
       </div>
     </nav>
+
     <main id="app" class="container">
       <router-view></router-view>
     </main>
+
   </body>
 </html>

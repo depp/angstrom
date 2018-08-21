@@ -139,13 +139,26 @@ def pop_figsize(args: Dict[str, List[str]],
         raise exceptions.BadRequest("Figsize out of range")
     return wf, hf
 
-@app.route("/data")
-def audiodata() -> flask.Response:
-    audio = get_audio()
-    return flask.Response(audio.tobytes(), mimetype="application/octet-stream")
+def audio_route(path):
+    def wrapper(func):
+        def input_func(name):
+            clip = get_project().inputs.get(name)
+            if clip is None:
+                raise exceptions.NotFound()
+            return func(clip.audio())
+        app.add_url_rule("/input/<name>/audio" + path,
+                         "input_" + func.__name__,
+                         input_func)
+        return func
+    return wrapper
 
-@app.route("/spectrogram")
-def spectrogram() -> flask.Response:
+@audio_route("/data")
+def audiodata(audio) -> flask.Response:
+    return flask.Response(audio.data.tobytes(),
+                          mimetype="application/octet-stream")
+
+@audio_route("/spectrogram")
+def spectrogram(audio) -> flask.Response:
     args = dict(flask.request.args)
     step = pop_int(args, "step", 240)
     if step <= 0:
@@ -160,14 +173,13 @@ def spectrogram() -> flask.Response:
         raise exceptions.BadRequest("Unknown parameters: {}".format(
                                     ", ".join(args)))
 
-    audio = get_audio()
     img = audio.spectrogram(step=step, bins=bins, dbrange=dbrange)
     fp = io.BytesIO()
     img.save(fp, format="png")
     return flask.Response(fp.getvalue(), mimetype="image/png")
 
-@app.route("/level")
-def level() -> flask.Response:
+@audio_route("/level")
+def level(audio) -> flask.Response:
     args = dict(flask.request.args)
     step = pop_int(args, "step", 240)
     if step <= 0:
@@ -199,13 +211,12 @@ def level() -> flask.Response:
         raise exceptions.BadRequest("Unknown parameters: {}".format(
                                     ", ".join(args)))
 
-    audio = get_audio()
     level = audio.level(window_size=wsize)
     level = level[::step]
     return result(level)
 
-@app.route("/pitch")
-def pitch() -> flask.Response:
+@audio_route("/pitch")
+def pitch(audio) -> flask.Response:
     args = dict(flask.request.args)
     step = pop_int(args, "step", 240)
     if step <= 0:
@@ -240,7 +251,6 @@ def pitch() -> flask.Response:
         raise exceptions.BadRequest("Unknown parameters: {}".format(
                                     ", ".join(args)))
 
-    audio = get_audio()
     pitch = audio.pitch(
         step=step,
         freq_range=freq,
@@ -262,10 +272,13 @@ def inputs() -> flask.Response:
 
 @app.route("/input/<name>")
 def input_info(name: str) -> flask.Response:
-    proj = get_project()
-    clip = proj.inputs.get(name)
+    clip = get_project().inputs.get(name)
     if clip is None:
         raise exceptions.NotFound()
-    data = {"url": clip.ident,
-            "name": clip.name}
+    audio = clip.audio()
+    data = {
+        "url": clip.ident,
+        "name": clip.name,
+        "length": len(audio.data),
+    }
     return flask.Response(json.dumps(data), mimetype="application/json")
