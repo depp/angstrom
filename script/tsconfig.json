@@ -8,6 +8,7 @@
   },
   "files": [
     "drag.ts",
-    "main.ts"
+    "main.ts",
+    "waveform.ts"
   ]
 }
