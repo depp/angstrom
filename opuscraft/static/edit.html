@@ -26,6 +26,7 @@
   </head>
   <body>
     <h1>Opuscraft Audio Optimizer</h1>
+
     <script type="text/x-template" id="waveform-template">
       <svg width="800"
            height="128"
@@ -43,8 +44,18 @@
         </g>
       </svg>
     </script>
+
+    <script type="text/x-template" id="inputlist-template">
+      <ul>
+        <li v-for="item in items">
+          {{ item.name }}
+        </li>
+      </ul>
+    </script>
+
     <div id="app">
-      <waveform :url="'/'"></waveform>
+      <!-- <waveform :url="'/'"></waveform> -->
+      <inputlist :items="inputs"></inputlist>
     </div>
   </body>
 </html>

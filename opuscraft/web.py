@@ -1,4 +1,5 @@
 import io
+import json
 import math
 import os
 import pathlib
@@ -9,10 +10,10 @@ import numpy
 import matplotlib
 import werkzeug.exceptions as exceptions
 
-from . import audio
 from . import js
+from . import project
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 matplotlib.use("svg")
 
@@ -21,14 +22,16 @@ import matplotlib.pyplot as pyplot
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 app = flask.Flask(__name__)
-app.config["AUDIO_FILE"] = os.environ.get("AUDIO_FILE")
+app.config["PROJECT"] = os.environ.get("PROJECT")
 
-AUDIO_DATA = None
-def get_audio():
-    global AUDIO_DATA
-    if AUDIO_DATA is None:
-        AUDIO_DATA = audio.Audio.load(app.config["AUDIO_FILE"])
-    return AUDIO_DATA
+PROJECT_DATA: Optional[project.Project] = None
+def get_project() -> project.Project:
+    global PROJECT_DATA
+    if PROJECT_DATA is None:
+        p = project.Project(pathlib.Path(app.config["PROJECT"]))
+        p.load()
+        PROJECT_DATA = p
+    return PROJECT_DATA
 
 SCRIPT_DATA = None
 def get_script(*, rebuild=False):
@@ -241,3 +244,14 @@ def pitch() -> flask.Response:
         corr_threshold=cmin,
     )
     return result(pitch)
+
+@app.route("/input")
+def inputs() -> flask.Response:
+    proj = get_project()
+    data = [
+        {"url": clip.ident,
+         "name": clip.name}
+        for clip in proj.inputs.values()
+    ]
+    data.sort(key=lambda x: x["name"])
+    return flask.Response(json.dumps(data), mimetype="application/json")

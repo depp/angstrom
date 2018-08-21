@@ -23,6 +23,23 @@ Vue.component("waveform", {
   },
 });
 
-new Vue({
-  el: "#app",
+interface InputInfo {
+  url: string;
+  name: string;
+}
+
+Vue.component("inputlist", {
+  props: ["items"],
+  template: "#inputlist-template",
 });
+
+fetch("/input").then((r: Response) => r.json())
+  .then((inputs: InputInfo[]) => {
+    new Vue({
+      el: "#app",
+      data: {
+        inputs: inputs,
+      },
+    });
+  })
+  .catch((e: Error) => console.error(e));
