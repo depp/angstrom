@@ -9,6 +9,7 @@ export default {
   external: [
     "bootstrap-vue",
     "vue",
+    "vue-router",
   ],
   input: "script/main",
   output: {
@@ -18,6 +19,7 @@ export default {
     sourcemap: true,
     globals: {
       "vue": "Vue",
+      "vue-router": "VueRouter",
     },
   },
   plugins: [

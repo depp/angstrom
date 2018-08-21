@@ -71,6 +71,7 @@ CONTENT_TYPES = {
 
 NODE_FILES = {
     "vue.js": "vue/dist/vue.js",
+    "vue-router.js": "vue-router/dist/vue-router.js",
     "bootstrap.css": "bootstrap/dist/css/bootstrap.css",
     "bootstrap-vue.css": "bootstrap-vue/dist/bootstrap-vue.css",
     "bootstrap-vue.js": "bootstrap-vue/dist/bootstrap-vue.js",
@@ -254,4 +255,14 @@ def inputs() -> flask.Response:
         for clip in proj.inputs.values()
     ]
     data.sort(key=lambda x: x["name"])
+    return flask.Response(json.dumps(data), mimetype="application/json")
+
+@app.route("/input/<name>")
+def input_info(name: str) -> flask.Response:
+    proj = get_project()
+    clip = proj.inputs.get(name)
+    if clip is None:
+        raise exceptions.NotFound()
+    data = {"url": clip.ident,
+            "name": clip.name}
     return flask.Response(json.dumps(data), mimetype="application/json")
