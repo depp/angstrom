@@ -236,6 +236,7 @@ Vue.component("waveform", {
     clip: <Clip|null> null,
     wave: <WaveformView|null> null,
     playing: false,
+    playhead: 0,
   }),
   created() {
     fetch(this.url + "/data")

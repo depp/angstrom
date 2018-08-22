@@ -89,10 +89,41 @@ def node_file(subpath) -> flask.Response:
     ctype = CONTENT_TYPES[fpath.suffix]
     return flask.Response(fpath.read_bytes(), mimetype=ctype)
 
-@app.route("/icon/<path:subpath>")
-def icon(subpath) -> flask.Response:
-    fpath = pathlib.Path(ROOT, "node_modules/feather-icons/dist/icons",
-                         subpath + ".svg")
+ICONS = None
+def get_icons():
+    global ICONS
+    if ICONS is not None:
+        return ICONS
+    rpath = pathlib.Path(ROOT, "node_modules/material-design-icons")
+    icons = {}
+    for dpath in rpath.iterdir():
+        spath = dpath.joinpath("svg/production")
+        if not spath.is_dir():
+            continue
+        dname = dpath.name
+        for ipath in spath.iterdir():
+            name = ipath.name
+            if not name.endswith("_24px.svg") or not name.startswith("ic_"):
+                continue
+            name = name[3:-9]
+            icons[name] = dname
+    ICONS = icons
+    return icons
+
+@app.route("/icon")
+def icons() -> flask.Response:
+    icons = get_icons()
+    return flask.Response(json.dumps(icons, sort_keys=True),
+                          mimetype="application/json")
+
+@app.route("/icon/<name>")
+def icon(name) -> flask.Response:
+    icons = get_icons()
+    dname = icons.get(name)
+    if dname is None:
+        raise exceptions.NotFound()
+    fpath = pathlib.Path(ROOT, "node_modules/material-design-icons",
+                         dname, "svg/production", "ic_" + name + "_24px.svg")
     return flask.Response(fpath.read_bytes(), mimetype="image/svg+xml")
 
 def pop_str(args: Dict[str, List[str]], name: str, default: str) -> str:
