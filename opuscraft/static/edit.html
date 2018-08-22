@@ -22,55 +22,50 @@
       </g>
     </script>
 
-    <script type="text/x-template" id="waveform-template">
+    <script type="text/x-template" id="audio-nav-template">
       <div>
         <svg :width="width"
-             :height="spectrumHeight"
-
+             :height="height"
              xmlns="http://www.w3.org/2000/svg"
-             xmlns:xlink="http://www.w3.org/1999/xlink"
-             @pointerdown="startDrag">
-          <rect :width="width" :height="spectrumHeight" />
+             xmlns:xlink="http://www.w3.org/1999/xlink">
+          <rect :width="width" :height="(height*0.5|0)" />
           <image v-bind="{'xlink:href': spectrogram}" />
-          <g :transform="'translate(' + x0 + ' 0) ' +
-                         'scale(1 ' + spectrumHeight + ')'">
-            <rect :x="-width" :width="width" height="1" class="zr-outer" />
-            <rect :x="wsize" :width="width" height="1" class="zr-outer" />
-            <rect :width="wsize" height="1" class="zr-inner" />
-            <line x1="-0.5" y1="0" x2="-0.5" y2="1" class="zl-outer" />
-            <line x1="0.5" y1="0" x2="0.5" y2="1" class="zl-inner" />
-            <line :x1="wsize-0.5" y1="0" :x2="wsize-0.5" y2="1"
-                  class="zl-inner" />
-            <line :x1="wsize+0.5" y1="0" :x2="wsize+0.5" y2="1"
-                  class="zl-outer" />
+          <g :transform="'translate(0 ' + (height*0.5|0) + ')'">
+            <audio-wave
+                :data="data"
+                :width="width"
+                :height="height-(height*0.5|0)"
+                :pos="0"
+                :scale="navScale">
+            </audio-wave>
           </g>
+          <rect v-bind="{x:(pos/navScale|0)+0.5,
+                        width:(width*scale/navScale|0)-1, height:height-1}"
+                y="0.5"
+                class="audionav-selection"
+                @pointerdown="clickSelection" />
         </svg>
-        <svg :width="width"
-             :height="waveHeight"
-             xmlns="http://www.w3.org/2000/svg">
-          <rect :width="width" :height="waveHeight" class="wave-bg" />
-          <g ref="wave"
-             :transform="'translate(' + waveX + ' ' +
-                  ((waveHeight / 2) | 0) + ')'"/>
-        </svg>
-        <div>
-          <button type="button" class="btn btn-light"
-                  @click="stop">
-            <img src="/icon/stop">
-          </button>
-          <button type="button" class="btn btn-light"
-                  @click="playPause">
-            <img :src="playing ? '/icon/pause' : '/icon/play_arrow'">
-          </button>
-          <button type="button" class="btn btn-light"
-                  @click="zoomIn">
-            <img src="/icon/zoom_in">
-          </button>
-          <button type="button" class="btn btn-light"
-                  @click="zoomOut">
-            <img src="/icon/zoom_out">
-          </button>
-        </div>
+      </div>
+    </script>
+
+    <script type="text/x-template" id="none">
+      <div>
+        <button type="button" class="btn btn-light"
+                @click="stop">
+          <img src="/icon/stop">
+        </button>
+        <button type="button" class="btn btn-light"
+                @click="playPause">
+          <img :src="playing ? '/icon/pause' : '/icon/play_arrow'">
+        </button>
+        <button type="button" class="btn btn-light"
+                @click="zoomIn">
+          <img src="/icon/zoom_in">
+        </button>
+        <button type="button" class="btn btn-light"
+                @click="zoomOut">
+          <img src="/icon/zoom_out">
+        </button>
       </div>
     </script>
 
@@ -108,15 +103,24 @@
             </li>
           </ul>
           <h2>{{item.name}}</h2>
+          <audio-nav
+              :url="url + '/audio'"
+              :data="data"
+              :width="800"
+              :height="100"
+              :pos="pos"
+              :scale="scale"
+              @update:pos="updatePos">
+          </audio-nav>
           <svg xmlns="http://www.w3.org/2000/svg"
                width="800"
                height="200">
             <audio-wave
                 :data="data"
-                width="800"
-                height="200"
-                pos="0"
-                scale="16">
+                :width="800"
+                :height="200"
+                :pos="pos"
+                :scale="scale">
             </audio-wave>
           </svg>
         </template>

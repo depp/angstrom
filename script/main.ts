@@ -53,12 +53,19 @@ const Input = Vue.extend({
       item: null as InputData|null,
       data: null as Float32Array|null,
       clip: null as Clip|null,
+      scale: 32,
+      pos: 0,
     };
   },
   created() {
     this.fetchData();
   },
   template: "#input-template",
+  computed: {
+    url(): string {
+      return "/input/" + this.$route.params.inputId;
+    },
+  },
   methods: {
     fetchData() {
       this.loading = true;
@@ -66,7 +73,7 @@ const Input = Vue.extend({
       this.item = null;
       this.data = null;
       this.clip = null;
-      let url = "/input/" + this.$route.params.inputId;
+      let url = this.url;
       Promise.all([
         fetch(url)
           .then((r: Response) => {
@@ -91,6 +98,16 @@ const Input = Vue.extend({
         this.error = e;
       });
     },
+    updatePos(pos: number) {
+      if (!this.data)
+        return;
+      let pmax = (this.data.length - this.scale * 800) | 0;
+      if (pos > pmax)
+        pos = pmax;
+      if (pos < 0)
+        pos = 0;
+      this.pos = pos;
+    }
   },
 });
 

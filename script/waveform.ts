@@ -13,7 +13,6 @@ function arrayToPath(arr: Float32Array, height: number,
   let p = "";
   let c = c1;
   let y = height * 0.5 | 0;
-  console.log("Y", y);
   if (reverse) {
     for (let x = arr.length - 1; x >= 0; x--) {
       p += c;
@@ -43,16 +42,18 @@ const SVGNS = "http://www.w3.org/2000/svg";
 class SimpleWaveform {
   private w: Float32Array;
   constructor(data: Float32Array, scale: number) {
-    let n = data.length * scale | 0;
+    let nn = data.length;
+    let n = nn / scale | 0;
     let w = new Float32Array(n)
-    let j = 0;
-    for (let i = 0; i < n; i++) {
-      let j1 = Math.min(n, (i + 1) * scale);
-      let m = j1 - j;
+    let sidx = 0;
+    for (let pidx = 0; pidx < n; pidx++) {
+      let starget = Math.min(nn, (pidx + 1) * scale | 0);
+      let scount = starget - sidx;
       let acc = 0;
-      for (; j < j1; j++) {
-        acc += data[j];
+      for (; sidx < starget; sidx++) {
+        acc += data[sidx];
       }
+      w[pidx] = acc / scount;
     }
     this.w = w;
   }
@@ -70,20 +71,21 @@ class DoubleWaveform {
   private w0: Float32Array;
   private w1: Float32Array;
   constructor(data: Float32Array, scale: number) {
-    let n = data.length * scale | 0;
+    let nn = data.length;
+    let n = nn / scale | 0;
     let w0 = new Float32Array(n);
     let w1 = new Float32Array(n);
-    let j = 0;
-    for (let i = 0; i < n; i++) {
-      let j1 = Math.min(n, (i + 1) * scale);
-      let p = data[j], p0 = p, p1 = p;
-      for (j++; j < j1; j++) {
-        p = data[j];
-        p0 = Math.min(p0, p);
-        p1 = Math.max(p1, p);
+    let sidx = 0;
+    for (let pidx = 0; pidx < n; pidx++) {
+      let starget = Math.min(nn, (pidx + 1) * scale | 0)
+      let s = data[sidx], p0 = s, p1 = s;
+      for (sidx++; sidx < starget; sidx++) {
+        s = data[sidx];
+        p0 = Math.min(p0, s);
+        p1 = Math.max(p1, s);
       }
-      w0[i] = p0;
-      w1[i] = p1;
+      w0[pidx] = p0;
+      w1[pidx] = p1;
     }
     this.w0 = w0;
     this.w1 = w1;
@@ -137,7 +139,7 @@ class WaveformView {
       this.x1 = 0;
       this.wave = wave;
     }
-    let x0 = pos * scale | 0, x1 = x0 + width;
+    let x0 = pos / scale | 0, x1 = x0 + width;
     let n = wave.length;
     const margin = 16;
     if ((this.x0 !== 0 && this.x0 > x0) ||
@@ -207,126 +209,41 @@ Vue.component("audio-wave", {
     },
   },
 });
-/*
-Vue.component("waveform", {
-  props: [
-    "url",
-    "width",
-    "bins",
-    "length",
-    "waveHeight",
-  ],
+
+Vue.component("audio-nav", {
+  props: {
+    url: {type: String},
+    data: {type: Float32Array},
+    width: {type: Number},
+    height: {type: Number},
+    pos: {type: Number},
+    scale: {type: Number},
+  },
+  template: "#audio-nav-template",
   computed: {
-    spectrumHeight(): number {
-      return ((this.bins / 2) | 0) + 1;
+    navScale(): number {
+      if (!this.data)
+        return 1;
+      return this.data.length / this.width;
     },
     spectrogram(): string {
-      return (this.url + "/spectrogram?bins=" + this.bins + "&step=" +
-              Math.round(this.length / this.width));
-    },
-    wsize(): number {
-      return this.width * this.zoom * this.width / this.length;
-    },
-    x0(): number {
-      return this.w0 * this.width / this.length;
+      return (this.url + "/spectrogram?bins=" + 128 + "&step=" +
+              Math.round(this.navScale));
     },
   },
-  data: () => ({
-    zoom: 16,
-    w0: 0,
-    waveX: 0,
-    clip: <Clip|null> null,
-    wave: <WaveformView|null> null,
-    playing: false,
-    playhead: 0,
-  }),
-  created() {
-    fetch(this.url + "/data")
-      .then((r: Response) => r.arrayBuffer())
-      .then((arr: ArrayBuffer) => {
-        let a = new Float32Array(arr);
-        this.clip = new Clip(a);
-        this.wave = new WaveformView(a,
-                                     <SVGElement> this.$refs.wave,
-                                     this.waveHeight);
-        this.updateWave();
-        this.clip.onupdated = (c: Clip) => {
-          this.playing = c.isplaying;
-        };
-        console.log(this);
-      });
-  },
-  watch: {
-    w0() { this.updateWave(); },
-    zoom() { this.updateWave(); },
-  },
-  template: "#waveform-template",
   methods: {
-    startDrag(e: PointerEvent): void {
-      let curW0 = this.w0;
-      let scale = this.length / this.width;
+    clickSelection(e: PointerEvent) {
+      let pos0 = this.pos;
+      let fac = this.data.length / this.width;
       drag(
         this.$el, e,
-        (x: number, y: number): void => this.setWindow(curW0 + scale * x),
+        (x: number, y: number): void => {
+          this.$emit("update:pos", pos0 + fac * x);
+        },
         () => {},
       );
-      console.log(this);
     },
-    updateWave() {
-      if (this.wave !== null) {
-        let x0 = (this.w0 / this.zoom) | 0;
-        this.waveX = this.wave.update(x0, x0 + this.width, this.zoom);
-      }
-    },
-    playPause() {
-      let clip = this.clip;
-      if (clip === null) {
-        return;
-      };
-      if (clip.isplaying) {
-        clip.pause();
-      } else {
-        clip.play();
-      }
-    },
-    stop() {
-      let clip = this.clip;
-      if (clip === null) {
-        return;
-      }
-      clip.stop();
-    },
-    setWindow(w0: number) {
-      let wmax = this.length - this.width * this.zoom;
-      if (wmax < 0) {
-        wmax = 0;
-      }
-      w0 = w0 | 0;
-      if (w0 < 0) {
-        w0 = 0;
-      } else if (w0 > wmax) {
-        w0 = wmax;
-      }
-      this.w0 = w0;
-    },
-    zoomIn() {
-      let z = this.zoom * 0.5;
-      if (z < 1) {
-        return;
-      }
-      let w0 = this.w0 + 0.5 * z * this.width;
-      this.zoom = z;
-      this.setWindow(w0);
-    },
-    zoomOut() {
-      let z = this.zoom * 2;
-      if (z * this.width > this.length || z > 128) {
-        return;
-      }
-      let w0 = this.w0 - 0.5 * this.zoom * this.width;
-      this.zoom = z;
-      this.setWindow(w0);
+    setPos(pos: number) {
     },
   },
 });
-*/
