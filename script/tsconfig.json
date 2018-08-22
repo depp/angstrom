@@ -9,7 +9,6 @@
   "files": [
     "audio.ts",
     "drag.ts",
-    "icon.ts",
     "main.ts",
     "waveform.ts"
   ]
