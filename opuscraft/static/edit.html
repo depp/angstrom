@@ -59,6 +59,13 @@
   </head>
   <body>
 
+    <script type="text/x-template" id="audio-wave-template">
+      <g xmlns="http://www.w3.org/2000/svg">
+        <rect :width="width" :height="height" class="wave-bg" />
+        <g ref="wave" />
+      </g>
+    </script>
+
     <script type="text/x-template" id="waveform-template">
       <div>
         <svg :width="width"
@@ -133,7 +140,7 @@
 
     <script type="text/x-template" id="input-template">
       <div>
-        <template v-if="!loading">
+        <template v-if="!loading && !error">
           <ul class="breadcrumb">
             <li class="breadcrumb-item">
               <router-link to="/input">
@@ -145,12 +152,17 @@
             </li>
           </ul>
           <h2>{{item.name}}</h2>
-          <waveform :url="'/input/' + item.url + '/audio'"
-                    :bins="128"
-                    :length="item.length"
-                    :wave-height="200"
-                    :width="Math.min(1000, item.length/60)">
-          </waveform>
+          <svg xmlns="http://www.w3.org/2000/svg"
+               width="800"
+               height="200">
+            <audio-wave
+                :data="data"
+                width="800"
+                height="200"
+                pos="0"
+                scale="16">
+            </audio-wave>
+          </svg>
         </template>
       </div>
     </script>
