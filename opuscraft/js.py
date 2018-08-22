@@ -41,7 +41,8 @@ class Script:
         input_paths = [tsconfig, rollupconfig]
         input_paths.extend(
             path.relative_to(ROOT)
-            for path in pathlib.Path(ROOT, "script").rglob("*.ts"))
+            for path in pathlib.Path(ROOT, "script").rglob("*.ts")
+            if not path.name.startswith("."))
 
         with tempfile.TemporaryDirectory("angstrom") as dname:
             # Symlink all sources in target directory.
