@@ -2,9 +2,13 @@ import os
 import subprocess
 import tempfile
 
+LENGTHS = [120, 240, 480, 960, 1920, 2880]
+
 class Packet:
     def __init__(self, data, *, bitrate=6000, bandwidth="NB",
                  independent=False):
+        if len(data) not in LENGTHS:
+            raise ValueError("invalid packet length")
         self.data = data
         self.bitrate = bitrate
         self.bandwidth = bandwidth

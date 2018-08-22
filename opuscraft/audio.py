@@ -99,6 +99,27 @@ class Audio:
                             len(data.shape))
         self.data = data
 
+    def save(self, path: str):
+        with open(path, "wb") as fp:
+            subprocess.run(
+                [
+                    "sox",
+                    "--channels", "1",
+                    "--bits", "32",
+                    "--encoding", "floating-point",
+                    "--endian", "little",
+                    "--type", "raw",
+                    "--rate", "48000",
+                    "-",
+                    "--bits", "16",
+                    "--type", "wav",
+                    "-",
+                ],
+                stdout=fp,
+                check=True,
+                input=self.data.tobytes(),
+            )
+
     @classmethod
     def load(class_, path: str) -> "Audio":
         """Load an audio file from the given path."""
