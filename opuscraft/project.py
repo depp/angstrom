@@ -1,6 +1,7 @@
 import json
 import pathlib
 import re
+import toml
 
 from . import audio
 
@@ -62,7 +63,15 @@ class Project:
         self.inputs = {}
 
     def load(self) -> None:
-        inputdir = pathlib.Path(self.path, "input")
+        with self.path.joinpath("opuscraft.toml").open() as fp:
+            conf = toml.load(fp)
+        sec = conf.get("web")
+        if sec is not None:
+            inputdir = sec.get("inputdir")
+            if inputdir is not None:
+                self.load_inputs(self.path.joinpath(inputdir))
+
+    def load_inputs(self, inputdir):
         infos = set(inputdir.glob("*.json"))
         wavs = inputdir.glob("*.wav")
         inputs: Dict[str, InputClip] = {}
