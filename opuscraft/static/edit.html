@@ -88,18 +88,18 @@
           <audio-nav
               :url="url + '/audio'"
               :data="data"
-              :width="800"
+              :width="width"
               :height="100"
               :pos="pos"
               :scale="scale"
               @update:pos="updatePos">
           </audio-nav>
           <svg xmlns="http://www.w3.org/2000/svg"
-               width="800"
+               :width="width"
                height="200">
             <audio-wave
                 :data="data"
-                :width="800"
+                :width="width"
                 :height="200"
                 :pos="pos"
                 :scale="scale">
