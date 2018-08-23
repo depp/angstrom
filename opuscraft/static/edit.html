@@ -49,24 +49,6 @@
     </script>
 
     <script type="text/x-template" id="none">
-      <div>
-        <button type="button" class="btn btn-light"
-                @click="stop">
-          <img src="/icon/stop">
-        </button>
-        <button type="button" class="btn btn-light"
-                @click="playPause">
-          <img :src="playing ? '/icon/pause' : '/icon/play_arrow'">
-        </button>
-        <button type="button" class="btn btn-light"
-                @click="zoomIn">
-          <img src="/icon/zoom_in">
-        </button>
-        <button type="button" class="btn btn-light"
-                @click="zoomOut">
-          <img src="/icon/zoom_out">
-        </button>
-      </div>
     </script>
 
     <script type="text/x-template" id="inputlist-template">
@@ -123,6 +105,24 @@
                 :scale="scale">
             </audio-wave>
           </svg>
+          <div>
+            <button type="button" class="btn btn-light"
+                    @click="stop">
+              <img src="/icon/stop">
+            </button>
+            <button type="button" class="btn btn-light"
+                    @click="playPause">
+              <img :src="playing ? '/icon/pause' : '/icon/play_arrow'">
+            </button>
+            <button type="button" class="btn btn-light"
+                    @click="zoomIn">
+              <img src="/icon/zoom_in">
+            </button>
+            <button type="button" class="btn btn-light"
+                    @click="zoomOut">
+              <img src="/icon/zoom_out">
+            </button>
+          </div>
         </template>
       </div>
     </script>

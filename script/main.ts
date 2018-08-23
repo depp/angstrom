@@ -45,6 +45,16 @@ interface InputData extends InputInfo {
   length: number;
 }
 
+function zoomLevel(scale: number): number {
+  return Math.round(Math.log2(scale) * 3);
+}
+
+function zoomScale(level: number): number {
+  return Math.pow(2, level/3);
+}
+
+const kWidth = 800;
+
 const Input = Vue.extend({
   data() {
     return {
@@ -55,6 +65,8 @@ const Input = Vue.extend({
       clip: null as Clip|null,
       scale: 32,
       pos: 0,
+      playing: false,
+      width: kWidth,
     };
   },
   created() {
@@ -92,6 +104,9 @@ const Input = Vue.extend({
         this.item = item;
         this.data = new Float32Array(data);
         this.clip = new Clip(this.data);
+        this.clip.onupdated = (c: Clip) => {
+          this.playing = c.isplaying;
+        };
       }).catch((e: Error) => {
         console.error(e);
         this.loading = false;
@@ -107,7 +122,45 @@ const Input = Vue.extend({
       if (pos < 0)
         pos = 0;
       this.pos = pos;
-    }
+    },
+    zoomBy(n: number) {
+      let scale0 = this.scale;
+      let level0 = zoomLevel(scale0);
+      let level1 = level0 + n;
+      if (level1 < 0) {
+        level1 = 0;
+      } else if (level1 > 21) {
+        level1 = 21;
+      }
+      if (level0 === level1)
+        return;
+      let scale1 = zoomScale(level1);
+      let pos = this.pos;
+      this.scale = scale1;
+      this.updatePos(pos + (scale0 - scale1) * (0.5 * kWidth));
+    },
+    zoomIn() {
+      this.zoomBy(-1);
+    },
+    zoomOut() {
+      this.zoomBy(1);
+    },
+    stop() {
+      let c = this.clip;
+      if (!c)
+        return;
+      c.stop();
+    },
+    playPause() {
+      let c = this.clip;
+      if (!c)
+        return;
+      if (c.isplaying) {
+        c.pause();
+      } else {
+        c.play();
+      }
+    },
   },
 });
 
