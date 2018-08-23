@@ -45,12 +45,16 @@ interface InputData extends InputInfo {
   length: number;
 }
 
+const kZoomSteps = 2;
+const kMinZoom = 0;
+const kMaxZoom = 7 * kZoomSteps;
+
 function zoomLevel(scale: number): number {
-  return Math.round(Math.log2(scale) * 3);
+  return Math.round(Math.log2(scale) * kZoomSteps);
 }
 
 function zoomScale(level: number): number {
-  return Math.pow(2, level/3);
+  return Math.pow(2, level/kZoomSteps);
 }
 
 const kWidth = 800;
@@ -127,10 +131,10 @@ const Input = Vue.extend({
       let scale0 = this.scale;
       let level0 = zoomLevel(scale0);
       let level1 = level0 + n;
-      if (level1 < 0) {
-        level1 = 0;
-      } else if (level1 > 21) {
-        level1 = 21;
+      if (level1 < kMinZoom) {
+        level1 = kMinZoom;
+      } else if (level1 > kMaxZoom) {
+        level1 = kMaxZoom;
       }
       if (level0 === level1)
         return;
