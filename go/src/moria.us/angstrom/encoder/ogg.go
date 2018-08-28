@@ -12,7 +12,6 @@ import "C"
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"unsafe"
 
@@ -82,7 +81,6 @@ func writeData(w io.Writer, os *C.ogg_stream_state, packets []OpusPacket) error 
 	pos := 0
 	for n, p := range packets {
 		pos += p.Length()
-		fmt.Println(p.Length())
 		var eos C.long
 		if n == len(packets)-1 {
 			eos = 1
