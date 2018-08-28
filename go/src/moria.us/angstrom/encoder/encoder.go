@@ -94,12 +94,27 @@ func (p OpusPacket) Length() int {
 	if len(p) == 0 {
 		return 0
 	}
-	switch c := int(p[0]); {
-	case c < 12:
-		return packetLengths[(c&3)+2]
-	case c < 16:
-		return packetLengths[(c&1)+2]
+	ctl := int(p[0])
+	var base int
+	switch cfg := ctl >> 3; {
+	case cfg < 12:
+		base = packetLengths[(cfg&3)+2]
+	case cfg < 16:
+		base = packetLengths[(cfg&1)+2]
 	default:
-		return packetLengths[c&3]
+		base = packetLengths[cfg&3]
 	}
+	var count int
+	switch n := ctl & 3; n {
+	case 0:
+		count = 1
+	case 1, 2:
+		count = 2
+	case 3:
+		if len(p) < 2 {
+			return 0
+		}
+		count = int(p[1]) & 63
+	}
+	return base * count
 }
