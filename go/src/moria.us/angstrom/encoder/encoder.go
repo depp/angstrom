@@ -71,9 +71,9 @@ func (b *Bandwidth) MarshalText() (text []byte, err error) {
 
 // A Configuration configures the encoder settings.
 type Configuration struct {
-	Bandwidth   Bandwidth `json:"bandwidth"`
-	Bitrate     int       `json:"bitrate"`
-	Independent bool      `json:"independent"`
+	Bandwidth   Bandwidth
+	Bitrate     int
+	Independent bool
 }
 
 // An AudioPacket contains a packet of audio and the configuration to be used for
