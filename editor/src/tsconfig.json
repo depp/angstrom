@@ -6,10 +6,5 @@
       "ES2015",
     ]
   },
-  "files": [
-    "audio.ts",
-    "drag.ts",
-    "main.ts",
-    "waveform.ts"
-  ]
+  "include": ["*.ts"]
 }

@@ -1,6 +1,6 @@
 import Vue from "vue";
 
-import { Clip } from "./audio";
+import { AudioClip } from "./audio";
 import { drag } from "./drag";
 
 interface Waveform {

@@ -1,14 +1,14 @@
 let ctx: AudioContext | null = null;
-let clip: Clip | null = null;
+let clip: AudioClip | null = null;
 
-export class Clip {
+export class AudioClip {
   private length: number;
   private buffer: AudioBuffer;
   private node: AudioBufferSourceNode | null = null;
   private startTime: number = 0;
   private resumeTime: number = 0;
   private atEnd: boolean = false;
-  onupdated: ((c: Clip) => void) | null = null;
+  onupdated: ((c: AudioClip) => void) | null = null;
 
   constructor(arr: Float32Array) {
     this.length = arr.length;

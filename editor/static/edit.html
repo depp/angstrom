@@ -15,6 +15,12 @@
   </head>
   <body>
 
+    <!--
+         =======================================================================
+         Audio Waves
+         =======================================================================
+    -->
+
     <script type="text/x-template" id="audio-wave-template">
       <g xmlns="http://www.w3.org/2000/svg">
         <rect :width="width" :height="height" class="wave-bg" />
@@ -48,11 +54,15 @@
       </div>
     </script>
 
-    <script type="text/x-template" id="none">
-    </script>
+    <!--
+         =======================================================================
+         Clips
+         =======================================================================
+    -->
 
-    <script type="text/x-template" id="inputlist-template">
+    <script type="text/x-template" id="clip-list-template">
       <div>
+        <div v-if="error" class="alert alert-danger">Error: {{ error.message }}</div>
         <template v-if="!loading">
           <ul class="breadcrumb">
             <li class="breadcrumb-item active">
@@ -61,9 +71,9 @@
           </ul>
           <h2>Input</h2>
           <ul>
-            <li v-for="item in items">
-              <router-link :to="'/input/' + item.url">
-                {{ item.name }}
+            <li v-for="clip in clips">
+              <router-link :to="'/clip/' + clip.name">
+                {{ clip.title }}
               </router-link>
             </li>
           </ul>
@@ -71,7 +81,7 @@
       </div>
     </script>
 
-    <script type="text/x-template" id="input-template">
+    <script type="text/x-template" id="clip-template">
       <div>
         <template v-if="!loading && !error">
           <ul class="breadcrumb">
@@ -124,19 +134,26 @@
             </button>
           </div>
         </template>
+        <div v-if="error" class="alert alert-danger">Error: {{ error.message }}</div>
       </div>
     </script>
+
+    <!--
+         =======================================================================
+         Main page
+         =======================================================================
+    -->
 
     <nav class="navbar navbar-expand-md navbar-dark bg-dark">
       <h1 class="navbar-brand">Opuscraft</h1>
       <div class="collapse navbar-collapse">
         <ul class="navbar-nav mr-auto">
           <li class="nav-item">
-            <a class="nav-link" href="#/input">Input</a></li>
+            <a class="nav-link" href="#/clip">Clips</a></li>
           <li class="nav-item">
-            <a class="nav-link" href="#/phone">Phones</a></li>
+            <a class="nav-link" href="#/class">Sounds</a></li>
           <li class="nav-item">
-            <a class="nav-link" href="#/output">Output</a></li>
+            <a class="nav-link" href="#/output">Outputs</a></li>
         </ul>
       </div>
     </nav>
