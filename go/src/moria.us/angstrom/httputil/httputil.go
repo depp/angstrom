@@ -10,6 +10,15 @@ import (
 	"strconv"
 )
 
+// Log logs an HTTP response.
+func Log(r *http.Request, status int, msg string) {
+	if 400 <= status && status <= 599 && status != 404 {
+		log.Println(r.Method, r.URL, status, msg)
+	} else {
+		log.Println(r.Method, r.URL, status)
+	}
+}
+
 var errTemplate = template.Must(template.New("error").Parse(`<!doctype html>
 <html>
   <head>
@@ -38,11 +47,7 @@ func ServeErrorf(w http.ResponseWriter, r *http.Request, status int,
 		Title:   http.StatusText(status),
 		Message: fmt.Sprintf(format, a...),
 	}
-	if 400 <= status && status <= 599 && status != 404 {
-		log.Println(r.Method, r.URL, status, data.Message)
-	} else {
-		log.Println(r.Method, r.URL, status)
-	}
+	Log(r, status, data.Message)
 	var buf bytes.Buffer
 	ctype := "text/html;charset=UTF-8"
 	if err := errTemplate.Execute(&buf, data); err != nil {

@@ -115,6 +115,7 @@ type Clip struct {
 	ClipInfo
 	Slices   []*Slice   `json:"slices"`
 	Segments []*Segment `json:"segments"`
+	Data     []int16    `json:"-"`
 }
 
 func (c *Clip) isDefault() bool {

@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -20,7 +19,8 @@ import (
 type webContextKey struct{}
 
 type handler struct {
-	mux *chi.Mux
+	mux   *chi.Mux
+	audio *audioHandler
 
 	proj  *project.Project
 	mutex sync.Mutex
@@ -45,7 +45,7 @@ func handleError(w http.ResponseWriter, r *http.Request, err error) {
 }
 
 func writeJSON(w http.ResponseWriter, r *http.Request, status int, d interface{}) {
-	log.Println(r.Method, r.URL, status)
+	httputil.Log(r, status, "")
 
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
@@ -193,13 +193,26 @@ func updateSegment(w http.ResponseWriter, r *http.Request) {}
 
 // =================================================================================================
 
+func clipAudio(w http.ResponseWriter, r *http.Request) {
+	clip, err := getClipData(r)
+	if err != nil {
+		handleError(w, r, err)
+		return
+	}
+	getHandler(r).audio.serve(w, r, clip.Data)
+}
+
+// =================================================================================================
+
+// NewHandler creates an HTTP handler for servign the REST API.
 func NewHandler(p *project.Project) http.Handler {
-	r := chi.NewMux()
-	r.Route("/clip", func(r chi.Router) {
+	mux := chi.NewMux()
+	mux.Route("/clip", func(r chi.Router) {
 		r.Get("/", getClips)
 		r.Route("/{clip}", func(r chi.Router) {
 			r.Get("/", getClip)
 			r.Put("/", updateClip)
+			r.Mount("/input", http.HandlerFunc(clipAudio))
 			r.Route("/slice", func(r chi.Router) {
 				r.Get("/", getSlices)
 				r.Post("/", insertSlice)
@@ -221,7 +234,8 @@ func NewHandler(p *project.Project) http.Handler {
 		})
 	})
 	return &handler{
-		mux:  r,
-		proj: p,
+		mux:   mux,
+		audio: newAudioHandler(),
+		proj:  p,
 	}
 }

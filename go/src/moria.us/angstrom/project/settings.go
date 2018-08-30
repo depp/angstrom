@@ -99,8 +99,15 @@ func (p *Project) ScanAudio() error {
 		}
 		if c, ok := p.files[file]; ok {
 			c.Length = len(data)
+			c.Data = data
 		} else {
-			p.addClip(&Clip{ClipInfo: ClipInfo{File: file, Length: len(data)}})
+			p.addClip(&Clip{
+				ClipInfo: ClipInfo{
+					File:   file,
+					Length: len(data),
+				},
+				Data: data,
+			})
 		}
 	}
 	return nil

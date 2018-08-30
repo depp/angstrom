@@ -158,7 +158,7 @@ func (h *handler) serveScript(w http.ResponseWriter, r *http.Request, name strin
 		data = s.SourceMap
 		hdr.Set("Content-Type", "text/plain;charset=UTF-8")
 	}
-	log.Println(r.Method, r.URL, http.StatusOK)
+	httputil.Log(r, http.StatusOK, "")
 	w.Header().Set("Cache-Control", "no-cache")
 	http.ServeContent(w, r, "", s.ModTime, bytes.NewReader(data))
 	return true
@@ -182,7 +182,7 @@ func (h *handler) serveFile(w http.ResponseWriter, r *http.Request, name string)
 		return true
 	}
 	defer fp.Close()
-	log.Println(r.Method, r.URL, http.StatusOK)
+	httputil.Log(r, http.StatusOK, "")
 	http.ServeContent(w, r, filepath.Base(name), st.ModTime(), fp)
 	return true
 }
