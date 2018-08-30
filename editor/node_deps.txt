@@ -1,0 +1,9 @@
+vue.js                  vue/dist/vue.js
+vue-router.js           vue-router/dist/vue-router.js
+
+jquery.js               jquery/dist/jquery.js
+popper.js               popper.js/dist/umd/popper.js
+bootstrap.js            bootstrap/dist/js/bootstrap.js
+bootstrap.css           bootstrap/dist/css/bootstrap.css
+bootstrap-vue.css       bootstrap-vue/dist/bootstrap-vue.css
+bootstrap-vue.js        bootstrap-vue/dist/bootstrap-vue.js

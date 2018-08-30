@@ -11,7 +11,7 @@ export default {
     "vue",
     "vue-router",
   ],
-  input: "script/main",
+  input: "editor/src/main",
   output: {
     file: "edit.js",
     format: "iife",

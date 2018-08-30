@@ -27,11 +27,11 @@ func (e *CompileError) Error() string {
 
 const (
 	nodeModules  = "node_modules"
-	scriptDir    = "script"
+	scriptDir    = "editor/src"
 	tsc          = "node_modules/.bin/tsc"
-	tsconfig     = "script/tsconfig.json"
+	tsconfig     = "editor/src/tsconfig.json"
 	rollup       = "node_modules/.bin/rollup"
-	rollupconfig = "script/rollup.config.js"
+	rollupconfig = "editor/src/rollup.config.js"
 )
 
 // An Input is an input source file needed to compile the script.
@@ -42,6 +42,8 @@ type Input struct {
 
 // A Script is the compiled editor script.
 type Script struct {
+	Root      string
+	ModTime   time.Time
 	Script    []byte
 	SourceMap []byte
 	Inputs    []Input
@@ -218,9 +220,24 @@ func Compile(root string) (*Script, error) {
 		return nil, err
 	}
 	return &Script{
+		Root:      root,
+		ModTime:   time.Now(),
 		Script:    js,
 		SourceMap: srcmap,
 		Inputs:    inputs,
 		Errors:    stderr.Bytes(),
 	}, nil
+}
+
+// IsOutdated returns true if the inputs have changed and the script should be
+// recompiled.
+func (s *Script) IsOutdated() bool {
+	for _, in := range s.Inputs {
+		fname := filepath.Join(s.Root, in.Name)
+		st, err := os.Stat(fname)
+		if err != nil || st.ModTime().After(in.ModTime) {
+			return true
+		}
+	}
+	return false
 }
