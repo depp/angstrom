@@ -205,7 +205,7 @@ func clipAudio(w http.ResponseWriter, r *http.Request) {
 // =================================================================================================
 
 // NewHandler creates an HTTP handler for servign the REST API.
-func NewHandler(p *project.Project) http.Handler {
+func NewHandler(root string, p *project.Project) http.Handler {
 	mux := chi.NewMux()
 	mux.Route("/clip", func(r chi.Router) {
 		r.Get("/", getClips)
@@ -235,7 +235,7 @@ func NewHandler(p *project.Project) http.Handler {
 	})
 	return &handler{
 		mux:   mux,
-		audio: newAudioHandler(),
+		audio: newAudioHandler(root),
 		proj:  p,
 	}
 }

@@ -48,7 +48,7 @@ func run(projDir string) error {
 	}
 
 	r := chi.NewMux()
-	r.Mount("/api", restapi.NewHandler(p))
+	r.Mount("/api", restapi.NewHandler(srcDir, p))
 	r.Mount("/editor", editor.NewHandler(srcDir))
 	fmt.Printf("Listening on http://%s/\n", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {
