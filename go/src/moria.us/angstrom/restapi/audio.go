@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -80,7 +81,12 @@ func getData(w http.ResponseWriter, r *http.Request) {
 	binary.Write(w, binary.LittleEndian, ad.data)
 }
 
-func (h *audioHandler) createSpectrogram(data []int16) ([]byte, error) {
+type spectrogramConfig struct {
+	step int
+	bins int
+}
+
+func (h *audioHandler) createSpectrogram(data []int16, cfg *spectrogramConfig) ([]byte, error) {
 	if h.python == "" {
 		return nil, errors.New("Python 3 is not available")
 	}
@@ -93,6 +99,8 @@ func (h *audioHandler) createSpectrogram(data []int16) ([]byte, error) {
 		Path: h.python,
 		Args: []string{
 			h.python, "-m", "spectrogram",
+			"-step", strconv.Itoa(cfg.step),
+			"-bins", strconv.Itoa(cfg.bins),
 		},
 		Dir:    h.pylib,
 		Stdin:  bytes.NewReader(abuf.Bytes()),
@@ -107,14 +115,55 @@ func (h *audioHandler) createSpectrogram(data []int16) ([]byte, error) {
 	return stdout.Bytes(), nil
 }
 
+func spectrogramParams(q url.Values, size int) (*spectrogramConfig, error) {
+	step := 240
+	if v := q.Get("step"); v != "" {
+		n, err := strconv.Atoi(v)
+		step = n
+		if err != nil || step <= 0 {
+			return nil, errors.New("invalid step")
+		}
+		if step > audio.SampleRate {
+			return nil, errors.New("step is too large")
+		}
+		if step*2048 < size {
+			return nil, errors.New("step is too small")
+		}
+	}
+	bins := 1024
+	if v := q.Get("bins"); v != "" {
+		n, err := strconv.Atoi(v)
+		bins = n
+		if err != nil || bins <= 0 {
+			return nil, errors.New("invalid bins")
+		}
+		if bins&(bins-1) != 0 {
+			return nil, errors.New("bins is not a power of two")
+		}
+		if bins > 1024 {
+			return nil, errors.New("bins is too large")
+		}
+	}
+	return &spectrogramConfig{
+		step: step,
+		bins: bins,
+	}, nil
+}
+
 func getSpectrogram(w http.ResponseWriter, r *http.Request) {
 	ad := getAudioData(r)
+	cfg, err := spectrogramParams(r.URL.Query(), len(ad.data))
+	if err != nil {
+		httputil.ServeErrorf(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
 	h := ad.handler
-	img, err := h.createSpectrogram(ad.data)
+	img, err := h.createSpectrogram(ad.data, cfg)
 	if err != nil {
 		httputil.ServeErrorf(w, r, http.StatusInternalServerError, err.Error())
 		return
 	}
+	httputil.Log(r, http.StatusOK, "")
 	w.Header().Set("Content-Type", "image/png")
 	w.Header().Set("Content-Length", strconv.Itoa(len(img)))
 	w.WriteHeader(http.StatusOK)
