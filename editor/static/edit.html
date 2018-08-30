@@ -51,6 +51,9 @@
                 y="0.5"
                 class="audionav-selection"
                 @pointerdown="clickSelection" />
+          <line :x1="(playhead/navScale|0)" :x2="(playhead/navScale|0)"
+                y1="0" :y2="height"
+                class="audionav-playhead" />
         </svg>
       </div>
     </script>
@@ -73,7 +76,7 @@
           <h2>Input</h2>
           <ul>
             <li v-for="clip in clips">
-              <router-link :to="'/clip/' + clip.name">
+              <router-link :to="'/clip/' + clip.title">
                 {{ clip.title }}
               </router-link>
             </li>
@@ -92,10 +95,10 @@
               </router-link>
             </li>
             <li class="breadcrumb-item active">
-              {{ item.name }}
+              {{ item.title }}
             </li>
           </ul>
-          <h2>{{item.name}}</h2>
+          <h2>{{item.title}}</h2>
           <audio-nav
               :url="url + '/input'"
               :data="data"
@@ -103,6 +106,7 @@
               :height="100"
               :pos="pos"
               :scale="scale"
+              :playhead="playhead"
               @update:pos="updatePos">
           </audio-nav>
           <svg xmlns="http://www.w3.org/2000/svg"

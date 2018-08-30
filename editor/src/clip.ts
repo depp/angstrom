@@ -65,6 +65,7 @@ export const Clip = Vue.extend({
       scale: 32,
       pos: 0,
       playing: false,
+      playhead: 0,
       width: kWidth,
     };
   },
@@ -103,8 +104,17 @@ export const Clip = Vue.extend({
         this.item = item;
         this.data = new Int16Array(data);
         this.clip = new AudioClip(this.data);
+        let updatePlayhead = () => {
+          let clip = this.clip;
+          if (!clip || !clip.isplaying) {
+            return;
+          }
+          this.playhead = clip.position;
+          window.requestAnimationFrame(updatePlayhead);
+        };
         this.clip.onupdated = (c: AudioClip) => {
           this.playing = c.isplaying;
+          window.requestAnimationFrame(updatePlayhead);
         };
       }).catch((e: Error) => {
         console.error(e);

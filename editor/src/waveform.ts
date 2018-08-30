@@ -218,6 +218,7 @@ Vue.component("audio-nav", {
     height: {type: Number},
     pos: {type: Number},
     scale: {type: Number},
+    playhead: {type: Number},
   },
   template: "#audio-nav-template",
   computed: {

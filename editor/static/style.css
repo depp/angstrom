@@ -47,3 +47,7 @@
   stroke: red;
   cursor: grab;
 }
+.audionav-playhead {
+  stroke-width: 2px;
+  stroke: blue;
+}
