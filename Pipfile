@@ -4,13 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-flask = "*"
 numpy = "*"
 pillow = "*"
-mypy = "*"
 scipy = "*"
-matplotlib = "*"
-toml = "*"
 
 [dev-packages]
 
