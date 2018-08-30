@@ -35,7 +35,8 @@
              xmlns="http://www.w3.org/2000/svg"
              xmlns:xlink="http://www.w3.org/1999/xlink">
           <rect :width="width" :height="(height*0.5|0)" />
-          <image v-bind="{'xlink:href': spectrogram}" />
+          <image v-bind="{'xlink:href': spectrogram}"
+                 :transform="'scale(1 ' + ((height*0.5|0)/65) + ')'" />
           <g :transform="'translate(0 ' + (height*0.5|0) + ')'">
             <audio-wave
                 :data="data"
@@ -96,7 +97,7 @@
           </ul>
           <h2>{{item.name}}</h2>
           <audio-nav
-              :url="url + '/audio'"
+              :url="url + '/input'"
               :data="data"
               :width="width"
               :height="100"

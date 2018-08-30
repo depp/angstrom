@@ -10,13 +10,17 @@ export class AudioClip {
   private atEnd: boolean = false;
   onupdated: ((c: AudioClip) => void) | null = null;
 
-  constructor(arr: Float32Array) {
+  constructor(arr: Int16Array) {
+    let farr = new Float32Array(arr.length);
+    for (let i = 0; i < arr.length; i++) {
+      farr[i] = arr[i] / 32768;
+    }
     this.length = arr.length;
     this.buffer = new AudioBuffer({
       length: arr.length,
       sampleRate: 48000,
     })
-    this.buffer.copyToChannel(arr, 0);
+    this.buffer.copyToChannel(farr, 0);
   }
 
   pause() {

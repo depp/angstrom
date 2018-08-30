@@ -8,7 +8,7 @@ interface Waveform {
   length: number;
 }
 
-function arrayToPath(arr: Float32Array, height: number,
+function arrayToPath(arr: Int16Array, height: number,
                      reverse: boolean, c1: string, c2: string): string {
   let p = "";
   let c = c1;
@@ -19,7 +19,7 @@ function arrayToPath(arr: Float32Array, height: number,
       p += " ";
       p += x;
       p += " ";
-      p += (arr[x] * y + y) | 0;
+      p += (arr[x] / 32768 * y + y) | 0;
       p += " ";
       c = c2;
     }
@@ -29,7 +29,7 @@ function arrayToPath(arr: Float32Array, height: number,
       p += " ";
       p += x;
       p += " ";
-      p += (arr[x] * y + y) | 0;
+      p += (arr[x] / 32768 * y + y) | 0;
       p += " ";
       c = c2;
     }
@@ -40,11 +40,11 @@ function arrayToPath(arr: Float32Array, height: number,
 const SVGNS = "http://www.w3.org/2000/svg";
 
 class SimpleWaveform {
-  private w: Float32Array;
-  constructor(data: Float32Array, scale: number) {
+  private w: Int16Array;
+  constructor(data: Int16Array, scale: number) {
     let nn = data.length;
     let n = nn / scale | 0;
-    let w = new Float32Array(n)
+    let w = new Int16Array(n)
     let sidx = 0;
     for (let pidx = 0; pidx < n; pidx++) {
       let starget = Math.min(nn, (pidx + 1) * scale | 0);
@@ -68,13 +68,13 @@ class SimpleWaveform {
 }
 
 class DoubleWaveform {
-  private w0: Float32Array;
-  private w1: Float32Array;
-  constructor(data: Float32Array, scale: number) {
+  private w0: Int16Array;
+  private w1: Int16Array;
+  constructor(data: Int16Array, scale: number) {
     let nn = data.length;
     let n = nn / scale | 0;
-    let w0 = new Float32Array(n);
-    let w1 = new Float32Array(n);
+    let w0 = new Int16Array(n);
+    let w1 = new Int16Array(n);
     let sidx = 0;
     for (let pidx = 0; pidx < n; pidx++) {
       let starget = Math.min(nn, (pidx + 1) * scale | 0)
@@ -103,7 +103,7 @@ class DoubleWaveform {
 }
 
 class WaveformView {
-  private readonly data: Float32Array;
+  private readonly data: Int16Array;
   private readonly parent: SVGElement;
 
   // Range of pixels present in the waveform view.
@@ -117,7 +117,7 @@ class WaveformView {
   // The wave data, rescaled to have one sample per pixel.
   private wave: Waveform|null = null;
 
-  constructor(data: Float32Array, parent: SVGElement) {
+  constructor(data: Int16Array, parent: SVGElement) {
     this.data = data;
     this.parent = parent;
   }
@@ -213,7 +213,7 @@ Vue.component("audio-wave", {
 Vue.component("audio-nav", {
   props: {
     url: {type: String},
-    data: {type: Float32Array},
+    data: {type: Int16Array},
     width: {type: Number},
     height: {type: Number},
     pos: {type: Number},

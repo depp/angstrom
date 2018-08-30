@@ -60,7 +60,7 @@ export const Clip = Vue.extend({
       loading: false,
       error: null as Error|null,
       item: null as ClipInfo|null,
-      data: null as Float32Array|null,
+      data: null as Int16Array|null,
       clip: null as AudioClip|null,
       scale: 32,
       pos: 0,
@@ -92,7 +92,7 @@ export const Clip = Vue.extend({
               throw Error(r.statusText);
             return r.json()
           }),
-        fetch(url + "/audio/data")
+        fetch(url + "/input/data")
           .then((r: Response) => {
             if (!r.ok)
               throw Error(r.statusText);
@@ -101,7 +101,7 @@ export const Clip = Vue.extend({
       ]).then(([item, data]) => {
         this.loading = false;
         this.item = item;
-        this.data = new Float32Array(data);
+        this.data = new Int16Array(data);
         this.clip = new AudioClip(this.data);
         this.clip.onupdated = (c: AudioClip) => {
           this.playing = c.isplaying;
