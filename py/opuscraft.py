@@ -1,13 +1,70 @@
 import json
 import os
+import subprocess
 import sys
+import tempfile
 
 import numpy
 import scipy.fftpack
 import scipy.signal
 
-from . import audio
-from . import encode
+def load_audio(path):
+    with open(path, "rb") as fp:
+        out = subprocess.run(
+            [
+                "sox",
+                "-",
+                "--channels", "1",
+                "--bits", "32",
+                "--encoding", "floating-point",
+                "--endian", "little",
+                "--type", "raw",
+                "-",
+                "rate", "48000",
+            ],
+            stdin=fp,
+            stdout=subprocess.PIPE,
+            check=True,
+        )
+    return numpy.frombuffer(out.stdout, dtype=numpy.float32)
+
+LENGTHS = [120, 240, 480, 960, 1920, 2880]
+
+class Packet:
+    def __init__(self, data, *, bitrate=6000, bandwidth="NB",
+                 independent=False):
+        if len(data) not in LENGTHS:
+            raise ValueError("invalid packet length")
+        self.data = data
+        self.bitrate = bitrate
+        self.bandwidth = bandwidth
+        self.independent = independent
+
+def encode(path, packets, stream):
+    exe = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "opustool/opustool")
+
+    with tempfile.TemporaryDirectory("opuscraft") as d:
+        dpath = os.path.join(d, "data")
+        spath = os.path.join(d, "script")
+        with open(spath, "w") as sfp:
+            with open(dpath, "wb") as dfp:
+                n = 0
+                for packet in packets:
+                    dfp.write(packet.data.tobytes())
+                    m = packet.data.shape[0]
+                    print("audio", n, m, file=sfp)
+                    n += m
+                    print("bitrate", packet.bitrate, file=sfp)
+                    print("bandwidth", packet.bandwidth, file=sfp)
+                    if packet.independent:
+                        print("independent", file=sfp)
+                    print("end", file=sfp)
+            for n in stream:
+                print("emit", n, file=sfp)
+
+        subprocess.run([exe, dpath, spath, path], check=True)
 
 def get_period(data, pos):
     tmax = 600
@@ -96,7 +153,7 @@ class Encoder:
             self.emit(*rest.split())
         elif cmd == "input":
             fpath = os.path.join(self.dirpath, rest)
-            self.clipdata = audio.Audio.load(fpath).data
+            self.clipdata = load_audio(fpath)
         elif cmd == "output":
             self.stream = Stream()
             self.files[rest] = self.stream
@@ -140,7 +197,7 @@ class Encoder:
         for n in [60,40,20,10]:
             m = n * 48
             while len(clip) >= m:
-                packet = encode.Packet(clip[:m], independent=independent)
+                packet = Packet(clip[:m], independent=independent)
                 clip = clip[m:]
                 packets.append((len(self.packets), n))
                 self.packets.append(packet)
@@ -172,13 +229,10 @@ class Encoder:
             i += 1
 
     def save(self):
-        s = encode.Stream()
-        s.packets = self.packets
         for name, stream in self.files.items():
             fpath = os.path.join(self.dirpath, name)
             os.makedirs(os.path.dirname(fpath), exist_ok=True)
-            s.stream = stream.packets
-            s.encode(fpath)
+            encode(fpath, self.packets, stream.packets)
             obj = {
                 "marks": stream.marks + [stream.length],
                 "names": stream.names,
