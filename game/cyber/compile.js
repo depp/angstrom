@@ -125,7 +125,9 @@ async function compile(config) {
       {
         // Run ESLint on the modules.
         transform(source, id) {
-          diagnostics[id].push(...linter.executeOnText(source, id).results[0].messages);
+          diagnostics[id].push(
+            ...linter.executeOnText(source, id).results[0].messages,
+          );
         },
       },
     ],
