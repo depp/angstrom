@@ -10,6 +10,7 @@ export default {
     "bootstrap-vue",
     "vue",
     "vue-router",
+    "jquery",
   ],
   input: "editor/src/main",
   output: {
@@ -20,6 +21,7 @@ export default {
     globals: {
       "vue": "Vue",
       "vue-router": "VueRouter",
+      "jquery": "$",
     },
   },
   plugins: [

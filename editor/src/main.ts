@@ -8,6 +8,8 @@ const router = new VueRouter({
   routes: [
     { path: "/clip", component: ClipList },
     { path: "/clip/:clipID", component: Clip },
+    // { path: "/clip/:clipID/slice/:sliceID", component: Slice },
+    // { path: "/clip/:clipID/segment/:segmentID", component: Segment },
   ],
 });
 

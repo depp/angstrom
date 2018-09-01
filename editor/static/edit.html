@@ -67,16 +67,16 @@
     <script type="text/x-template" id="clip-list-template">
       <div>
         <div v-if="error" class="alert alert-danger">Error: {{ error.message }}</div>
-        <template v-if="!loading">
+        <template v-if="!loading && !error">
           <ul class="breadcrumb">
             <li class="breadcrumb-item active">
-              Input
+              Clips
             </li>
           </ul>
-          <h2>Input</h2>
+          <h2>Clips</h2>
           <ul>
             <li v-for="clip in clips">
-              <router-link :to="'/clip/' + clip.title">
+              <router-link :to="'/clip/' + clip.name">
                 {{ clip.title }}
               </router-link>
             </li>
@@ -85,13 +85,25 @@
       </div>
     </script>
 
+    <script type="text/x-template" id="clip-item-template">
+      <g xmlns="http://www.w3.org/2000/svg">
+        <rect v-for="(item, index) in items"
+              :x="((item.pos-pos)/scale|0)"
+              :width="(item.length/scale|0)"
+              height="32"
+              :class="index === selected ? 'clip-item-selected' : 'clip-item'"
+        />
+      </g>
+    </script>
+
     <script type="text/x-template" id="clip-template">
       <div>
+        <div v-if="error" class="alert alert-danger">Error: {{ error.message }}</div>
         <template v-if="!loading && !error">
           <ul class="breadcrumb">
             <li class="breadcrumb-item">
-              <router-link to="/input">
-                Input
+              <router-link to="/clip">
+                Clips
               </router-link>
             </li>
             <li class="breadcrumb-item active">
@@ -111,35 +123,120 @@
           </audio-nav>
           <svg xmlns="http://www.w3.org/2000/svg"
                :width="width"
-               height="200">
+               height="256"
+               class="audiowave">
             <audio-wave
                 :data="data"
                 :width="width"
-                :height="200"
+                :height="192"
                 :pos="pos"
                 :scale="scale">
             </audio-wave>
+            <line :x1="(playhead/scale|0)" :x2="(playhead/scale|0)"
+                  y1="0" :y2="192"
+                  class="audionav-playhead" />
+            <g transform="translate(0 192)">
+              <clip-item-view
+                  :items="slices"
+                  :width="width"
+                  :pos="pos"
+                  :scale="scale"
+                  :selected="selectedSlice"
+              />
+            </g>
+            <g transform="translate(0 224)">
+              <clip-item-view
+                  :items="segments"
+                  :width="width"
+                  :pos="pos"
+                  :scale="scale"
+                  :selected="selectedSegment"
+              />
+            </g>
           </svg>
-          <div>
-            <button type="button" class="btn btn-light"
-                    @click="stop">
-              <img src="icon/stop">
-            </button>
-            <button type="button" class="btn btn-light"
-                    @click="playPause">
-              <img :src="playing ? 'icon/pause' : 'icon/play_arrow'">
-            </button>
-            <button type="button" class="btn btn-light"
-                    @click="zoomIn">
-              <img src="icon/zoom_in">
-            </button>
-            <button type="button" class="btn btn-light"
-                    @click="zoomOut">
-              <img src="icon/zoom_out">
-            </button>
+          <div class="btn-toolbar justify-content-between">
+            <div class="btn-group">
+              <button type="button" class="btn btn-light"
+                      @click="stop">
+                <img src="icon/stop">
+              </button>
+              <button type="button" class="btn btn-light"
+                      @click="playPause">
+                <img :src="playing ? 'icon/pause' : 'icon/play_arrow'">
+              </button>
+              <button type="button" class="btn btn-light"
+                      @click="playPause">
+                <img :src="playing ? 'icon/pause_circle_filled' : 'icon/play_circle_filled'">
+              </button>
+              <button type="button" class="btn btn-light"
+                      @click="zoomIn">
+                <img src="icon/zoom_in">
+              </button>
+              <button type="button" class="btn btn-light"
+                      @click="zoomOut">
+                <img src="icon/zoom_out">
+              </button>
+            </div>
+            <div class="btn-group">
+              <button type="button" class="btn btn-secondary"
+                      @click="decimateShow">
+                Decimate
+              </button>
+            </div>
+          </div>
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-md-6">
+                <h3>Slices</h3>
+                <ol v-if="slices.length">
+                  <li v-for="slice in slices">
+                    Slice
+                  </li>
+                </ol>
+                <p v-else>(No slices)</p>
+              </div>
+              <div class="col-md-6">
+                <h3>Segments</h3>
+                <ol v-if="segments.length">
+                  <li v-for="segment in segments">
+                    Segment
+                  </li>
+                </ol>
+                <p v-else>(No segments)</p>
+              </div>
+            </div>
           </div>
         </template>
-        <div v-if="error" class="alert alert-danger">Error: {{ error.message }}</div>
+        <div class="modal" ref="decimateModal" id="decimate-modal">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Decimate</h5>
+              </div>
+              <div class="modal-body">
+                <p>Replaces the slices and segments in the clip with evenly spaced ones.
+                  Choose a decimation ratio, 1 or higher.</p>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">Ratio</span>
+                  </div>
+                  <input v-model.number="decimateRatio"
+                         type="number" class="form-control" min="1" max="20" value="1">
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        @click="decimateCancel">
+                  Cancel
+                </button>
+                <button type="button" class="btn btn-primary"
+                        @click="decimateApply">
+                  Decimate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </script>
 

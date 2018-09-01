@@ -51,3 +51,17 @@
   stroke-width: 2px;
   stroke: blue;
 }
+.audiowave {
+}
+.clip-item {
+  stroke-width: 1px;
+  stroke: black;
+  fill: gray;
+  cursor: crosshair;
+}
+.clip-item-selected {
+  stroke-width: 1px;
+  stroke: #33c;
+  fill: #39f;
+  cursor: crosshair;
+}

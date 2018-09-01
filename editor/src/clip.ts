@@ -1,4 +1,5 @@
 import Vue from "vue";
+import $ from "jquery";
 
 import { AudioClip } from "./audio";
 
@@ -54,6 +55,46 @@ function zoomScale(level: number): number {
 
 const kWidth = 800;
 
+type Bandwidth = "Auto" | "NB" | "MB" | "WB" | "SWB" | "FB";
+
+interface EncoderConfig {
+  bandwidth?: Bandwidth;
+  bitrate?: number;
+  independent?: boolean;
+}
+
+interface Packet extends EncoderConfig {
+  length: number;
+}
+
+interface SliceInfo extends EncoderConfig {
+  clip?: string;
+  index?: number;
+  class?: string;
+  selected?: boolean;
+  pos: number;
+  packets: Packet[];
+  comment?: string;
+  length?: number;
+}
+
+interface SegmentInfo {
+  source: string;
+  pos: number;
+  length: number;
+}
+
+Vue.component("clip-item-view", {
+  props: [
+    "items",
+    "width",
+    "pos",
+    "scale",
+    "selected",
+  ],
+  template: "#clip-item-template",
+});
+
 export const Clip = Vue.extend({
   data() {
     return {
@@ -62,11 +103,16 @@ export const Clip = Vue.extend({
       item: null as ClipInfo|null,
       data: null as Int16Array|null,
       clip: null as AudioClip|null,
+      slices: [] as Slice[],
+      selectedSlice: 0,
+      segments: [] as Segment[],
+      selectedSegment: 0,
       scale: 32,
       pos: 0,
       playing: false,
       playhead: 0,
       width: kWidth,
+      decimateRatio: 1,
     };
   },
   created() {
@@ -169,6 +215,44 @@ export const Clip = Vue.extend({
       } else {
         c.play();
       }
+    },
+    decimateShow() {
+      this.decimateRatio = 1;
+      $(this.$refs.decimateModal).modal("show");
+    },
+    decimateCancel() {
+      $(this.$refs.decimateModal).modal("hide");
+    },
+    decimateApply() {
+      $(this.$refs.decimateModal).modal("hide");
+      let ratio = this.decimateRatio | 0;
+      if (ratio < 1 || ratio > 20) {
+        console.error("Ratio out of range:", ratio)
+        return;
+      }
+      const pksize = 480;
+      const stride = pksize * ratio;
+      const offset = pksize * (ratio - 1) * 0.5 | 0;
+      const n = Math.max((this.item!.length / stride + 0.5) | 0, 1);
+      let slices: Slice[] = [];
+      let segments: Segment[] = [];
+      for (let i = 0; i < n; i++) {
+        let name = this.item!.name + "." + i;
+        slices.push({
+          class: name,
+          selected: true,
+          pos: stride * i + offset,
+          packets: [{length: pksize}],
+          length: pksize,
+        });
+        segments.push({
+          source: name,
+          pos: stride * i,
+          length: stride,
+        });
+      }
+      this.slices = slices;
+      this.segments = segments;
     },
   },
 });

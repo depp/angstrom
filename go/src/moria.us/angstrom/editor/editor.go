@@ -50,7 +50,7 @@ func readDeps(name string) (*deps, error) {
 		if len(fields) != 2 {
 			return nil, fmt.Errorf("%q:%d: got %d fields, expected 2", name, lineno, len(fields))
 		}
-		src := path.Join("/", fields[0])
+		src := path.Clean(fields[0])
 		dest := path.Clean(fields[1])
 		if _, ok := files[src]; ok {
 			return nil, fmt.Errorf("%q:%d: duplicate file %q", name, lineno, src)
