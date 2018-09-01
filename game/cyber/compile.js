@@ -146,9 +146,9 @@ async function compile(config) {
   }
   let errorCount = 0;
   let warningCount = 0;
-  for (let messages of Object.values(diagnostics)) {
-    for (let message of messages) {
-      let s = message.severity;
+  for (const messages of Object.values(diagnostics)) {
+    for (const message of messages) {
+      const s = message.severity;
       if (s >= 2) {
         errorCount++;
       } else if (s >= 1) {
@@ -156,8 +156,8 @@ async function compile(config) {
       }
     }
   }
-  let success = errorCount === 0;
-  let result = {
+  const success = errorCount === 0;
+  const result = {
     success,
     errorCount,
     warningCount,

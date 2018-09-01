@@ -6,8 +6,8 @@ module.exports = {
   rules: {
     'no-console': 'off',
     'import/no-extraneous-dependencies': 'devDependencies',
-    'no-restricted-syntax': 0,
-    'prefer-const': 0,
-    'no-plusplus': 0,
+    'no-restricted-syntax': 'off',
+    'prefer-const': 'warn',
+    'no-plusplus': 'off',
   },
 };
