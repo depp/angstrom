@@ -3,9 +3,9 @@ const path = require('path');
 const { promisify } = require('util');
 
 const rollup = require('rollup');
-const sourcemaps = require('rollup-plugin-sourcemaps');
-
 const { CLIEngine } = require('eslint');
+const minimist = require('minimist');
+const terser = require('terser');
 
 const close = promisify(fs.close);
 const fstat = promisify(fs.fstat);
@@ -80,8 +80,37 @@ function pushDiagnostic(diagnostics, e, severity) {
   diagnostics[file].push(msg);
 }
 
-async function compile(config) {
-  const linter = new CLIEngine();
+const baseConfig = {
+  minify: true,
+  lint: true,
+  sourceMap: true,
+};
+const configNames = {
+  release: {},
+  debug: {
+    minify: false,
+  },
+};
+
+function getConfig(options) {
+  const config = options.config || 'debug';
+  const obj = { config };
+  const nobj = configNames[config];
+  if (!nobj) {
+    throw Error(`Unknown configuration ${JSON.stringify(config)}`);
+  }
+  Object.assign(obj, nobj, baseConfig);
+  for (const key of Object.keys(obj)) {
+    const value = options[key];
+    if (value !== undefined && value !== null) {
+      obj[key] = value;
+    }
+  }
+  return obj;
+}
+
+async function compile(options) {
+  const config = getConfig(options);
   // Map from relative file path to list of ESLint diagnostics and our own that
   // we added. The empty string marks the root level.
   const diagnostics = { '': [] };
@@ -116,24 +145,31 @@ async function compile(config) {
           return fpath;
         },
         // Load the files and store the modification time.
-        async load(id) {
-          // const source = await files.load(id);
+        load(id) {
           diagnostics[id] = [];
           return files.load(id);
         },
       },
-      {
-        // Run ESLint on the modules.
-        transform(source, id) {
-          diagnostics[id].push(
-            ...linter.executeOnText(source, id).results[0].messages,
-          );
-        },
-      },
     ],
   };
-  if (config === 'debug') {
-    inputOptions.pluigns.push(sourcemaps());
+  if (config.lint) {
+    const linter = new CLIEngine();
+    inputOptions.plugins.push({
+      transform(source, id) {
+        diagnostics[id].push(
+          ...linter.executeOnText(source, id).results[0].messages,
+        );
+      },
+    });
+  }
+  if (config.minify) {
+    inputOptions.plugins.push({
+      renderChunk(code) {
+        return terser.minify(code, {
+          sourceMap: true,
+        });
+      },
+    });
   }
   let bundle;
   try {
@@ -164,17 +200,37 @@ async function compile(config) {
     diagnostics,
     inputs: files.deps,
   };
-  if (success) {
-    const outputOptions = {
-      format: 'iife',
-      name: 'Game',
-      sourcemap: true,
-    };
-    const { code, map } = await bundle.generate(outputOptions);
-    result.code = code;
-    result.map = map;
+  if (!success) {
+    return result;
   }
+  const outputOptions = {
+    format: 'iife',
+    name: 'Game',
+    sourcemap: true,
+  };
+  const { code, map } = await bundle.generate(outputOptions);
+  result.code = code;
+  result.map = map;
   return result;
 }
 
-compile().then(r => console.log(JSON.stringify(r, null, '  ')));
+const command = minimist(process.argv.slice(2), {
+  string: ['config'],
+  boolean: ['minify', 'lint', 'sourceMap'],
+  alias: {
+    'source-map': 'sourceMap',
+  },
+  default: {
+    config: 'debug',
+    minify: null,
+    lint: null,
+    sourceMap: null,
+  },
+  unknown(arg) {
+    throw Error(`Unknown argument ${JSON.stringify(arg)}`);
+  },
+});
+
+compile(command).then((r) => {
+  console.log(JSON.stringify(r, null, '  '));
+});
