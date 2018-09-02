@@ -116,7 +116,9 @@ async function compile(options) {
   const diagnostics = { '': [] };
   const files = new FileSet();
   const inputOptions = {
-    input: '/game/cyber/main',
+    input: config.config === 'release'
+      ? '/game/cyber/main.release'
+      : '/game/cyber/main',
     onwarn(w) {
       pushDiagnostic(diagnostics, w, 1);
     },
@@ -124,14 +126,15 @@ async function compile(options) {
       {
         // Resolve the modules to JS files.
         async resolveId(id, origin) {
-          if (origin) {
-            return null;
-          }
           let mpath = id;
           if (mpath.startsWith('/')) {
             mpath = path.normalize(mpath.replace(/^\/+/, ''));
           } else {
-            mpath = path.join(path.dirname(origin), mpath);
+            diagnostics[origin || ''].push({
+              severity: 2,
+              message: `Cannot resolve relative import ${JSON.stringify(mpath)}`,
+            });
+            return null;
           }
           const fpath = `${mpath}.js`;
           const source = await files.load(fpath);
@@ -205,9 +208,11 @@ async function compile(options) {
   }
   const outputOptions = {
     format: 'iife',
-    name: 'Game',
     sourcemap: true,
   };
+  if (config.config !== 'release') {
+    outputOptions.name = 'Game';
+  }
   try {
     const { code, map } = await bundle.generate(outputOptions);
     result.code = code;
