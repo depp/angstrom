@@ -1,55 +1,35 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/go-chi/chi"
 
-	"moria.us/angstrom/editor"
-	"moria.us/angstrom/project"
-	"moria.us/angstrom/restapi"
+	"moria.us/angstrom/game"
+	"moria.us/angstrom/httputil"
+	"moria.us/angstrom/util"
 )
 
 const addr = "localhost:9000"
 
-func findRoot() (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	for {
-		pkg := filepath.Join(dir, "package.json")
-		if _, err := os.Stat(pkg); err == nil {
-			return dir, nil
-		}
-		old := dir
-		dir = filepath.Dir(dir)
-		if old == dir {
-			return "", errors.New("cannot find angstrom root directory")
-		}
-	}
+func getIndex(w http.ResponseWriter, r *http.Request) {
+	httputil.ServeFile(w, r, "server/index.html")
 }
 
-func run(projDir string) error {
-	srcDir, err := findRoot()
+func run() error {
+	root, err := util.FindRoot()
 	if err != nil {
 		return err
 	}
-	p, err := project.Open(projDir)
-	if err != nil {
-		return fmt.Errorf("could not open project: %v", err)
-	}
-	if err := p.ScanAudio(); err != nil {
-		return fmt.Errorf("could not scan audio: %v", err)
+	if err := os.Chdir(root); err != nil {
+		return err
 	}
 
 	r := chi.NewMux()
-	r.Mount("/api", restapi.NewHandler(srcDir, p))
-	r.Mount("/editor", editor.NewHandler(srcDir))
+	r.Get("/", getIndex)
+	r.Mount("/debug", game.NewHandler())
 	fmt.Printf("Listening on http://%s/\n", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		return fmt.Errorf("could not listen: %v", err)
@@ -58,11 +38,11 @@ func run(projDir string) error {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Fprintln(os.Stderr, "error: usage: angstrom <project-dir>")
+	if len(os.Args) != 1 {
+		fmt.Fprintln(os.Stderr, "error: usage: angstrom")
 		os.Exit(2)
 	}
-	if err := run(os.Args[1]); err != nil {
+	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}

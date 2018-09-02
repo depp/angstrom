@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -70,4 +71,25 @@ func ServeErrorf(w http.ResponseWriter, r *http.Request, status int,
 // NotFound serves a 404 Not Found error.
 func NotFound(w http.ResponseWriter, r *http.Request) {
 	ServeErrorf(w, r, http.StatusNotFound, "Object %q not found", r.URL)
+}
+
+func serveFile(w http.ResponseWriter, r *http.Request, name string) error {
+	fp, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
+	st, err := fp.Stat()
+	if err != nil {
+		return err
+	}
+	http.ServeContent(w, r, name, st.ModTime(), fp)
+	return nil
+}
+
+// ServeFile serves a file from the filesystem.
+func ServeFile(w http.ResponseWriter, r *http.Request, name string) {
+	if err := serveFile(w, r, name); err != nil {
+		ServeErrorf(w, r, http.StatusInternalServerError, "Error: %v", err)
+	}
 }
