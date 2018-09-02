@@ -3,6 +3,10 @@ module.exports = {
     browser: true,
   },
   extends: 'airbnb-base',
+  parserOptions: {
+    ecmaVersion: 8, // 2017
+    sourceType: 'module',
+  },
   rules: {
     'no-console': 'off',
     'import/no-extraneous-dependencies': 'devDependencies',
