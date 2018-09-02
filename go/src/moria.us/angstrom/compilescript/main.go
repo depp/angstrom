@@ -1,59 +1,66 @@
 package main
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
+	"strings"
 
 	"moria.us/angstrom/script"
+	"moria.us/angstrom/util"
 )
 
 func run(root string) error {
 	fmt.Printf("ROOT: %q\n", root)
-	s, err := script.Compile(root)
-	if err != nil {
-		if e, ok := err.(*script.CompileError); ok {
-			os.Stdout.Write(e.Stderr)
-		}
+	if err := os.Chdir(root); err != nil {
 		return err
 	}
-	fmt.Println("==== Errors ====")
-	os.Stdout.Write(s.Errors)
-	fmt.Println()
-
-	fmt.Println("==== Script ====")
-	os.Stdout.Write(s.Script)
-	fmt.Println()
-
-	fmt.Println("==== Source Map ====")
-	os.Stdout.Write(s.SourceMap)
-	fmt.Println()
-
-	fmt.Println("==== Inputs ====")
-	for _, f := range s.Inputs {
-		fmt.Println(f)
-	}
-
-	return nil
-}
-
-func findRoot() (string, error) {
-	dir, err := os.Getwd()
+	s, err := script.Build("game/cyber/compile.js")
 	if err != nil {
-		return "", err
+		return fmt.Errorf("could not build script: %v", err)
 	}
-	for {
-		pkg := filepath.Join(dir, "package.json")
-		if _, err := os.Stat(pkg); err == nil {
-			return dir, nil
+
+	if s.Success {
+		fmt.Println("Build succeeded")
+		fmt.Println("===== Script =====")
+		nl := 0
+		for _, line := range strings.Split(s.Code, "\n") {
+			for ; nl > 0; nl-- {
+				fmt.Println()
+			}
+			if line == "" {
+				nl++
+			} else {
+				fmt.Println("  " + line)
+			}
 		}
-		old := dir
-		dir = filepath.Dir(dir)
-		if old == dir {
-			return "", errors.New("cannot find angstrom root directory")
+		fmt.Println("===== Source Map =====")
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("  ", "  ")
+		fmt.Print("  ")
+		if err := enc.Encode(s.Map); err != nil {
+			return err
+		}
+	} else {
+		fmt.Println("Build failed")
+	}
+	fmt.Println("===== Diagnostics =====")
+	for name, msgs := range s.Diagnostics {
+		if len(msgs) == 0 {
+			continue
+		}
+		fmt.Printf("  %s:\n", name)
+		for _, msg := range msgs {
+			var sev string
+			if msg.Severity >= 2 {
+				sev = "error"
+			} else {
+				sev = "warning"
+			}
+			fmt.Printf("    %d:%d  %s  %s\n", msg.Line, msg.Column, sev, msg.Message)
 		}
 	}
+	return nil
 }
 
 func main() {
@@ -65,7 +72,7 @@ func main() {
 	if len(os.Args) == 2 {
 		root = os.Args[1]
 	} else {
-		r, err := findRoot()
+		r, err := util.FindRoot()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "error:", err)
 			os.Exit(1)
