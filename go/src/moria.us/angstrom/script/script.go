@@ -2,8 +2,11 @@
 package script
 
 import (
+	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 )
@@ -44,7 +47,7 @@ type Script struct {
 }
 
 // Build builds the script and returns the build result.
-func Build(compile string, args ...string) (*Script, error) {
+func Build(compile string, args []string) (*Script, error) {
 	var buf bytes.Buffer
 	cmdArgs := []string{compile}
 	cmdArgs = append(cmdArgs, args...)
@@ -59,4 +62,43 @@ func Build(compile string, args ...string) (*Script, error) {
 		return nil, err
 	}
 	return scr, nil
+}
+
+// WatchBuild builds the script and writes the build result to the channel. The
+// script is then rebuilt as the sources change.
+func WatchBuild(ctx context.Context, out chan<- *Script, compile string, args []string) error {
+	var cmd *exec.Cmd
+	rp, wp, err := os.Pipe()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if rp != nil {
+			rp.Close()
+		}
+		if wp != nil {
+			wp.Close()
+		}
+		cmd.Wait()
+	}()
+	cmdArgs := []string{compile, "--watch"}
+	cmdArgs = append(cmdArgs, args...)
+	cmd = exec.CommandContext(ctx, "node", cmdArgs...)
+	cmd.Stdout = wp
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	wp.Close()
+	wp = nil
+	sc := bufio.NewScanner(rp)
+	for sc.Scan() {
+		scr := new(Script)
+		fmt.Printf("BYTES: %q\n", sc.Text())
+		if err := json.Unmarshal(sc.Bytes(), scr); err != nil {
+			return err
+		}
+		out <- scr
+	}
+	return sc.Err()
 }

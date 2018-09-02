@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -10,16 +12,7 @@ import (
 	"moria.us/angstrom/util"
 )
 
-func run(root string) error {
-	fmt.Printf("ROOT: %q\n", root)
-	if err := os.Chdir(root); err != nil {
-		return err
-	}
-	s, err := script.Build("game/cyber/compile.js")
-	if err != nil {
-		return fmt.Errorf("could not build script: %v", err)
-	}
-
+func showResult(s *script.Script) error {
 	if s.Success {
 		fmt.Println("Build succeeded")
 		fmt.Println("===== Script =====")
@@ -63,14 +56,45 @@ func run(root string) error {
 	return nil
 }
 
+func run(root string, watch bool) error {
+	const compile = "game/cyber/compile.js"
+	fmt.Printf("ROOT: %q\n", root)
+	if err := os.Chdir(root); err != nil {
+		return err
+	}
+	if !watch {
+		s, err := script.Build(compile, nil)
+		if err != nil {
+			return fmt.Errorf("could not build script: %v", err)
+		}
+		return showResult(s)
+	}
+	ch := make(chan *script.Script)
+	go func() {
+		defer close(ch)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		if err := script.WatchBuild(ctx, ch, compile, nil); err != nil {
+			fmt.Fprintln(os.Stderr, "Error: WatchBuild:", err)
+		}
+	}()
+	for s := range ch {
+		showResult(s)
+	}
+	return nil
+}
+
 func main() {
-	if len(os.Args) > 2 {
+	var watch bool
+	flag.BoolVar(&watch, "watch", false, "watch for changes and run continuously")
+	flag.Parse()
+	if flag.NArg() > 1 {
 		fmt.Fprintln(os.Stderr, "error: usage: compilescript [<root-dir>]")
 		os.Exit(2)
 	}
 	var root string
-	if len(os.Args) == 2 {
-		root = os.Args[1]
+	if flag.NArg() == 1 {
+		root = flag.Arg(0)
 	} else {
 		r, err := util.FindRoot()
 		if err != nil {
@@ -79,7 +103,7 @@ func main() {
 		}
 		root = r
 	}
-	if err := run(root); err != nil {
+	if err := run(root, watch); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}

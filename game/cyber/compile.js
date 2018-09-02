@@ -6,9 +6,11 @@ const rollup = require('rollup');
 const { CLIEngine } = require('eslint');
 const minimist = require('minimist');
 const terser = require('terser');
+const chokidar = require('chokidar');
 
 const close = promisify(fs.close);
 const fstat = promisify(fs.fstat);
+const stat = promisify(fs.stat);
 const open = promisify(fs.open);
 const readFile = promisify(fs.readFile);
 
@@ -16,15 +18,16 @@ const readFile = promisify(fs.readFile);
 class FileSet {
   constructor() {
     this.files = {};
-    this.deps = [];
   }
 
   load(file) {
-    const source = this.files[file];
+    let source = this.files[file];
     if (source) {
-      return source;
+      return source.contents;
     }
-    const r = (async () => {
+    source = { file, mtime: null };
+    this.files[file] = source;
+    source.contents = (async () => {
       let fd;
       try {
         fd = await open(file, 'r');
@@ -41,15 +44,11 @@ class FileSet {
       } finally {
         await close(fd);
       }
-      this.files[file] = text;
-      this.deps.push({
-        path: file,
-        mtime: st.mtime,
-      });
+      source.contents = text;
+      source.mtime = st.mtime;
       return text;
     })();
-    this.files[file] = r;
-    return r;
+    return source.contents;
   }
 }
 
@@ -109,8 +108,7 @@ function getConfig(options) {
   return obj;
 }
 
-async function compile(options) {
-  const config = getConfig(options);
+async function compile(config) {
   // Map from relative file path to list of ESLint diagnostics and our own that
   // we added. The empty string marks the root level.
   const diagnostics = { '': [] };
@@ -178,6 +176,7 @@ async function compile(options) {
   try {
     bundle = await rollup.rollup(inputOptions);
   } catch (e) {
+    console.error(e);
     if (e.code === undefined) {
       throw e;
     }
@@ -201,7 +200,7 @@ async function compile(options) {
     errorCount,
     warningCount,
     diagnostics,
-    inputs: files.deps,
+    inputs: Object.values(files.files).map(f => ({ file: f.file, mtime: f.mtime })),
   };
   if (!success) {
     return result;
@@ -222,9 +221,86 @@ async function compile(options) {
   return result;
 }
 
+async function watch(config) {
+  const watcher = chokidar.watch('game/cyber', {
+    ignored: /(^|\/)\.|~$/,
+    persistent: true,
+  });
+  let dirty = true;
+  let seen = {};
+  let inputs = {};
+  let files = {};
+  let compiling = false;
+  watcher
+    .on("add", didChange)
+    .on("change", didChange)
+    .on("unlink", didUnlink);
+  build();
+  async function didChange(path) {
+    updateFile(path, (await stat(path)).mtime);
+  }
+  function didUnlink(path) {
+    updateFile(path, null);
+  }
+  function updateFile(file, mtime) {
+    files[file] = mtime;
+    if (dirty) {
+      // Already dirty, can't make it any dirtier.
+      return;
+    }
+    const input = inputs[file];
+    if (input === undefined) {
+      // Not an input.
+      return;
+    }
+    if (!(mtime === null || mtime > input || mtime < input)) {
+      // Unchanged from last compilation.
+      return;
+    }
+    dirty = true;
+    setImmediate(build);
+  }
+  function build() {
+    if (!dirty || compiling) {
+      return;
+    }
+    compiling = true;
+    return compile(config)
+      .then((script) => {
+        process.stdout.write(JSON.stringify(script) + '\n');
+        let ninputs = {};
+        let ndirty = false;
+        for (const input of script.inputs) {
+          ninputs[input.file] = input.mtime;
+          const mtime = files[input.file];
+          if (mtime === undefined) {
+            continue;
+          }
+          if (mtime === null) {
+            if (input.mtime != null) {
+              ndirty = true;
+            }
+          } else if (input.mtime === null || input.mtime < mtime || input.mtime > mtime) {
+            ndirty = true;
+          }
+        }
+        dirty = ndirty;
+        inputs = ninputs;
+        compiling = false;
+        if (ndirty) {
+          setImmediate(build);
+        }
+      })
+      .catch((e) => {
+        compiling = false;
+        console.error(e);
+      });
+  }
+}
+
 const command = minimist(process.argv.slice(2), {
   string: ['config'],
-  boolean: ['minify', 'lint', 'sourceMap'],
+  boolean: ['minify', 'lint', 'sourceMap', 'watch'],
   alias: {
     'source-map': 'sourceMap',
   },
@@ -239,9 +315,17 @@ const command = minimist(process.argv.slice(2), {
   },
 });
 
-compile(command).then((r) => {
-  console.log(JSON.stringify(r, null, '  '));
-}).catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+if (command.watch) {
+  watch(getConfig(command))
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+} else {
+  compile(getConfig(command)).then((r) => {
+    console.log(JSON.stringify(r, null, '  '));
+  }).catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}
