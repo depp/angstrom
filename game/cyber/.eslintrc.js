@@ -1,6 +1,7 @@
 module.exports = {
   env: {
     browser: true,
+    es6: true,
   },
   extends: 'airbnb-base',
   parserOptions: {
@@ -10,7 +11,6 @@ module.exports = {
   rules: {
     // Just let Rollup catch import errors.
     'import/no-absolute-path': 'off',
-    'import/no-extraneous-dependencies': 'devDependencies',
     'import/no-unresolved': 'off',
 
     // Too useful for development.
@@ -24,4 +24,18 @@ module.exports = {
     // A bit too annoying to leave as an error.
     'prefer-const': 'warn',
   },
+  overrides: [
+    {
+      files: ["compile.js"],
+      env: {
+        browser: false,
+        node: true,
+      },
+      rules: {
+        'import/no-absolute-path': 'error',
+        'import/no-unresolved': 'error',
+        'import/no-extraneous-dependencies': 'devDependencies',
+      },
+    }
+  ],
 };
