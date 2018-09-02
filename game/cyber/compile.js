@@ -208,11 +208,9 @@ async function compile(options) {
   }
   const outputOptions = {
     format: 'iife',
+    name: 'Game',
     sourcemap: true,
   };
-  if (config.config !== 'release') {
-    outputOptions.name = 'Game';
-  }
   try {
     const { code, map } = await bundle.generate(outputOptions);
     result.code = code;
