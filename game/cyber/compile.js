@@ -208,9 +208,14 @@ async function compile(options) {
     name: 'Game',
     sourcemap: true,
   };
-  const { code, map } = await bundle.generate(outputOptions);
-  result.code = code;
-  result.map = map;
+  try {
+    const { code, map } = await bundle.generate(outputOptions);
+    result.code = code;
+    result.map = map;
+  } catch (e) {
+    pushDiagnostic(diagnostics, e, 2);
+    result.success = false;
+  }
   return result;
 }
 
@@ -233,4 +238,7 @@ const command = minimist(process.argv.slice(2), {
 
 compile(command).then((r) => {
   console.log(JSON.stringify(r, null, '  '));
+}).catch((e) => {
+  console.error(e);
+  process.exit(1);
 });
