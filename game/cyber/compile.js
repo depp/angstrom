@@ -99,7 +99,7 @@ function getConfig(options) {
   if (!nobj) {
     throw Error(`Unknown configuration ${JSON.stringify(config)}`);
   }
-  Object.assign(obj, nobj, baseConfig);
+  Object.assign(obj, baseConfig, nobj);
   for (const key of Object.keys(obj)) {
     const value = options[key];
     if (value !== undefined && value !== null) {
