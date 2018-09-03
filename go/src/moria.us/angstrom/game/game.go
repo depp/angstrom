@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -57,7 +58,7 @@ func (b *builder) ticker() {
 	}
 }
 
-func reader(ws *websocket.Conn) {
+func reader(b *builder, ws *websocket.Conn, closed *int32) {
 	defer ws.Close()
 	ws.SetReadLimit(1024)
 	ws.SetReadDeadline(time.Now().Add(pongTimeout))
@@ -66,6 +67,10 @@ func reader(ws *websocket.Conn) {
 		ws.SetReadDeadline(time.Now().Add(pongTimeout))
 		return nil
 	})
+	defer func() {
+		atomic.StoreInt32(closed, 1)
+		b.cond.Broadcast()
+	}()
 	for {
 		_, _, err := ws.ReadMessage()
 		if err != nil {
@@ -75,7 +80,7 @@ func reader(ws *websocket.Conn) {
 	}
 }
 
-func writer(b *builder, ws *websocket.Conn) {
+func writer(b *builder, ws *websocket.Conn, closed *int32) {
 	var tick int
 	defer func() {
 		b.mutex.Lock()
@@ -85,11 +90,15 @@ func writer(b *builder, ws *websocket.Conn) {
 	}()
 	for {
 		b.mutex.Lock()
-		for b.tick == tick {
+		for b.tick == tick && atomic.LoadInt32(closed) == 0 {
 			b.cond.Wait()
 		}
 		tick = b.tick
 		b.mutex.Unlock()
+
+		if atomic.LoadInt32(closed) != 0 {
+			return
+		}
 
 		ws.SetWriteDeadline(time.Now().Add(writeTimeout))
 		if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
@@ -108,8 +117,9 @@ func getSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("Upgraded")
 	b := newBuilder()
-	go reader(ws)
-	go writer(b, ws)
+	closed := new(int32)
+	go reader(b, ws, closed)
+	go writer(b, ws, closed)
 }
 
 // =================================================================================================
