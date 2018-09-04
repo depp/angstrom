@@ -71,7 +71,9 @@ func WatchBuild(ctx context.Context, out chan<- *Script, compile string, args []
 	if err != nil {
 		return err
 	}
+	ctx, cancel := context.WithCancel(ctx)
 	defer func() {
+		cancel()
 		if rp != nil {
 			rp.Close()
 		}

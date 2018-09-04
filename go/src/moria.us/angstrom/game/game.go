@@ -129,7 +129,8 @@ func (b *builder) scriptBuilder() {
 		for {
 			if err := script.WatchBuild(ctx, ch, "game/cyber/compile.js",
 				[]string{"--config=debug"}); err != nil {
-				log.Printf("Build failed, retrying (delay = %v)", buildFailureRetry)
+				log.Println("Error: Build failed:", err)
+				log.Printf("Retrying (delay = %v)", buildFailureRetry)
 				<-time.After(buildFailureRetry)
 			}
 		}
