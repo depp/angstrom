@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
+	"path"
 
 	"github.com/go-chi/chi"
 
@@ -15,7 +17,18 @@ import (
 const addr = "localhost:9000"
 
 func getIndex(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-cache")
 	httputil.ServeFile(w, r, "server/index.html")
+}
+
+func getNode(w http.ResponseWriter, r *http.Request) {
+	p := chi.URLParam(r, "*")
+	if path.Join("/", p)[1:] != p {
+		log.Println("NOPE", p)
+		httputil.NotFound(w, r)
+		return
+	}
+	httputil.ServeFile(w, r, "node_modules/"+p)
 }
 
 func run() error {
@@ -30,6 +43,7 @@ func run() error {
 	r := chi.NewMux()
 	r.Get("/", getIndex)
 	r.Mount("/debug", game.NewHandler(root))
+	r.Get("/node_modules/*", getNode)
 	fmt.Printf("Listening on http://%s/\n", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		return fmt.Errorf("could not listen: %v", err)
