@@ -84,6 +84,9 @@ func serveFile(w http.ResponseWriter, r *http.Request, name string) error {
 	if err != nil {
 		return err
 	}
+	if st.IsDir() {
+		return os.ErrNotExist
+	}
 	http.ServeContent(w, r, name, st.ModTime(), fp)
 	return nil
 }
@@ -91,7 +94,11 @@ func serveFile(w http.ResponseWriter, r *http.Request, name string) error {
 // ServeFile serves a file from the filesystem.
 func ServeFile(w http.ResponseWriter, r *http.Request, name string) {
 	if err := serveFile(w, r, name); err != nil {
-		ServeErrorf(w, r, http.StatusInternalServerError, "Error: %v", err)
+		if os.IsNotExist(err) {
+			NotFound(w, r)
+		} else {
+			ServeErrorf(w, r, http.StatusInternalServerError, "Error: %v", err)
+		}
 	}
 }
 
