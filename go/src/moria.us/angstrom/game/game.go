@@ -334,6 +334,7 @@ func NewHandler(root string) http.Handler {
 	mux.NotFound(httputil.NotFound)
 	mux.Get("/", getIndex)
 	mux.Get("/load.js", getFile)
+	mux.Get("/style.css", getFile)
 	mux.Get("/build-socket", getSocket)
 	mux.Get("/data/*", getData)
 	return &handler{

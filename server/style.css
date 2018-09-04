@@ -1,0 +1,82 @@
+body {
+  margin: 1rem;
+  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: #555;
+}
+
+h1 {
+  margin: 0;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+/* ========================================================================== */
+
+#status {
+  margin: 0.5rem 0;
+}
+
+#status p {
+  margin: 0;
+  padding: 0.5rem;
+}
+
+.status-ok {
+  display: none;
+}
+
+.status-loading {
+  border: 1px solid #bbb;
+  background: #ddd;
+}
+.status-loading p:before {
+  content: "Loading: ";
+}
+
+.status-error {
+  border: 1px solid red;
+  background: #fcc;
+}
+.status-error p:before {
+  content: "Loading: ";
+}
+
+/* ========================================================================== */
+
+#diagnostics {
+  background: #ddd;
+  border: 1px solid #bbb;
+}
+#diagnostics h2 {
+  background: #ddd;
+  margin: 0;
+  padding: 0 0.5rem;
+}
+
+.file {
+  margin: 0;
+}
+.file h3 {
+  margin: 0;
+  padding: 0 0.5rem;
+}
+.file ul {
+  margin: 0;
+  list-style: none;
+}
+
+.message h4 {
+  margin: 0;
+}
+.message p {
+  margin: 0;
+}
+.message-loc {
+  font-weight: normal;
+}
+.message pre {
+  margin: 0 0 0.5rem 1rem;
+}
+.code-error {
+  text-decoration: red double underline;
+}

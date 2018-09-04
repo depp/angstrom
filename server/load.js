@@ -1,25 +1,135 @@
 'use strict';
 
+/* global Vue */
+
 (function loader() {
+  if (Vue === undefined) {
+    console.error('Vue did not load');
+  }
+
   function dataURL(name, stamp) {
     return `data/${encodeURI(name)}?t=${encodeURIComponent(stamp)}`;
   }
+
+  const status = (function status() {
+    const cmp = new Vue({
+      el: '#status',
+      data: {
+        status: 'loading',
+        message: 'Initializing',
+      },
+    });
+
+    function set(sclass, message) {
+      cmp.status = sclass;
+      cmp.message = message;
+    }
+
+    return {
+      set,
+    };
+  }());
 
   // ===========================================================================
   // Diagnostics
   // ===========================================================================
   const diagnostics = (function diagnostics() {
+    Vue.component('file-messages', {
+      props: ['file'],
+      template: '#file-messages',
+      mounted() {
+        this.renderText();
+      },
+      updated() {
+        this.renderText();
+      },
+      methods: {
+        renderText() {
+          const { code } = this.file;
+          if (code == null) {
+            return;
+          }
+          const lines = code.split('\n');
+          const msgs = this.file.messages;
+          let elt = this.$refs.list.firstChild;
+          for (let i = 0; i < msgs.length; i++, elt = elt.nextSibling) {
+            const last = elt.lastChild;
+            if (last.tagName === 'PRE') {
+              elt.removeChild(last);
+            }
+            const msg = msgs[i];
+            const line0 = msg.line;
+            if (!line0) {
+              continue;
+            }
+            const line1 = msg.endLine || line0;
+            const column0 = msg.column || 0;
+            const column1 = msg.endColumn || column0;
+            const preElt = document.createElement('pre');
+            const codeElt = document.createElement('code');
+            preElt.appendChild(codeElt);
+            let curElt = codeElt;
+            for (let j = line0; j <= line1; j++) {
+              let c0 = 0;
+              if (j === line0) {
+                c0 = column0;
+              } else {
+                curElt.appendChild(document.createTextNode('\n'));
+              }
+              let c1 = 0;
+              if (j === line1) {
+                c1 = column1;
+              }
+              const line = lines[j - 1];
+              let idx = 0;
+              if (c0 > 0) {
+                if (c0 > 1) {
+                  const text = document.createTextNode(line.substring(0, c0 - 1));
+                  idx = c0 - 1;
+                  curElt.appendChild(text);
+                }
+                curElt = document.createElement('span');
+                curElt.className = 'code-error';
+                codeElt.appendChild(curElt);
+              }
+              if (c1 > 1) {
+                c1 = Math.min(line.length, c1);
+                let s = line.substring(idx, c1);
+                if (idx === c1) {
+                  s += '\u00a0';
+                }
+                const text = document.createTextNode(s);
+                idx = c1;
+                curElt.appendChild(text);
+                curElt = codeElt;
+              }
+              if (idx < line.length) {
+                const text = document.createTextNode(line.substring(idx));
+                curElt.appendChild(text);
+              }
+            }
+            elt.appendChild(preElt);
+          }
+        },
+      },
+    });
+
+    const cmp = new Vue({
+      el: '#diagnostics',
+      data: {
+        files: {},
+      },
+    });
+
     const manifest = {};
     const data = {};
-    let flat = {};
 
     function update() {
-      const nflat = {};
-      for (const v of Object.values(data)) {
-        Object.assign(nflat, v);
+      const files = {};
+      for (const set of Object.values(data)) {
+        Object.assign(files, set);
       }
-      flat = nflat;
-      console.log(flat);
+      cmp.files = files;
     }
 
     async function load(name, stamp) {
@@ -29,11 +139,12 @@
         console.error(`Could not load ${url}: ${resp.statusText}`);
         return;
       }
-      const d = await resp.json();
-      if (manifest[name] === stamp) {
-        data[name] = d;
-        update();
+      const file = await resp.json();
+      if (manifest[name] !== stamp) {
+        return;
       }
+      data[name] = file;
+      update();
     }
 
     function changed(name, stamp) {
@@ -52,35 +163,42 @@
     };
   }());
 
-  const ws = new WebSocket(`ws://${window.location.host}/debug/build-socket`);
-  ws.addEventListener('error', (e) => {
-    console.error('SOCKET ERROR', e);
-  });
-  ws.addEventListener('open', (e) => {
-    console.log('SOCKET OPEN', e);
-  });
-  ws.addEventListener('close', (e) => {
-    console.log('SOCKET CLOSED', e);
-  });
-  ws.addEventListener('message', (e) => {
-    const delta = JSON.parse(e.data);
-    for (const file of Object.keys(delta)) {
-      const stamp = delta[file];
-      const i = file.indexOf('/');
-      let root = file;
-      if (i !== -1) {
-        root = file.substring(0, i);
+  // ===========================================================================
+  // WebSocket
+  // ===========================================================================
+  (function runsocket() {
+    const ws = new WebSocket(`ws://${window.location.host}/debug/build-socket`);
+    ws.addEventListener('error', (e) => {
+      status.set('error', `Socket error: ${e.message}`);
+    });
+    ws.addEventListener('open', () => {
+      status.set('loading', 'Socket open, waiting for script');
+    });
+    ws.addEventListener('close', () => {
+      status.set('error', 'Socket closed');
+    });
+    ws.addEventListener('message', (e) => {
+      const delta = JSON.parse(e.data);
+      for (const file of Object.keys(delta)) {
+        const stamp = delta[file];
+        const i = file.indexOf('/');
+        let root = file;
+        if (i !== -1) {
+          root = file.substring(0, i);
+        }
+        switch (root) {
+          case 'game.js':
+            break;
+          case 'diagnostics':
+            diagnostics.changed(file, stamp);
+            break;
+          default:
+            console.warn(`Unknown file: ${JSON.stringify(file)}`);
+            break;
+        }
       }
-      switch (root) {
-        case 'game.js':
-          break;
-        case 'diagnostics':
-          diagnostics.changed(file, stamp);
-          break;
-        default:
-          console.warn(`Unknown file: ${JSON.stringify(file)}`);
-          break;
-      }
-    }
-  });
+    });
+  }());
+
+  // ===========================================================================
 }());

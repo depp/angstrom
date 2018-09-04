@@ -12,6 +12,10 @@ module.exports = {
     // Too useful for development.
     'no-console': 'off',
 
+    // One of the most ill-conceived rules I have ever seen.
+    'no-continue': 'off',
+    'no-plusplus': 'off',
+
     // JS13K code is going to be a little different.
     'no-restricted-syntax': 'off',
 

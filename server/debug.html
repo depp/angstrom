@@ -2,9 +2,34 @@
 <html>
   <head>
     <title>Cyber Agent</title>
+    <script src="/node_modules/vue/dist/vue.js" defer></script>
     <script src="load.js" defer></script>
+    <link href="style.css" rel="stylesheet" type="text/css">
   </head>
   <body>
     <h1>Cyber Agent</h1>
+    <div id="status" :class="'status-'+status">
+      <p>{{ message }}</p>
+    </div>
+    <div id="diagnostics">
+      <h2>Errors and Warnings</h2>
+      <file-messages v-for="file in files"
+                     :file="file"
+                     :key="file.file" />
+    </div>
+
+    <script type="text/x-template" id="file-messages">
+      <div class="file">
+        <h3>{{ file.file || 'Compilation' }}</h3>
+        <ul ref="list">
+          <li v-for="msg in file.messages"
+              :class="'message ' + (msg.severity >= 2 ? 'message-error' : 'message-warning')">
+            <h4><span v-if="msg.line" class="message-loc">{{ msg.line + (msg.column ? ':' + msg.column : '')}}</span>
+              <span class="message-severity">{{ msg.severity >= 2 ? 'Error' : 'Warning' }}:</span>
+              {{ msg.message }}</h4>
+          </li>
+        </ul>
+      </div>
+    </script>
   </body>
 </html>
