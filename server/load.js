@@ -167,6 +167,26 @@
   // WebSocket
   // ===========================================================================
   (function runsocket() {
+    let haveScript = false;
+    function loadScript(stamp) {
+      if (haveScript) {
+        return;
+      }
+      haveScript = true;
+      status.set('loading', 'Loading script');
+      const canvasElt = document.createElement('canvas');
+      canvasElt.width = 800;
+      canvasElt.height = 600;
+      canvasElt.id = 'g';
+      const statusElt = document.getElementById('status');
+      statusElt.parentNode.insertBefore(canvasElt, statusElt.nextSibling);
+      const scriptElt = document.createElement('script');
+      scriptElt.setAttribute('src', dataURL('game.js', stamp));
+      scriptElt.addEventListener('load', () => {
+        status.set('ok', 'Loaded');
+      });
+      document.head.appendChild(scriptElt);
+    }
     const ws = new WebSocket(`ws://${window.location.host}/debug/build-socket`);
     ws.addEventListener('error', (e) => {
       status.set('error', `Socket error: ${e.message}`);
@@ -188,6 +208,7 @@
         }
         switch (root) {
           case 'game.js':
+            loadScript(stamp);
             break;
           case 'diagnostics':
             diagnostics.changed(file, stamp);

@@ -9,7 +9,7 @@ let handle;
 // Main loop.
 function main(curTime) {
   handle = 0;
-  const a = Math.sin(curTime / 1000);
+  const a = Math.sin(curTime / 300) * 0.5 + 0.5;
   gl.clearColor(a * 0.6, a * 0.5, a * 0.4, 0.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   handle = window.requestAnimationFrame(main);
