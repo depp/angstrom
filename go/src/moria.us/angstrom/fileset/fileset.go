@@ -128,6 +128,9 @@ func (s *Set) Expire(stamp time.Time) {
 		return
 	}
 	copy(s.expiring, s.expiring[n:])
+	for i := range s.expiring[:len(s.expiring)-n] {
+		s.expiring[i] = nil
+	}
 	s.expiring = s.expiring[:len(s.expiring)-n]
 }
 
