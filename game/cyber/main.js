@@ -1,9 +1,5 @@
+import { gl } from '/game/cyber/gl';
 import { compileShaderProgram } from '/game/cyber/shader';
-
-// Canvas element.
-export const canvas = document.getElementById('g');
-// WebGL rendering context.
-export const gl = canvas.getContext('webgl', { alpha: false });
 
 // Handle to RequestAnimationFrame request.
 let handle;

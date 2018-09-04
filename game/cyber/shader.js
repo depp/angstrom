@@ -1,4 +1,4 @@
-import { gl } from '/game/cyber/main';
+import { gl } from '/game/cyber/gl';
 
 // Compile a shader program.
 export function compileShaderProgram(attributes, uniforms, auniforms, vertex, fragment) {
