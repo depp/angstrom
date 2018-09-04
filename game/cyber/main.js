@@ -1,16 +1,30 @@
-import { gl } from '/game/cyber/gl';
+import { gl } from '/game/cyber/global';
 import { compileShaderProgram } from '/game/cyber/shader';
+import {
+  initInput, clearInput, updateInput, xaxis, yaxis,
+} from '/game/cyber/input';
 
 // Handle to RequestAnimationFrame request.
 let handle;
+
+let prevTime = 0;
 
 // Shader program.
 let prog;
 let buf;
 
+let x = 0;
+let y = 0;
+
 // Main loop.
 function main(curTime) {
   handle = 0;
+
+  const dt = (curTime - prevTime) * 1e-3;
+  x += xaxis() * dt;
+  y += yaxis() * dt;
+  updateInput();
+  prevTime = curTime;
 
   gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
@@ -22,6 +36,7 @@ function main(curTime) {
   gl.enableVertexAttribArray(0);
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.uniform2f(prog.Offset, x, y);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 
   handle = window.requestAnimationFrame(main);
@@ -32,6 +47,7 @@ export function pause() {
   if (!handle) {
     return;
   }
+  clearInput();
   window.cancelAnimationFrame(main);
   handle = 0;
 }
@@ -46,8 +62,9 @@ export function unpause() {
 
 const vertex = `precision mediump float;
 attribute vec2 Pos;
+uniform vec2 Offset;
 void main() {
-  gl_Position = vec4(Pos, 0.0, 1.0);
+  gl_Position = vec4(Pos + Offset, 0.0, 1.0);
 }
 `;
 
@@ -57,7 +74,12 @@ const fragment = `void main() {
 `;
 
 if (gl) {
-  prog = compileShaderProgram('Pos', '', '', vertex, fragment);
+  initInput();
+  window.addEventListener('focus', unpause);
+  window.addEventListener('blur', pause);
+
+
+  prog = compileShaderProgram('Pos', 'Offset', '', vertex, fragment);
   buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
