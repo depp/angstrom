@@ -24,6 +24,9 @@ module.exports = {
     'no-plusplus': 'off',
     'no-restricted-syntax': 'off',
 
+    // Stylistic differences.
+    'no-use-before-define': 'off',
+
     // A bit too annoying to leave as an error.
     'prefer-const': 'warn',
   },

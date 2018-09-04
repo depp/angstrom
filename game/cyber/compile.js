@@ -245,20 +245,19 @@ async function watch(config) {
     persistent: true,
   });
   let dirty = true;
-  let seen = {};
   let inputs = {};
-  let files = {};
+  const files = {};
   let compiling = false;
   watcher
-    .on("add", didChange)
-    .on("change", didChange)
-    .on("unlink", didUnlink);
+    .on('add', didChange)
+    .on('change', didChange)
+    .on('unlink', didUnlink);
   build();
-  async function didChange(path) {
-    updateFile(path, (await stat(path)).mtime);
+  async function didChange(fpath) {
+    updateFile(fpath, (await stat(fpath)).mtime);
   }
-  function didUnlink(path) {
-    updateFile(path, null);
+  function didUnlink(fpath) {
+    updateFile(fpath, null);
   }
   function updateFile(file, mtime) {
     files[file] = mtime;
@@ -283,10 +282,11 @@ async function watch(config) {
       return;
     }
     compiling = true;
-    return compile(config)
+    compile(config)
       .then((script) => {
-        process.stdout.write(JSON.stringify(script) + '\n');
-        let ninputs = {};
+        process.stdout.write(JSON.stringify(script));
+        process.stdout.write('\n');
+        const ninputs = {};
         let ndirty = false;
         for (const input of script.inputs) {
           ninputs[input.file] = input.mtime;
