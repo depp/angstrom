@@ -13,6 +13,12 @@ module.exports = {
     'import/no-absolute-path': 'off',
     'import/no-unresolved': 'off',
 
+    // Complete garbage.
+    'import/prefer-default-export': 'off',
+
+    // OpenGL demands otherwise.
+    'no-bitwise': 'off',
+
     // Too useful for development.
     // TODO: Find a way to enable this for release builds.
     'no-console': 'off',
@@ -29,6 +35,9 @@ module.exports = {
 
     // A bit too annoying to leave as an error.
     'prefer-const': 'warn',
+
+    // Annoying.
+    'prefer-template': 'off',
   },
   overrides: [
     {
