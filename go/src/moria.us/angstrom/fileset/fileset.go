@@ -122,7 +122,7 @@ func (s *Set) Expire(stamp time.Time) {
 		}
 		f.versions[len(f.versions)-1] = nil
 		f.versions = f.versions[:len(f.versions)-1]
-		n = i
+		n = i + 1
 	}
 	if n == 0 {
 		return
