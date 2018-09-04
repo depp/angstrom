@@ -128,7 +128,7 @@ func (s *Set) Expire(stamp time.Time) {
 		return
 	}
 	copy(s.expiring, s.expiring[n:])
-	s.expiring = s.expiring[:n]
+	s.expiring = s.expiring[:len(s.expiring)-n]
 }
 
 // GetVersion returns a specific version of a file.
