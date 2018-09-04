@@ -246,10 +246,12 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 		httputil.NotFound(w, r)
 		return
 	}
+	w.Header().Set("Cache-Control", "no-cache")
 	httputil.ServeFile(w, r, "server/debug.html")
 }
 
 func getFile(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-cache")
 	httputil.ServeFile(w, r, filepath.Join("server", path.Base(r.URL.Path)))
 }
 
