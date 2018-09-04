@@ -202,21 +202,25 @@ async function compile(config) {
     diagnostics,
     inputs: Object.values(files.files).map(f => ({ file: f.file, mtime: f.mtime })),
   };
-  if (!success) {
-    return result;
+  if (success) {
+    const outputOptions = {
+      format: 'iife',
+      name: 'Game',
+      sourcemap: true,
+    };
+    try {
+      const { code, map } = await bundle.generate(outputOptions);
+      result.code = code;
+      result.map = map;
+    } catch (e) {
+      pushDiagnostic(diagnostics, e, 2);
+      result.success = false;
+    }
   }
-  const outputOptions = {
-    format: 'iife',
-    name: 'Game',
-    sourcemap: true,
-  };
-  try {
-    const { code, map } = await bundle.generate(outputOptions);
-    result.code = code;
-    result.map = map;
-  } catch (e) {
-    pushDiagnostic(diagnostics, e, 2);
-    result.success = false;
+  for (const k of Object.keys(diagnostics)) {
+    if (!diagnostics[k].length) {
+      delete diagnostics[k];
+    }
   }
   return result;
 }
