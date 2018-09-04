@@ -30,6 +30,13 @@ def load_audio(path):
 
 LENGTHS = [120, 240, 480, 960, 1920, 2880]
 
+class ZeroPacket:
+    def __init__(self, size):
+        self.size = size
+
+    def write(self, dfp, sfp):
+        print("zero", self.size, file=sfp)
+
 class Packet:
     def __init__(self, data, *, bitrate=6000, bandwidth="NB",
                  independent=False):
@@ -39,6 +46,16 @@ class Packet:
         self.bitrate = bitrate
         self.bandwidth = bandwidth
         self.independent = independent
+
+    def write(self, dfp, sfp):
+        dfp.write(self.data.tobytes())
+        print("audio", self.data.shape[0], file=sfp)
+        print("bitrate", self.bitrate, file=sfp)
+        print("bandwidth", self.bandwidth, file=sfp)
+        if self.independent:
+            print("independent", file=sfp)
+        print("end", file=sfp)
+        return self.data.shape[0]
 
 def encode(path, packets, stream):
     exe = os.path.join(
@@ -50,17 +67,8 @@ def encode(path, packets, stream):
         spath = os.path.join(d, "script")
         with open(spath, "w") as sfp:
             with open(dpath, "wb") as dfp:
-                n = 0
                 for packet in packets:
-                    dfp.write(packet.data.tobytes())
-                    m = packet.data.shape[0]
-                    print("audio", n, m, file=sfp)
-                    n += m
-                    print("bitrate", packet.bitrate, file=sfp)
-                    print("bandwidth", packet.bandwidth, file=sfp)
-                    if packet.independent:
-                        print("independent", file=sfp)
-                    print("end", file=sfp)
+                    packet.write(dfp, sfp)
             for n in stream:
                 print("emit", n, file=sfp)
 
@@ -129,6 +137,8 @@ class Encoder:
         self.words = {}
         self.files = {}
         self.dirpath = None
+        self.packets.append(ZeroPacket(480))
+        self.sounds["-"] = [(0, 10)]
 
     def run_script(self, path):
         fullpath = os.path.abspath(path)

@@ -315,6 +315,7 @@ static void run_script(const char *fname) {
     char line[256];
     // Audio data for packet.
     const float *audio_data = NULL;
+    unsigned long offset = 0;
     int audio_length = 0;
     int bitrate = 0;     // OPUS_SET_BITRATE
     int bandwidth = 0;   // OPUS_SET_BANDWIDTH
@@ -332,14 +333,11 @@ static void run_script(const char *fname) {
         if (nfields == 0)
             continue;
         if (strcmp(fields[0], "audio") == 0) {
-            check_args(nfields, 2);
+            check_args(nfields, 1);
             if (state != kStateInitial)
                 die(0, "unexpected audio command");
             char *e;
-            unsigned long offset = strtoul(fields[1], &e, 10);
-            if (*e != '\0')
-                die(0, "invalid offset");
-            unsigned long length = strtoul(fields[2], &e, 10);
+            unsigned long length = strtoul(fields[1], &e, 10);
             if (*e != '\0')
                 die(0, "invalid length");
             unsigned long alen = (unsigned long)gAudioLength;
@@ -352,6 +350,7 @@ static void run_script(const char *fname) {
             bandwidth = OPUS_BANDWIDTH_NARROWBAND;
             independent = 0;
             state = kStateAudio;
+            offset += length;
         } else if (strcmp(fields[0], "bitrate") == 0) {
             check_args(nfields, 1);
             if (state != kStateAudio)
@@ -401,6 +400,33 @@ static void run_script(const char *fname) {
             if (n > gPacketSize)
                 die(0, "copy index out of range");
             emit_packet(n);
+        } else if (strcmp(fields[0], "zero") == 0) {
+            check_args(nfields, 1);
+            if (state != kStateInitial)
+                die(0, "unexpected zero command");
+            char *e;
+            unsigned long audio_length = strtoul(fields[1], &e, 10);
+            if (*e != '\0')
+                die(0, "invalid zero length");
+            unsigned char *ptr = get_buffer(1);
+            switch (audio_length) {
+            case 480:
+                *ptr = 0;
+                break;
+            case 960:
+                *ptr = 1;
+                break;
+            case 1920:
+                *ptr = 2;
+                break;
+            case 2880:
+                *ptr = 3;
+                break;
+            default:
+                die(0, "unsupported zero length");
+                break;
+            }
+            write_packet(audio_length, 1);
         } else {
             die(0, "unknown command %s", quote(fields[0]));
         }
