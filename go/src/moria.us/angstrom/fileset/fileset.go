@@ -30,6 +30,12 @@ type Version struct {
 	expiry time.Time
 }
 
+// A FileVersion is a paired filename and version.
+type FileVersion struct {
+	Name    string
+	Version *Version
+}
+
 // VersionName returns the name of this version.
 func (ver *Version) VersionName() string {
 	return ver.sstamp
@@ -51,14 +57,14 @@ type Set struct {
 	files    map[string]*file
 }
 
-// NewSet returns a new, empty set of files.
-func NewSet() *Set {
+// New returns a new, empty set of files.
+func New() *Set {
 	return &Set{files: make(map[string]*file)}
 }
 
-// Set sets the latest version of a file. The verison can be nil, which marks
-// the file as removed.
-func (s *Set) Set(name string, stamp time.Time, ver *Version) bool {
+// SetFile sets the latest version of a file. The verison can be nil, which
+// marks the file as removed. Returns true if the set is modified.
+func (s *Set) SetFile(name string, stamp time.Time, ver *Version) bool {
 	f, ok := s.files[name]
 	if !ok {
 		if ver == nil {
@@ -94,6 +100,18 @@ func (s *Set) Set(name string, stamp time.Time, ver *Version) bool {
 	return true
 }
 
+// SetFiles sets the latest version of many files. Returns true if the set is
+// modified.
+func (s *Set) SetFiles(stamp time.Time, files []FileVersion) bool {
+	var changed bool
+	for _, f := range files {
+		if s.SetFile(f.Name, stamp, f.Version) {
+			changed = true
+		}
+	}
+	return changed
+}
+
 // Expire purges all file versions with an expiry before the given time.
 func (s *Set) Expire(stamp time.Time) {
 	var n int
@@ -106,10 +124,11 @@ func (s *Set) Expire(stamp time.Time) {
 		f.versions = f.versions[:len(f.versions)-1]
 		n = i
 	}
-	if n != 0 {
-		copy(s.expiring, s.expiring[n:])
-		s.expiring = s.expiring[:n]
+	if n == 0 {
+		return
 	}
+	copy(s.expiring, s.expiring[n:])
+	s.expiring = s.expiring[:n]
 }
 
 // GetVersion returns a specific version of a file.
@@ -129,7 +148,7 @@ func (s *Set) GetVersion(name, stamp string) *Version {
 // GetLatest returns the latest version for a file.
 func (s *Set) GetLatest(name string) *Version {
 	f, ok := s.files[name]
-	if !ok {
+	if !ok || !f.exists {
 		return nil
 	}
 	return f.versions[0]
@@ -150,7 +169,7 @@ func (s *Set) GetDelta(m Manifest) map[string]*string {
 				delta[k] = nil
 				delete(m, k)
 			}
-		} else if sv := f.versions[0].sstamp; m[k] == sv {
+		} else if sv := f.versions[0].sstamp; m[k] != sv {
 			if delta == nil {
 				delta = make(map[string]*string)
 			}

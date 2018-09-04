@@ -29,7 +29,7 @@ func run() error {
 
 	r := chi.NewMux()
 	r.Get("/", getIndex)
-	r.Mount("/debug", game.NewHandler())
+	r.Mount("/debug", game.NewHandler(root))
 	fmt.Printf("Listening on http://%s/\n", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		return fmt.Errorf("could not listen: %v", err)

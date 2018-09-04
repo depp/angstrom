@@ -15,17 +15,17 @@ func TestSet(t *testing.T) {
 		t2 = t1.Add(24 * time.Hour)
 		t3 = t1.Add(48 * time.Hour)
 	)
-	s := NewSet()
-	s.Set("a", t1, &Version{
+	s := New()
+	s.SetFile("a", t1, &Version{
 		Data: d1,
 	})
-	s.Set("b", t1, &Version{
+	s.SetFile("b", t1, &Version{
 		Data: d2,
 	})
-	s.Set("a", t2, &Version{
+	s.SetFile("a", t2, &Version{
 		Data: d3,
 	})
-	s.Set("b", t2, nil)
+	s.SetFile("b", t2, nil)
 	type qcase struct {
 		n string
 		t time.Time

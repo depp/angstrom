@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 )
@@ -92,4 +93,12 @@ func ServeFile(w http.ResponseWriter, r *http.Request, name string) {
 	if err := serveFile(w, r, name); err != nil {
 		ServeErrorf(w, r, http.StatusInternalServerError, "Error: %v", err)
 	}
+}
+
+// Redirect serves a temporary redirect. Permanent redirects are nothing but
+// annoying for development servers.
+func Redirect(w http.ResponseWriter, r *http.Request, u *url.URL) {
+	const status = http.StatusTemporaryRedirect
+	Log(r, status, "")
+	http.Redirect(w, r, u.String(), status)
 }

@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"os/exec"
 )
@@ -94,7 +93,6 @@ func WatchBuild(ctx context.Context, out chan<- *Script, compile string, args []
 	sc := bufio.NewScanner(rp)
 	for sc.Scan() {
 		scr := new(Script)
-		fmt.Printf("BYTES: %q\n", sc.Text())
 		if err := json.Unmarshal(sc.Bytes(), scr); err != nil {
 			return err
 		}
