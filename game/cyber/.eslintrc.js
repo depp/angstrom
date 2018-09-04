@@ -17,6 +17,9 @@ module.exports = {
     // TODO: Find a way to enable this for release builds.
     'no-console': 'off',
 
+    // One of the most ill-conceived rules I have ever seen.
+    'no-continue': 'off',
+
     // JS13K code is going to be a little different.
     'no-plusplus': 'off',
     'no-restricted-syntax': 'off',

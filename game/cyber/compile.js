@@ -199,7 +199,6 @@ async function compile(config) {
     success,
     errorCount,
     warningCount,
-    diagnostics,
     inputs: Object.values(files.files).map(f => ({ file: f.file, mtime: f.mtime })),
   };
   if (success) {
@@ -217,11 +216,26 @@ async function compile(config) {
       result.success = false;
     }
   }
-  for (const k of Object.keys(diagnostics)) {
-    if (!diagnostics[k].length) {
-      delete diagnostics[k];
+  const dlist = [];
+  for (const k of Object.keys(diagnostics).sort()) {
+    const v = diagnostics[k];
+    if (!v.length) {
+      continue;
     }
+    const d = {
+      file: k,
+      messages: v,
+    };
+    const file = files.files[k];
+    if (file) {
+      const code = file.contents;
+      if (typeof code === 'string') {
+        d.code = code;
+      }
+    }
+    dlist.push(d);
   }
+  result.diagnostics = dlist;
   return result;
 }
 

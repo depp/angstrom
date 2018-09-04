@@ -21,6 +21,13 @@ type Diagnostic struct {
 	RuleID    string `json:"ruleId,omitempty"`
 }
 
+// A FileDiagnostics is the set of diagnostic messages for a single source file.
+type FileDiagnostics struct {
+	File     string        `json:"file,omitempty"`
+	Messages []*Diagnostic `json:"messages"`
+	Code     string        `json:"code,omitempty"`
+}
+
 // A SourceMap is a bidirectional source map. See
 // https://sourcemaps.info/spec.html
 type SourceMap struct {
@@ -37,12 +44,12 @@ type SourceMap struct {
 // map, and diagnostic messages. The code and source map will be missing if the
 // build failed.
 type Script struct {
-	Success      bool                     `json:"success"`
-	ErrorCount   int                      `json:"errorCount"`
-	WarningCount int                      `json:"warningCount"`
-	Diagnostics  map[string][]*Diagnostic `json:"diagnostics"`
-	Code         string                   `json:"code,omitempty"`
-	Map          *SourceMap               `json:"map,omitempty"`
+	Success      bool               `json:"success"`
+	ErrorCount   int                `json:"errorCount"`
+	WarningCount int                `json:"warningCount"`
+	Diagnostics  []*FileDiagnostics `json:"diagnostics"`
+	Code         string             `json:"code,omitempty"`
+	Map          *SourceMap         `json:"map,omitempty"`
 }
 
 // Build builds the script and returns the build result.
