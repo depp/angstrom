@@ -80,6 +80,9 @@ h1 {
 .message-loc {
   font-weight: normal;
 }
+.message-rule {
+  font-weight: normal;
+}
 .message pre {
   margin: 0 0 0.5rem 1rem;
 }

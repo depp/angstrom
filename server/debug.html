@@ -26,7 +26,8 @@
               :class="'message ' + (msg.severity >= 2 ? 'message-error' : 'message-warning')">
             <h4><span v-if="msg.line" class="message-loc">{{ msg.line + (msg.column ? ':' + msg.column : '')}}</span>
               <span class="message-severity">{{ msg.severity >= 2 ? 'Error' : 'Warning' }}:</span>
-              {{ msg.message }}</h4>
+              {{ msg.message }}
+              <span v-if="msg.ruleId" class="message-rule">{{msg.ruleId}}</span></h4>
           </li>
         </ul>
       </div>
