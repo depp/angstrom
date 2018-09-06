@@ -1,37 +1,53 @@
-const emoji = '💣 🌤 😭'.split(' ');
-const ecanvas = document.createElement('canvas');
-ecanvas.width = 256;
-ecanvas.height = 256;
-const ctx = ecanvas.getContext('2d');
-ctx.font = '48px "Noto Color Emoji"';
-ctx.textAlign = 'center';
-ctx.textBaseline = 'middle';
-let idx = 0;
-for (const e of emoji) {
-  ctx.fillText(e, idx * 64 + 32, 32);
-  idx++;
-}
+import { gl } from '/game/cyber/global';
 
-function drawGrid(size) {
-  const { width, height } = ecanvas;
-  for (let x = size; x < width; x += size) {
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
+export let emojiTexture;
+
+export function initEmoji() {
+  const emoji = '💣 🌤 😭'.split(' ');
+  const ecanvas = document.createElement('canvas');
+  ecanvas.width = 256;
+  ecanvas.height = 256;
+  const ctx = ecanvas.getContext('2d');
+  ctx.font = '48px "Noto Color Emoji"';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  let idx = 0;
+  for (const e of emoji) {
+    ctx.fillText(e, idx * 64 + 32, 32);
+    idx++;
   }
-  for (let x = size; x < width; x += size) {
-    ctx.moveTo(0, x);
-    ctx.lineTo(width, x);
+
+  function drawGrid(size) {
+    const { width, height } = ecanvas;
+    for (let x = size; x < width; x += size) {
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+    }
+    for (let x = size; x < width; x += size) {
+      ctx.moveTo(0, x);
+      ctx.lineTo(width, x);
+    }
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.stroke();
   }
-  ctx.strokeStyle = 'white';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+
+  drawGrid(64);
+
+  ecanvas.toBlob((b) => {
+    const img = new Image();
+    img.addEventListener('load', () => {
+      emojiTexture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, emojiTexture);
+      gl.texImage2D(
+        gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img,
+      );
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(
+        gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR,
+      );
+      gl.generateMipmap(gl.TEXTURE_2D);
+    });
+    img.src = URL.createObjectURL(b);
+  });
 }
-
-drawGrid(64);
-
-ecanvas.toBlob((b) => {
-  const elt = document.createElement('img');
-  elt.src = URL.createObjectURL(b);
-  elt.style = 'border: 2px solid white';
-  document.body.appendChild(elt);
-});

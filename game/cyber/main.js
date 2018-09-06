@@ -3,8 +3,7 @@ import { compileShaderProgram } from '/game/cyber/shader';
 import {
   initInput, clearInput, updateInput, xaxis, yaxis,
 } from '/game/cyber/input';
-
-import '/game/cyber/emoji';
+import { initEmoji } from '/game/cyber/emoji';
 
 // Handle to RequestAnimationFrame request.
 let handle;
@@ -65,17 +64,23 @@ export function unpause() {
 const vertex = `precision mediump float;
 attribute vec2 Pos;
 uniform vec2 Offset;
+varying vec2 TexPos;
 void main() {
+  TexPos = Pos;
   gl_Position = vec4(Pos + Offset, 0.0, 1.0);
 }
 `;
 
-const fragment = `void main() {
-  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+const fragment = `precision mediump float;
+varying vec2 TexPos;
+uniform sampler2D Texture;
+void main() {
+  gl_FragColor = texture2D(Texture, TexPos);
 }
 `;
 
 if (gl) {
+  initEmoji();
   initInput();
   window.addEventListener('focus', unpause);
   window.addEventListener('blur', pause);

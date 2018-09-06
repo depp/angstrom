@@ -13,6 +13,9 @@ module.exports = {
     'import/no-absolute-path': 'off',
     'import/no-unresolved': 'off',
 
+    // Necessary for making code small.
+    'import/no-mutable-exports': 'off',
+
     // Complete garbage.
     'import/prefer-default-export': 'off',
 
