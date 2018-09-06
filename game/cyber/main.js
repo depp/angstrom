@@ -81,7 +81,7 @@ export function pause() {
     return;
   }
   clearInput();
-  window.cancelAnimationFrame(main);
+  window.cancelAnimationFrame(handle);
   handle = 0;
 }
 
