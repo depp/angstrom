@@ -61,6 +61,7 @@ function pushDiagnostic(diagnostics, e, severity=2, fatal=false) {
   let file;
   if (loc) {
     if (!file) {
+      /* eslint prefer-destructuring: off */
       file = loc.file;
     }
     if (loc.line !== undefined) {
