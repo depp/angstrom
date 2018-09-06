@@ -33,14 +33,24 @@ module.exports = {
     'no-plusplus': 'off',
     'no-restricted-syntax': 'off',
 
+    // Good rule, except for code size.
+    'no-shadow': 'off',
+
     // Stylistic differences.
     'no-use-before-define': 'off',
+
+    // We don't care.
+    'one-var': 'off',
+    'one-var-declaration-per-line': 'off',
 
     // A bit too annoying to leave as an error.
     'prefer-const': 'warn',
 
     // Annoying.
     'prefer-template': 'off',
+
+    // We want to put spaces freely.
+    'space-infix-ops': 'off',
   },
   overrides: [
     {

@@ -33,14 +33,40 @@ function main(curTime) {
   gl.clearColor(a * 0.6, a * 0.5, a * 0.4, 0.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  const sprites = [
+    { x: Math.cos(curTime / 3e3), y: Math.sin(curTime / 4e3), n: 0 },
+    { x: Math.cos(curTime / 6e3), y: Math.sin(curTime / 5e3), n: 1 },
+    { x, y, n: 2 },
+  ];
+  const arr = new Float32Array(4 * 6 * sprites.length);
+  let i = 0;
+  for (const sprite of sprites) {
+    // FIXME: Deoptimize for better gzip size?
+    const { x, y, n } = sprite;
+    const a = 1/4, u = (n & 3)*a, v = (n >> 2)*a;
+    arr.set([
+      x-0.1, y-0.1, u, v+a,
+      x+0.1, y-0.1, u+a, v+a,
+      x-0.1, y+0.1, u, v,
+      x-0.1, y+0.1, u, v,
+      x+0.1, y-0.1, u+a, v+a,
+      x+0.1, y+0.1, u+a, v,
+    ], i);
+    i += 4 * 6;
+  }
+  gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STREAM_DRAW);
+
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   gl.useProgram(prog.program);
   gl.enableVertexAttribArray(0);
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(1);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
+  gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
   gl.uniform2f(prog.Offset, x, y);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.drawArrays(gl.TRIANGLES, 0, sprites.length * 6);
 
   handle = window.requestAnimationFrame(main);
 }
@@ -65,11 +91,11 @@ export function unpause() {
 
 const vertex = `precision mediump float;
 attribute vec2 Pos;
-uniform vec2 Offset;
+attribute vec2 TexCoord;
 varying vec2 TexPos;
 void main() {
-  TexPos = Pos;
-  gl_Position = vec4(Pos + Offset, 0.0, 1.0);
+  TexPos = TexCoord;
+  gl_Position = vec4(Pos, 0.0, 1.0);
 }
 `;
 
@@ -87,8 +113,7 @@ if (gl) {
   window.addEventListener('focus', unpause);
   window.addEventListener('blur', pause);
 
-
-  prog = compileShaderProgram('Pos', 'Offset', '', vertex, fragment);
+  prog = compileShaderProgram('Pos TexCoord', '', '', vertex, fragment);
   buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
