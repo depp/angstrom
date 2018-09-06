@@ -52,7 +52,7 @@ class FileSet {
   }
 }
 
-function pushDiagnostic(diagnostics, e, severity) {
+function pushDiagnostic(diagnostics, e, severity=2) {
   const { loc } = e;
   const msg = {
     severity,
@@ -178,7 +178,6 @@ async function compile(config) {
   try {
     bundle = await rollup.rollup(inputOptions);
   } catch (e) {
-    console.error(e);
     if (e.code === undefined) {
       throw e;
     }
