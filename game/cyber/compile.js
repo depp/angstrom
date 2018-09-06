@@ -60,18 +60,18 @@ function pushDiagnostic(diagnostics, e, severity=2, fatal=false) {
   };
   let file;
   if (loc) {
-    if (file !== undefined) {
-      loc.file = file;
+    if (!file) {
+      file = loc.file;
     }
     if (loc.line !== undefined) {
       msg.line = loc.line;
     }
     if (loc.column !== undefined) {
-      msg.column = loc.column;
+      msg.column = loc.column + 1;
     }
   }
-  if (file === undefined) {
-    file = e.importer;
+  if (!file) {
+    file = e.importer || '';
   }
   if (file === undefined) {
     file = '';
