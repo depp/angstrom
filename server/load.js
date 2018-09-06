@@ -64,7 +64,7 @@
             }
             const line1 = msg.endLine || line0;
             const column0 = msg.column || 0;
-            const column1 = msg.endColumn || column0;
+            const column1 = msg.endColumn || (column0 + 1);
             const preElt = document.createElement('pre');
             const codeElt = document.createElement('code');
             preElt.appendChild(codeElt);
@@ -84,7 +84,8 @@
               let idx = 0;
               if (c0 > 0) {
                 if (c0 > 1) {
-                  const text = document.createTextNode(line.substring(0, c0 - 1));
+                  const text = document.createTextNode(
+                    line.substring(0, c0 - 1));
                   idx = c0 - 1;
                   curElt.appendChild(text);
                 }
@@ -92,8 +93,8 @@
                 curElt.className = 'code-error';
                 codeElt.appendChild(curElt);
               }
-              if (c1 > 1) {
-                c1 = Math.min(line.length, c1);
+              if (c1 > 0) {
+                c1 = Math.min(line.length, c1 - 1);
                 let s = line.substring(idx, c1);
                 if (idx === c1) {
                   s += '\u00a0';
