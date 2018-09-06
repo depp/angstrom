@@ -1,4 +1,4 @@
-import { gl } from '/game/cyber/global';
+import { canvas, gl } from '/game/cyber/global';
 import { compileShaderProgram } from '/game/cyber/shader';
 import {
   initInput, clearInput, updateInput, xaxis, yaxis,
@@ -20,6 +20,8 @@ let y = 0;
 // Main loop.
 function main(curTime) {
   handle = 0;
+
+  const aspect = canvas.clientWidth / canvas.clientHeight;
 
   const dt = (curTime - prevTime) * 1e-3;
   x += xaxis() * dt;
@@ -65,7 +67,7 @@ function main(curTime) {
   gl.enableVertexAttribArray(1);
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
-  gl.uniform2f(prog.Offset, x, y);
+  gl.uniform2f(prog.Scale, 0.6, aspect * 0.6);
   gl.drawArrays(gl.TRIANGLES, 0, sprites.length * 6);
 
   handle = window.requestAnimationFrame(main);
@@ -93,9 +95,10 @@ const vertex = `precision mediump float;
 attribute vec2 Pos;
 attribute vec2 TexCoord;
 varying vec2 TexPos;
+uniform vec2 Scale;
 void main() {
   TexPos = TexCoord;
-  gl_Position = vec4(Pos, 0.0, 1.0);
+  gl_Position = vec4(Pos * Scale, 0.0, 1.0);
 }
 `;
 
@@ -113,7 +116,7 @@ if (gl) {
   window.addEventListener('focus', unpause);
   window.addEventListener('blur', pause);
 
-  prog = compileShaderProgram('Pos TexCoord', '', '', vertex, fragment);
+  prog = compileShaderProgram('Pos TexCoord', 'Scale', '', vertex, fragment);
   buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
