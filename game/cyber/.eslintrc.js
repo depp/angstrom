@@ -9,6 +9,9 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    // Save one character.
+    'eqeqeq': 'off',
+
     // Just let Rollup catch import errors.
     'import/no-absolute-path': 'off',
     'import/no-unresolved': 'off',
@@ -33,6 +36,7 @@ module.exports = {
     'no-param-reassign': 'off',
     'no-plusplus': 'off',
     'no-restricted-syntax': 'off',
+    'no-multi-assign': 'off',
 
     // Good rule, except for code size.
     'no-shadow': 'off',

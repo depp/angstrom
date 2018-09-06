@@ -1,6 +1,9 @@
 import { canvas } from '/game/cyber/global';
 
-// Map from keycode OR mouse button to in-game action.
+// Compatibility note: We use UI Events here to bind keys, since they give us
+// consistent values regardless of layout. This does not work in Edge.
+
+// Map from key code OR mouse button to in-game action.
 const buttonBindings = {
   KeyW: 'f',
   KeyA: 'l',
@@ -14,20 +17,6 @@ const buttonBindings = {
 
   ControlLeft: 's',
   ControlRight: 's',
-  /*
-    For .keyCode values:
-  87: 'f', // W
-  65: 'l', // A
-  83: 'b', // S
-  68: 'r', // D
-
-  37: 'L', // Left arrow
-  38: 'f', // Up arrow
-  39: 'R', // Right arrow
-  40: 'b', // Down arrow
-
-  17: 's', // Control
-  */
 
   m0: 's', // Left mouse button
   // m1 Middle mouse button
