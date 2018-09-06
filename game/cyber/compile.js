@@ -156,6 +156,8 @@ async function compile(config) {
     ],
   };
   if (config.lint) {
+    // Total hack to reload when ESLint config changes.
+    await files.load('game/cyber/.eslintrc.js');
     const linter = new CLIEngine();
     inputOptions.plugins.push({
       transform(source, id) {
@@ -245,7 +247,7 @@ async function compile(config) {
 
 async function watch(config) {
   const watcher = chokidar.watch('game/cyber', {
-    ignored: /(^|\/)\.|~$/,
+    ignored: /(^|\/)#|~$/,
     persistent: true,
   });
   let dirty = true;
@@ -264,6 +266,14 @@ async function watch(config) {
     updateFile(fpath, null);
   }
   function updateFile(file, mtime) {
+    if (file === 'game/cyber/compile.js') {
+      if (!files[file]) {
+        files[file] = mtime;
+      } else {
+        process.exit(0);
+      }
+      return;
+    }
     files[file] = mtime;
     if (dirty) {
       // Already dirty, can't make it any dirtier.

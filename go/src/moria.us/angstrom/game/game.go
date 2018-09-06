@@ -132,6 +132,8 @@ func (b *builder) scriptBuilder() {
 				log.Println("Error: Build failed:", err)
 				log.Printf("Retrying (delay = %v)", buildFailureRetry)
 				<-time.After(buildFailureRetry)
+			} else {
+				log.Println("Restarting builder")
 			}
 		}
 	}()
