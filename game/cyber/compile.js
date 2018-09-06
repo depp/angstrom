@@ -131,6 +131,7 @@ async function compile(config) {
             diagnostics[origin || ''].push({
               severity: 2,
               message: `Cannot resolve relative import ${JSON.stringify(mpath)}`,
+              fatal: true,
             });
             return null;
           }
@@ -140,6 +141,7 @@ async function compile(config) {
             diagnostics[origin || ''].push({
               severity: 2,
               message: `Could not resolve module ${JSON.stringify(id)}`,
+              fatal: true,
             });
             return false;
           }
@@ -180,10 +182,11 @@ async function compile(config) {
     if (e.code === undefined) {
       throw e;
     }
-    pushDiagnostic(diagnostics, e, 2);
+    pushDiagnostic(diagnostics, e);
   }
   let errorCount = 0;
   let warningCount = 0;
+  let success = true;
   for (const messages of Object.values(diagnostics)) {
     for (const message of messages) {
       const s = message.severity;
@@ -192,9 +195,11 @@ async function compile(config) {
       } else if (s >= 1) {
         warningCount++;
       }
+      if (s.fatal) {
+        success = false;
+      }
     }
   }
-  const success = errorCount === 0;
   const result = {
     success,
     errorCount,
@@ -212,7 +217,7 @@ async function compile(config) {
       result.code = code;
       result.map = map;
     } catch (e) {
-      pushDiagnostic(diagnostics, e, 2);
+      pushDiagnostic(diagnostics, e);
       result.success = false;
     }
   }
