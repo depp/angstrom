@@ -52,7 +52,7 @@ class FileSet {
   }
 }
 
-function pushDiagnostic(diagnostics, e, severity=2) {
+function pushDiagnostic(diagnostics, e, severity=2, fatal=false) {
   const { loc } = e;
   const msg = {
     severity,
@@ -75,6 +75,9 @@ function pushDiagnostic(diagnostics, e, severity=2) {
   }
   if (file === undefined) {
     file = '';
+  }
+  if (fatal) {
+    msg.fatal = true;
   }
   diagnostics[file].push(msg);
 }
@@ -183,7 +186,7 @@ async function compile(config) {
     if (e.code === undefined) {
       throw e;
     }
-    pushDiagnostic(diagnostics, e);
+    pushDiagnostic(diagnostics, e, 2, true);
   }
   let errorCount = 0;
   let warningCount = 0;
@@ -196,7 +199,7 @@ async function compile(config) {
       } else if (s >= 1) {
         warningCount++;
       }
-      if (s.fatal) {
+      if (message.fatal) {
         success = false;
       }
     }
@@ -218,7 +221,7 @@ async function compile(config) {
       result.code = code;
       result.map = map;
     } catch (e) {
-      pushDiagnostic(diagnostics, e);
+      pushDiagnostic(diagnostics, e, 2, true);
       result.success = false;
     }
   }
