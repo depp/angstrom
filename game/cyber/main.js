@@ -99,3 +99,5 @@ if (gl) {
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
   unpause();
 }
+
+export { gl };
