@@ -33,6 +33,8 @@ function main(curTime) {
   gl.clearColor(a * 0.6, a * 0.5, a * 0.4, 0.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   gl.useProgram(prog.program);
   gl.enableVertexAttribArray(0);
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
