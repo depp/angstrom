@@ -30,6 +30,7 @@ module.exports = {
     'no-continue': 'off',
 
     // JS13K code is going to be a little different.
+    'no-param-reassign': 'off',
     'no-plusplus': 'off',
     'no-restricted-syntax': 'off',
 
