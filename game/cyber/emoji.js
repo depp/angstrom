@@ -17,23 +17,6 @@ export function initEmoji() {
     idx++;
   }
 
-  function drawGrid(size) {
-    const { width, height } = ecanvas;
-    for (let x = size; x < width; x += size) {
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-    }
-    for (let x = size; x < width; x += size) {
-      ctx.moveTo(0, x);
-      ctx.lineTo(width, x);
-    }
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
-
-  drawGrid(64);
-
   ecanvas.toBlob((b) => {
     const img = new Image();
     img.addEventListener('load', () => {
