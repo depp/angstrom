@@ -4,6 +4,8 @@ import {
   initInput, clearInput, updateInput, xaxis, yaxis,
 } from '/game/cyber/input';
 
+import '/game/cyber/emoji';
+
 // Handle to RequestAnimationFrame request.
 let handle;
 
