@@ -13,7 +13,16 @@ import zlib
 from typing import List
 
 TIME = datetime.datetime(2018, 9, 13, 13, 0, 0)
-EPOCH = datetime.datetime(1980, 1, 1, 0, 0, 0)
+
+def msdosDate(t):
+    return (
+        ((t.year - 1980) << 9) |
+        (t.month << 5) |
+        t.day,
+        (t.hour << 11) |
+        (t.minute << 5) |
+        (t.second >> 1),
+    )
 
 LIMIT = 13 * 1024
 
@@ -97,15 +106,15 @@ class FileSet:
         bname = name.encode("ASCII")
         pos = self.body.tell()
         crc = zlib.crc32(data)
-        dt = TIME - EPOCH
+        date, time = msdosDate(TIME)
         self.body.write(struct.pack(
             "<IHHHHHIIIHH",
             0x04034b50, # signature
             20, # version needed
             0, # flags
             8, # compression method
-            dt.seconds // 2, # mod time
-            dt.days, # mod date
+            time, # mod time
+            date, # mod date
             crc, # crc-32
             len(cdata), # compressed size
             len(data), # uncompressed size
@@ -121,8 +130,8 @@ class FileSet:
             20, # version needed
             0, # flags
             8, # compression method
-            dt.seconds // 2, # mod time
-            dt.days, # mod date
+            time, # mod time
+            date, # mod date
             crc, # crc-32
             len(cdata), # compressed size
             len(data), # uncompressed size
