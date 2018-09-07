@@ -167,6 +167,13 @@ func (b *builder) scriptBuilder() {
 	}
 }
 
+func websocketError(err error, fn string) {
+	if websocket.IsCloseError(err, websocket.CloseGoingAway) {
+		return
+	}
+	log.Printf("Error: %s: %v", fn, err)
+}
+
 func reader(b *builder, ws *websocket.Conn, closed *int32) {
 	defer ws.Close()
 	ws.SetReadLimit(1024)
@@ -182,7 +189,7 @@ func reader(b *builder, ws *websocket.Conn, closed *int32) {
 	for {
 		_, _, err := ws.ReadMessage()
 		if err != nil {
-			log.Println("Error: ReadMessage:", err)
+			websocketError(err, "ReadMessage")
 			break
 		}
 	}
@@ -214,7 +221,7 @@ func writer(b *builder, ws *websocket.Conn, closed *int32) {
 		if doTick {
 			ws.SetWriteDeadline(time.Now().Add(writeTimeout))
 			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
-				log.Println("Error: WriteMessage:", err)
+				websocketError(err, "ReadMessage")
 				return
 			}
 		}
@@ -222,7 +229,7 @@ func writer(b *builder, ws *websocket.Conn, closed *int32) {
 		if len(delta) != 0 {
 			ws.SetWriteDeadline(time.Now().Add(writeTimeout))
 			if err := ws.WriteJSON(delta); err != nil {
-				log.Println("Error: WriteMessage:", err)
+				websocketError(err, "WriteJSON")
 				return
 			}
 		}
