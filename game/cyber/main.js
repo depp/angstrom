@@ -91,6 +91,10 @@ export function unpause() {
   startTime();
 }
 
+export function loadData(name, data) {
+  console.log(`Loaded data ${JSON.stringify(name)} ${JSON.stringify(data)}`);
+}
+
 const vertex = `precision mediump float;
 attribute vec2 Pos;
 attribute vec2 TexCoord;

@@ -11,6 +11,9 @@
     return `data/${encodeURI(name)}?t=${encodeURIComponent(stamp)}`;
   }
 
+  // ===========================================================================
+  // Status bar
+  // ===========================================================================
   const status = (function status() {
     const cmp = new Vue({
       el: '#status',
@@ -85,7 +88,8 @@
               if (c0 > 0) {
                 if (c0 > 1) {
                   const text = document.createTextNode(
-                    line.substring(0, c0 - 1));
+                    line.substring(0, c0 - 1),
+                  );
                   idx = c0 - 1;
                   curElt.appendChild(text);
                 }
@@ -165,6 +169,61 @@
   }());
 
   // ===========================================================================
+  // Data files
+  // ===========================================================================
+  const datafiles = (function datafiles() {
+    const manifest = {};
+    const data = {};
+
+    function update(name) {
+      const g = window.Game;
+      if (g) {
+        g.loadData(name, data[name] || null);
+      }
+    }
+
+    function loadedScript() {
+      const g = window.Game;
+      if (g) {
+        for (const [k, v] of Object.entries(data)) {
+          g.loadData(k, v);
+        }
+      }
+    }
+
+    async function load(name, stamp) {
+      const url = dataURL(name, stamp);
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        console.error(`Could not load ${url}: ${resp.statusText}`);
+        return;
+      }
+      const file = await resp.text();
+      if (manifest[name] !== stamp) {
+        return;
+      }
+      data[name] = file;
+      update(name);
+    }
+
+    function changed(name, stamp) {
+      if (stamp === null) {
+        delete manifest[name];
+        delete data[name];
+        update(name);
+        return;
+      }
+      manifest[name] = stamp;
+      load(name, stamp);
+    }
+
+    return {
+      changed,
+      loadedScript,
+    };
+  }());
+
+  // ===========================================================================
   // WebSocket
   // ===========================================================================
   (function runsocket() {
@@ -185,6 +244,7 @@
       scriptElt.setAttribute('src', dataURL('game.js', stamp));
       scriptElt.addEventListener('load', () => {
         status.set('ok', 'Loaded');
+        datafiles.loadedScript();
       });
       document.head.appendChild(scriptElt);
     }
@@ -213,6 +273,9 @@
             break;
           case 'diagnostics':
             diagnostics.changed(file, stamp);
+            break;
+          case 'shader':
+            datafiles.changed(file, stamp);
             break;
           default:
             console.warn(`Unknown file: ${JSON.stringify(file)}`);
