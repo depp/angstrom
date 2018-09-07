@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"mime"
 	"net/http"
 	"os"
 	"path"
@@ -38,6 +39,10 @@ func run() error {
 	}
 	if err := os.Chdir(root); err != nil {
 		return err
+	}
+
+	if err := mime.AddExtensionType(".glsl", "text/plain"); err != nil {
+		return fmt.Errorf("could not add MIME type: %v", err)
 	}
 
 	r := chi.NewMux()
