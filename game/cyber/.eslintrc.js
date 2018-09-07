@@ -57,18 +57,4 @@ module.exports = {
     // We want to put spaces freely.
     'space-infix-ops': 'off',
   },
-  overrides: [
-    {
-      files: ["compile.js"],
-      env: {
-        browser: false,
-        node: true,
-      },
-      rules: {
-        'import/no-absolute-path': 'error',
-        'import/no-unresolved': 'error',
-        'import/no-extraneous-dependencies': 'devDependencies',
-      },
-    }
-  ],
 };

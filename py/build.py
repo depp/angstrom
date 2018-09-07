@@ -41,7 +41,7 @@ HTML = """\
 def build_html() -> bytes:
     print("Building HTML", file=sys.stderr)
     out = subprocess.run(
-        ["node", "game/cyber/compile.js", "--config=release"],
+        ["node", "tools/compile.js", "--config=release"],
         cwd=ROOT_DIR,
         stdout=subprocess.PIPE,
         check=True,

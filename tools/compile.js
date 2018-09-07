@@ -52,7 +52,7 @@ class FileSet {
   }
 }
 
-function pushDiagnostic(diagnostics, e, severity=2, fatal=false) {
+function pushDiagnostic(diagnostics, e, severity = 2, fatal = false) {
   const { loc } = e;
   const msg = {
     severity,
@@ -103,12 +103,12 @@ function getConfig(options) {
     throw Error(`Unknown configuration ${JSON.stringify(config)}`);
   }
   Object.assign(obj, baseConfig, nobj);
-  for (const key of Object.keys(obj)) {
+  Object.keys(obj).forEach((key) => {
     const value = options[key];
     if (value !== undefined && value !== null) {
       obj[key] = value;
     }
-  }
+  });
   return obj;
 }
 
@@ -134,7 +134,8 @@ async function compile(config) {
           } else {
             diagnostics[origin || ''].push({
               severity: 2,
-              message: `Cannot resolve relative import ${JSON.stringify(mpath)}`,
+              message:
+              `Cannot resolve relative import ${JSON.stringify(mpath)}`,
               fatal: true,
             });
             return null;
@@ -192,24 +193,26 @@ async function compile(config) {
   let errorCount = 0;
   let warningCount = 0;
   let success = true;
-  for (const messages of Object.values(diagnostics)) {
-    for (const message of messages) {
+  Object.values(diagnostics).forEach((messages) => {
+    messages.forEach((message) => {
       const s = message.severity;
       if (s >= 2) {
-        errorCount++;
+        errorCount += 1;
       } else if (s >= 1) {
-        warningCount++;
+        warningCount += 1;
       }
       if (message.fatal) {
         success = false;
       }
-    }
-  }
+    });
+  });
   const result = {
     success,
     errorCount,
     warningCount,
-    inputs: Object.values(files.files).map(f => ({ file: f.file, mtime: f.mtime })),
+    inputs: Object.values(files.files).map(
+      f => ({ file: f.file, mtime: f.mtime }),
+    ),
   };
   if (success) {
     const outputOptions = {
@@ -227,10 +230,10 @@ async function compile(config) {
     }
   }
   const dlist = [];
-  for (const k of Object.keys(diagnostics).sort()) {
+  Object.keys(diagnostics).sort().forEach((k) => {
     const v = diagnostics[k];
     if (!v.length) {
-      continue;
+      return;
     }
     const d = {
       file: k,
@@ -244,13 +247,13 @@ async function compile(config) {
       }
     }
     dlist.push(d);
-  }
+  });
   result.diagnostics = dlist;
   return result;
 }
 
 async function watch(config) {
-  const watcher = chokidar.watch('game/cyber', {
+  const watcher = chokidar.watch(['game/cyber', 'tools/compile.js'], {
     ignored: /(^|\/)#|~$/,
     persistent: true,
   });
@@ -258,19 +261,47 @@ async function watch(config) {
   let inputs = {};
   const files = {};
   let compiling = false;
-  watcher
-    .on('add', didChange)
-    .on('change', didChange)
-    .on('unlink', didUnlink);
-  build();
-  async function didChange(fpath) {
-    updateFile(fpath, (await stat(fpath)).mtime);
-  }
-  function didUnlink(fpath) {
-    updateFile(fpath, null);
+  function build() {
+    if (!dirty || compiling) {
+      return;
+    }
+    compiling = true;
+    compile(config)
+      .then((script) => {
+        process.stdout.write(JSON.stringify(script));
+        process.stdout.write('\n');
+        const ninputs = {};
+        let ndirty = false;
+        script.inputs.forEach((input) => {
+          ninputs[input.file] = input.mtime;
+          const mtime = files[input.file];
+          if (mtime === undefined) {
+            return;
+          }
+          if (mtime === null) {
+            if (input.mtime != null) {
+              ndirty = true;
+            }
+          } else if (
+            input.mtime === null || input.mtime < mtime || input.mtime > mtime
+          ) {
+            ndirty = true;
+          }
+        });
+        dirty = ndirty;
+        inputs = ninputs;
+        compiling = false;
+        if (ndirty) {
+          setImmediate(build);
+        }
+      })
+      .catch((e) => {
+        compiling = false;
+        console.error(e);
+      });
   }
   function updateFile(file, mtime) {
-    if (file === 'game/cyber/compile.js') {
+    if (file === 'tools/compile.js') {
       if (!files[file]) {
         files[file] = mtime;
       } else {
@@ -295,43 +326,17 @@ async function watch(config) {
     dirty = true;
     setImmediate(build);
   }
-  function build() {
-    if (!dirty || compiling) {
-      return;
-    }
-    compiling = true;
-    compile(config)
-      .then((script) => {
-        process.stdout.write(JSON.stringify(script));
-        process.stdout.write('\n');
-        const ninputs = {};
-        let ndirty = false;
-        for (const input of script.inputs) {
-          ninputs[input.file] = input.mtime;
-          const mtime = files[input.file];
-          if (mtime === undefined) {
-            continue;
-          }
-          if (mtime === null) {
-            if (input.mtime != null) {
-              ndirty = true;
-            }
-          } else if (input.mtime === null || input.mtime < mtime || input.mtime > mtime) {
-            ndirty = true;
-          }
-        }
-        dirty = ndirty;
-        inputs = ninputs;
-        compiling = false;
-        if (ndirty) {
-          setImmediate(build);
-        }
-      })
-      .catch((e) => {
-        compiling = false;
-        console.error(e);
-      });
+  async function didChange(fpath) {
+    updateFile(fpath, (await stat(fpath)).mtime);
   }
+  function didUnlink(fpath) {
+    updateFile(fpath, null);
+  }
+  watcher
+    .on('add', didChange)
+    .on('change', didChange)
+    .on('unlink', didUnlink);
+  build();
 }
 
 const command = minimist(process.argv.slice(2), {

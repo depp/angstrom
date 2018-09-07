@@ -163,7 +163,7 @@ func (b *builder) scriptRunner(ch chan<- *script.Script) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	for {
-		if err := script.WatchBuild(ctx, ch, "game/cyber/compile.js",
+		if err := script.WatchBuild(ctx, ch, "tools/compile.js",
 			[]string{"--config=debug"}); err != nil {
 			log.Println("Error: Build failed:", err)
 			log.Printf("Retrying (delay = %v)", buildFailureRetry)
