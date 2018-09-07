@@ -13,6 +13,13 @@ export function vec2Rect([x1, y1], [x2, y2, w2, h2]) {
 
 const vecZero = [0, 0, 0];
 
+// Assigns [x, y, z] to out.
+export function vecSet(out, x, y, z) {
+  out[0] = x;
+  out[1] = y;
+  out[2] = z;
+}
+
 // Computes out = a * x + y, returns out.
 export function vecMulAdd(out, x, a=1, y=vecZero) {
   for (let i = 0; i < 3; i++) {

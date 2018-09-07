@@ -23,8 +23,8 @@ const buttonBindings = {
   // m2 Right mouse button
 };
 
-const buttonPress = {};
-const buttonState = {};
+export const buttonPress = {};
+export const buttonState = {};
 
 function zeroButtons(buttons) {
   for (const c of 'flbrLRs') {
@@ -76,12 +76,4 @@ export function clearInput() {
 
 export function updateInput() {
   zeroButtons(buttonPress);
-}
-
-export function xaxis() {
-  return buttonState.r - buttonState.l;
-}
-
-export function yaxis() {
-  return buttonState.f - buttonState.b;
 }

@@ -1,35 +1,30 @@
 import { gl } from '/game/cyber/global';
 import { compileShaderProgram } from '/game/cyber/shader';
 import {
-  initInput, clearInput, updateInput, xaxis, yaxis,
+  initInput, clearInput, updateInput,
 } from '/game/cyber/input';
 import { initEmoji } from '/game/cyber/emoji';
 import { updateCamera, cameraMatrix } from '/game/cyber/camera';
 import { startPlayer, updatePlayer } from '/game/cyber/player';
+import { frameDT, startTime, updateTime } from '/game/cyber/time';
 
 // Handle to RequestAnimationFrame request.
 let handle;
-
-let prevTime = 0;
 
 // Shader program.
 let prog;
 let buf;
 
-let x = 0;
-let y = 0;
-
 // Main loop.
 function main(curTime) {
   handle = 0;
 
-  const dt = (curTime - prevTime) * 1e-3;
-  prevTime = curTime;
-  x += xaxis() * dt;
-  y += yaxis() * dt;
-  updatePlayer();
+  updateTime(curTime);
+  if (frameDT) {
+    updatePlayer();
+    updateInput();
+  }
   updateCamera();
-  updateInput();
 
   gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
@@ -41,7 +36,7 @@ function main(curTime) {
   const sprites = [
     { x: Math.cos(curTime / 3e3), y: Math.sin(curTime / 4e3), n: 0 },
     { x: Math.cos(curTime / 6e3), y: Math.sin(curTime / 5e3), n: 1 },
-    { x, y, n: 2 },
+    { x: Math.cos(curTime / 1e3), y: Math.sin(curTime / 1e3), n: 2 },
   ];
   const arr = new Float32Array(4 * 6 * sprites.length);
   let i = 0;
@@ -91,6 +86,7 @@ export function unpause() {
     return;
   }
   handle = window.requestAnimationFrame(main);
+  startTime();
 }
 
 const vertex = `precision mediump float;
