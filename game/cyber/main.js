@@ -6,7 +6,9 @@ import {
 import { initEmoji } from '/game/cyber/emoji';
 import { updateCamera, cameraMatrix } from '/game/cyber/camera';
 import { startPlayer, updatePlayer } from '/game/cyber/player';
-import { frameDT, startTime, updateTime } from '/game/cyber/time';
+import {
+  frameDT, levelTime, startTime, updateTime,
+} from '/game/cyber/time';
 
 // Handle to RequestAnimationFrame request.
 let handle;
@@ -16,10 +18,10 @@ let prog;
 let buf;
 
 // Main loop.
-function main(curTime) {
+function main(curTimeMS) {
   handle = 0;
 
-  updateTime(curTime);
+  updateTime(curTimeMS);
   if (frameDT) {
     updatePlayer();
     updateInput();
@@ -28,15 +30,15 @@ function main(curTime) {
 
   gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
-  const a = Math.sin(curTime / 300) * 0.5 + 0.5;
+  const a = Math.sin(levelTime * 3) * 0.5 + 0.5;
   gl.clearColor(a * 0.6, a * 0.5, a * 0.4, 0.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   const sprites = [
-    { x: Math.cos(curTime / 3e3), y: Math.sin(curTime / 4e3), n: 0 },
-    { x: Math.cos(curTime / 6e3), y: Math.sin(curTime / 5e3), n: 1 },
-    { x: Math.cos(curTime / 1e3), y: Math.sin(curTime / 1e3), n: 2 },
+    { x: Math.cos(levelTime / 3), y: Math.sin(levelTime / 4), n: 0 },
+    { x: Math.cos(levelTime / 6), y: Math.sin(levelTime / 5), n: 1 },
+    { x: Math.cos(levelTime), y: Math.sin(levelTime), n: 2 },
   ];
   const arr = new Float32Array(4 * 6 * sprites.length);
   let i = 0;
