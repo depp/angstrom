@@ -5,10 +5,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"mime"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -16,6 +18,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/go-chi/chi"
 	"github.com/gorilla/websocket"
 
@@ -65,6 +68,7 @@ func (h *handler) openBuilder() *builder {
 		h.builder = b
 		go b.ticker()
 		go b.scriptBuilder()
+		go b.watcher()
 	}
 	h.mutex.Unlock()
 	return b
@@ -168,6 +172,74 @@ func (b *builder) scriptRunner(ch chan<- *script.Script) {
 			log.Println("Restarting builder")
 		}
 	}
+}
+
+const shaderDir = "game/cyber/shader"
+
+func (b *builder) watcher() {
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Println("Error: Could not watch files:", err)
+		return
+	}
+	defer w.Close()
+	if err := w.Add(shaderDir); err != nil {
+		log.Println("Error: Could not add watch:", err)
+		return
+	}
+	sts, err := ioutil.ReadDir(shaderDir)
+	if err != nil {
+		log.Println("Error: Could not list directory:", err)
+		return
+	}
+	for _, st := range sts {
+		b.watchEvent(fsnotify.Event{
+			Name: filepath.Join(shaderDir, st.Name()),
+			Op:   fsnotify.Create,
+		})
+	}
+	for e := range w.Events {
+		b.watchEvent(e)
+	}
+}
+
+func (b *builder) watchEvent(e fsnotify.Event) {
+	dir := filepath.Dir(e.Name)
+	if dir != shaderDir {
+		return
+	}
+	fname := filepath.Base(e.Name)
+	if strings.HasPrefix(fname, ".") || strings.HasPrefix(fname, "#") {
+		return
+	}
+	if !strings.HasSuffix(fname, ".glsl") {
+		return
+	}
+	if e.Op&(fsnotify.Create|fsnotify.Write|fsnotify.Remove|fsnotify.Rename) == 0 {
+		return
+	}
+	var ver *fileset.Version
+	fp, err := os.Open(e.Name)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			log.Printf("Error: Could not open %q: %v", e.Name, err)
+			return
+		}
+	} else {
+		defer fp.Close()
+		data, err := ioutil.ReadAll(fp)
+		if err != nil {
+			log.Printf("Error: Could not read %q: %v", e.Name, err)
+			return
+		}
+		ver = &fileset.Version{
+			Data: data,
+		}
+	}
+	b.setFiles([]fileset.FileVersion{{
+		Name:    path.Join("shader", fname),
+		Version: ver,
+	}})
 }
 
 func websocketError(err error, fn string) {
