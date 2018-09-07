@@ -122,21 +122,8 @@ func (b *builder) setFiles(files []fileset.FileVersion) {
 }
 
 func (b *builder) scriptBuilder() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	ch := make(chan *script.Script)
-	go func() {
-		for {
-			if err := script.WatchBuild(ctx, ch, "game/cyber/compile.js",
-				[]string{"--config=debug"}); err != nil {
-				log.Println("Error: Build failed:", err)
-				log.Printf("Retrying (delay = %v)", buildFailureRetry)
-				<-time.After(buildFailureRetry)
-			} else {
-				log.Println("Restarting builder")
-			}
-		}
-	}()
+	go b.scriptRunner(ch)
 	for s := range ch {
 		files := make([]fileset.FileVersion, 0, 2)
 		data, err := json.Marshal(s.Diagnostics)
@@ -164,6 +151,22 @@ func (b *builder) scriptBuilder() {
 			})
 		}
 		b.setFiles(files)
+	}
+}
+
+func (b *builder) scriptRunner(ch chan<- *script.Script) {
+	defer close(ch)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	for {
+		if err := script.WatchBuild(ctx, ch, "game/cyber/compile.js",
+			[]string{"--config=debug"}); err != nil {
+			log.Println("Error: Build failed:", err)
+			log.Printf("Retrying (delay = %v)", buildFailureRetry)
+			<-time.After(buildFailureRetry)
+		} else {
+			log.Println("Restarting builder")
+		}
 	}
 }
 
