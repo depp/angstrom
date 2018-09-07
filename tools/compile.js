@@ -3,6 +3,7 @@ const path = require('path');
 const { promisify } = require('util');
 
 const rollup = require('rollup');
+const replace = require('rollup-plugin-replace');
 const { CLIEngine } = require('eslint');
 const minimist = require('minimist');
 const terser = require('terser');
@@ -89,9 +90,18 @@ const baseConfig = {
   sourceMap: true,
 };
 const configNames = {
-  release: {},
+  release: {
+    defines: {
+      RELEASE: true,
+      DEBUG: false,
+    },
+  },
   debug: {
     minify: false,
+    defines: {
+      RELEASE: false,
+      DEBUG: true,
+    },
   },
 };
 
@@ -172,6 +182,7 @@ async function compile(config) {
       },
     });
   }
+  inputOptions.plugins.push(replace({ values: config.defines }));
   if (config.minify) {
     inputOptions.plugins.push({
       renderChunk(code) {

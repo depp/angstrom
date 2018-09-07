@@ -5,25 +5,27 @@ class ShaderError extends Error {}
 // Compile a shader program.
 //
 // attributes: string, space-separated list of attribute names.
-// uniforms: string, space-separated list of scalar uniform names.
-// auniforms: string, space-separated list of array uniform names.
-// vsource: string, vertex shader source code.
-// fsource: string, fragment shader source code.
-function compileShaderProgram(
-  attributes, uniforms, auniforms, vsource, fsource,
+// scalarUniforms: string, space-separated list of scalar uniform names.
+// arrayUniforms: string, space-separated list of array uniform names.
+// vSource: string, vertex shader source code.
+// fSource: string, fragment shader source code.
+export function compileShaderProgram(
+  attributes, scalarUniforms, arrayUniforms, vSource, fSource,
 ) {
   const program = gl.createProgram();
   for (const [type, source] of [
-    [gl.VERTEX_SHADER, vsource], [gl.FRAGMENT_SHADER, fsource],
+    [gl.VERTEX_SHADER, vSource], [gl.FRAGMENT_SHADER, fSource],
   ]) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
-    // TODO: remove in release??
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      throw new ShaderError(
-        'Failed to compile shader:\n' + gl.getShaderInfoLog(shader),
-      );
+      if (DEBUG) {
+        throw new ShaderError(
+          'Failed to compile shader:\n' + gl.getShaderInfoLog(shader),
+        );
+      }
+      return null;
     }
     gl.attachShader(program, shader);
     gl.deleteShader(shader);
@@ -34,16 +36,18 @@ function compileShaderProgram(
   }
   gl.linkProgram(program);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    // TODO: remove in release??
-    throw new ShaderError(
-      'Failed to link program:\n' + gl.getProgramInfoLog(program),
-    );
+    if (DEBUG) {
+      throw new ShaderError(
+        'Failed to link program:\n' + gl.getProgramInfoLog(program),
+      );
+    }
+    return null;
   }
   const obj = { program };
-  for (const uniform of uniforms.split(' ')) {
+  for (const uniform of scalarUniforms.split(' ')) {
     obj[uniform] = gl.getUniformLocation(program, uniform);
   }
-  for (const uniform of auniforms.split(' ')) {
+  for (const uniform of arrayUniforms.split(' ')) {
     obj[uniform] = gl.getUniformLocation(program, uniform + '[0]');
   }
   return obj;
