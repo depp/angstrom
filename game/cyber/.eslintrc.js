@@ -9,6 +9,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    'default-case': 'off',
     // Save one character.
     'eqeqeq': 'off',
 

@@ -178,7 +178,7 @@
     function update(name) {
       const g = window.Game;
       if (g) {
-        g.loadData(name, data[name] || null);
+        g.loadedData(name, data[name] || null);
       }
     }
 
@@ -186,7 +186,7 @@
       const g = window.Game;
       if (g) {
         for (const [k, v] of Object.entries(data)) {
-          g.loadData(k, v);
+          g.loadedData(k, v);
         }
       }
     }

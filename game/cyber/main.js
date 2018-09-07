@@ -1,5 +1,5 @@
 import { gl } from '/game/cyber/global';
-import { compileShaderProgram } from '/game/cyber/shader';
+import { spriteProgram, loadedShaderSource } from '/game/cyber/shader';
 import {
   initInput, clearInput, updateInput,
 } from '/game/cyber/input';
@@ -13,8 +13,7 @@ import {
 // Handle to RequestAnimationFrame request.
 let handle;
 
-// Shader program.
-let prog;
+// Sprite vertex buffer.
 let buf;
 
 // Main loop.
@@ -58,16 +57,19 @@ function main(curTimeMS) {
   }
   gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STREAM_DRAW);
 
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  gl.useProgram(prog.program);
-  gl.enableVertexAttribArray(0);
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.enableVertexAttribArray(1);
-  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
-  gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
-  gl.uniformMatrix4fv(prog.M, false, cameraMatrix);
-  gl.drawArrays(gl.TRIANGLES, 0, sprites.length * 6);
+  const p = spriteProgram;
+  if (p) {
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.useProgram(p.program);
+    gl.enableVertexAttribArray(0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
+    gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
+    gl.uniformMatrix4fv(p.M, false, cameraMatrix);
+    gl.drawArrays(gl.TRIANGLES, 0, sprites.length * 6);
+  }
 
   handle = window.requestAnimationFrame(main);
 }
@@ -91,28 +93,21 @@ export function unpause() {
   startTime();
 }
 
-export function loadData(name, data) {
-  console.log(`Loaded data ${JSON.stringify(name)} ${JSON.stringify(data)}`);
+// Callback for when data is loaded dynamically by the development server. Not
+// used in the release version.
+export function loadedData(name, data) {
+  const i = name.indexOf('/');
+  if (i != -1) {
+    const dir = name.substr(0, i);
+    const base = name.substr(i + 1);
+    switch (dir) {
+      case 'shader':
+        loadedShaderSource(base, data);
+        return;
+    }
+  }
+  console.error(`Unknown file: ${JSON.stringify(name)}`);
 }
-
-const vertex = `precision mediump float;
-attribute vec2 Pos;
-attribute vec2 TexCoord;
-varying vec2 TexPos;
-uniform mat4 M;
-void main() {
-  TexPos = TexCoord;
-  gl_Position = M * vec4(Pos * 0.6, 0.0, 1.0).xzyw;
-}
-`;
-
-const fragment = `precision mediump float;
-varying vec2 TexPos;
-uniform sampler2D Texture;
-void main() {
-  gl_FragColor = texture2D(Texture, TexPos);
-}
-`;
 
 if (gl) {
   initEmoji();
@@ -121,7 +116,6 @@ if (gl) {
   window.addEventListener('focus', unpause);
   window.addEventListener('blur', pause);
 
-  prog = compileShaderProgram('Pos TexCoord', 'Scale M', '', vertex, fragment);
   buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
