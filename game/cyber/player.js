@@ -6,23 +6,42 @@ import { vecSet } from '/game/cyber/vec';
 const playerSpeed = 3;
 // Player acceleration, units per second squared.
 const playerAccel = 15;
+// Keyboard turning speed, radians per second.
+const playerTurnSpeed = 3;
+// Keyboard turning acceleration, radians per second squared.
+const playerTurnAccel = 15;
 
-// The player position in the world.
+// The player position [x, y, z] in the world.
 export let playerPos;
-// Current player velocity, units per second.
+// Current player velocity [x, y, z], units per second.
 let playerVel;
 // Curent angle the player is looking at, [yaw, pitch, roll].
 // Yaw: 0: +X, pi/2: +Y.
 // Pitch: 0: horizontal, pi/2: +Z.
 export let playerAngle;
+// Current angular velocity, yaw only.
+let playerAngleVel;
 
 export function startPlayer() {
   playerPos = [0, -1, 0];
   playerVel = [0, 0, 0];
   playerAngle = [1.5, 0, 0];
+  playerAngleVel = 0;
 }
 
 export function updatePlayer() {
+  // Update player angles.
+  {
+    /* eslint dot-notation: off */
+    let rMove = (buttonState['L'] - buttonState['R']) * playerTurnSpeed;
+    let accelDV = frameDT * playerTurnAccel;
+    playerAngleVel = Math.abs(rMove - playerAngleVel) <= accelDV
+      ? rMove
+      : playerAngleVel + accelDV * Math.sign(rMove - playerAngleVel);
+    playerAngle[0] = (playerAngle[0] + playerAngleVel * frameDT)
+      % (2 * Math.PI);
+  }
+
   // Update player velocity.
   /* eslint prefer-const: off */
   let [xVel, yVel, zVel] = playerVel;
