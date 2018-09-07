@@ -93,7 +93,7 @@ func (s *Set) SetFile(name string, stamp time.Time, ver *Version) bool {
 		f.versions[0] = ver
 		f.exists = true
 	}
-	if prev != nil {
+	if prev != nil && !prev.expiry.IsZero() {
 		prev.expiry = stamp.Add(fileRetention)
 		s.expiring = append(s.expiring, f)
 	}
