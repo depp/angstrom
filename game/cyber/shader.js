@@ -1,4 +1,15 @@
+// Code for loading shader programs.
+//
+// This module is only imported by main.js (to load shader source code
+// dynamically) and by shaders.js (to define shader programs). There is code for
+// both the debug and release build here, and rollup will only include the
+// correct version.
+
 import { gl } from '/game/cyber/global';
+
+// =============================================================================
+// Release build
+// =============================================================================
 
 // Compile a shader program.
 //
@@ -37,6 +48,10 @@ export function compileShaderProgram(
   }
   return obj;
 }
+
+// =============================================================================
+// Debug build
+// =============================================================================
 
 // Map from filename to shader source.
 const shaderSource = {};
