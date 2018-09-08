@@ -40,6 +40,7 @@ export function renderSprite() {
   const pos = [];
   const relPos = [];
   const right = [];
+  const up = [];
   for (const sprite of sprites) {
     for (let i = 0; i < 3; i++) {
       let p = sprite.pos[i], v = sprite.vel[i];
@@ -59,11 +60,13 @@ export function renderSprite() {
     vec3MulAdd(relPos, pos, playerPos, -1);
     vec3Cross(right, relPos, vecZ);
     vec3Norm(right);
+    vec3Cross(up, right, relPos);
+    vec3Norm(up);
     for (let j = 0; j < 6; j++) {
       const [r, s, u, v] = quad[j];
       vec3SetMulAdd(arr, pos,   1,       i + 5 * j);
       vec3SetMulAdd(arr, right, r * 0.2, i + 5 * j);
-      vec3SetMulAdd(arr, vecZ,  s * 0.2, i + 5 * j);
+      vec3SetMulAdd(arr, up,    s * 0.2, i + 5 * j);
       vec2Set(arr, ((n & 3) + u) / 4, ((n >> 2) + v) / 4, i + 5 * j + 3);
     }
     i += 5 * 6;
