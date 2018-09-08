@@ -149,6 +149,7 @@ class ShaderProgramDefinition {
       gl.deleteProgram(this.program);
     }
     this.program = program;
+    console.log(`Reloaded shader ${this.vname} ${this.fname}`);
   }
 }
 
