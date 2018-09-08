@@ -27,7 +27,7 @@ export const buttonPress = {};
 export const buttonState = {};
 
 function zeroButtons(buttons) {
-  for (const c of 'flbrLRs') {
+  for (const c of 'flbrLRsxy') {
     buttons[c] = 0;
   }
 }
@@ -60,12 +60,31 @@ function buttonUp(event) {
   }
 }
 
+function mouseMove(event) {
+  const { movementX = 0, movementY = 0 } = event;
+  buttonPress['x'] += movementX;
+  buttonPress['y'] -= movementY;
+}
+
+function pointerLockChange() {
+  if (document.pointerLockElement == canvas) {
+    document.addEventListener('mousemove', mouseMove);
+    document.addEventListener('mousedown', buttonDown);
+    document.addEventListener('mouseup', buttonUp);
+  } else {
+    document.removeEventListener('mousemove', mouseMove);
+    document.removeEventListener('mousedown', buttonDown);
+    document.removeEventListener('mouseup', buttonUp);
+  }
+}
+
 export function initInput() {
   canvas.addEventListener('click', () => {
-    console.log('CLICK');
+    canvas.requestPointerLock();
   });
   window.addEventListener('keydown', buttonDown);
   window.addEventListener('keyup', buttonUp);
+  document.addEventListener('pointerlockchange', pointerLockChange);
   clearInput();
 }
 

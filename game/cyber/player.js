@@ -1,6 +1,7 @@
-import { buttonState } from '/game/cyber/input';
+import { buttonState, buttonPress } from '/game/cyber/input';
 import { frameDT } from '/game/cyber/time';
 import { vec3Set } from '/game/cyber/vec';
+import { clamp } from '/game/cyber/util';
 
 // Maximum player speed, units per second.
 const playerSpeed = 3;
@@ -10,6 +11,8 @@ const playerAccel = 15;
 const playerTurnSpeed = 3;
 // Keyboard turning acceleration, radians per second squared.
 const playerTurnAccel = 15;
+// Mouse turning speed, radians per pixel.
+const playerTurnSensitivity = 3e-3;
 
 // The player position [x, y, z] in the world.
 export let playerPos;
@@ -32,23 +35,23 @@ export function startPlayer() {
 export function updatePlayer() {
   // Update player angles.
   {
-    /* eslint dot-notation: off */
+    const xLook = playerTurnSensitivity * buttonPress['x'];
+    const yLook = playerTurnSensitivity * buttonPress['y'];
     let rMove = (buttonState['L'] - buttonState['R']) * playerTurnSpeed;
     let accelDV = frameDT * playerTurnAccel;
     playerAngleVel = Math.abs(rMove - playerAngleVel) <= accelDV
       ? rMove
       : playerAngleVel + accelDV * Math.sign(rMove - playerAngleVel);
-    playerAngle[0] = (playerAngle[0] + playerAngleVel * frameDT)
+    playerAngle[0] = (playerAngle[0] + playerAngleVel * frameDT - xLook)
       % (2 * Math.PI);
+    playerAngle[1] = clamp(playerAngle[1] + yLook, -1.5, 1.5);
   }
 
   // Update player velocity.
   /* eslint prefer-const: off */
   let [xVel, yVel, zVel] = playerVel;
   {
-    /* eslint dot-notation: off */
     const forwardMove = buttonState['f'] - buttonState['b'];
-    /* eslint dot-notation: off */
     const strafeMove = buttonState['r'] - buttonState['l'];
     const scale = playerSpeed
           / Math.max(1, Math.hypot(forwardMove, strafeMove));

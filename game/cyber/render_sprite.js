@@ -35,7 +35,6 @@ export function renderSprite() {
   const relPos = [];
   const right = [];
   for (const sprite of sprites) {
-    // FIXME: Deoptimize for better gzip size?
     const { pos, n } = sprite;
     vec3MulAdd(relPos, pos, playerPos, -1);
     vec3Cross(right, relPos, vecZ);

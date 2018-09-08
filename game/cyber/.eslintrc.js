@@ -67,5 +67,9 @@ module.exports = {
     // We like to line data up.
     'no-multi-spaces': 'off',
     'array-bracket-spacing': 'off',
+
+    // We use square bracket notation to signal to Terser that the properties
+    // should not be mangled. This is mostly used for input bindings.
+    'dot-notation': 'off',
   },
 };
