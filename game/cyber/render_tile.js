@@ -22,6 +22,7 @@ export function renderTile() {
     return;
   }
 
+  gl.enable(gl.DEPTH_TEST);
   gl.useProgram(p.program);
   gl.enableVertexAttribArray(0);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
@@ -30,4 +31,5 @@ export function renderTile() {
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 
   gl.disableVertexAttribArray(1);
+  gl.disable(gl.DEPTH_TEST);
 }

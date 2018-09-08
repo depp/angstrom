@@ -9,9 +9,9 @@ const vertexBuffer = gl.createBuffer();
 export function renderSprite() {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   const sprites = [
-    { x: Math.cos(levelTime / 3), y: Math.sin(levelTime / 4) + 1, n: 0 },
-    { x: Math.cos(levelTime / 6), y: Math.sin(levelTime / 5) + 1, n: 1 },
-    { x: Math.cos(levelTime), y: Math.sin(levelTime) + 1, n: 2 },
+    { x: Math.cos(levelTime / 3), y: Math.sin(levelTime / 4) + 0.5, n: 0 },
+    { x: Math.cos(levelTime / 6), y: Math.sin(levelTime / 5) + 0.5, n: 1 },
+    { x: Math.cos(levelTime), y: Math.sin(levelTime) + 0.5, n: 2 },
   ];
   const arr = new Float32Array(4 * 6 * sprites.length);
   let i = 0;
@@ -20,12 +20,12 @@ export function renderSprite() {
     const { x, y, n } = sprite;
     const a = 1/4, u = (n & 3)*a, v = (n >> 2)*a;
     arr.set([
-      x-0.1, y-0.1, u, v+a,
-      x+0.1, y-0.1, u+a, v+a,
-      x-0.1, y+0.1, u, v,
-      x-0.1, y+0.1, u, v,
-      x+0.1, y-0.1, u+a, v+a,
-      x+0.1, y+0.1, u+a, v,
+      x-0.2, y-0.2, u, v+a,
+      x+0.2, y-0.2, u+a, v+a,
+      x-0.2, y+0.2, u, v,
+      x-0.2, y+0.2, u, v,
+      x+0.2, y-0.2, u+a, v+a,
+      x+0.2, y+0.2, u+a, v,
     ], i);
     i += 4 * 6;
   }
@@ -37,6 +37,7 @@ export function renderSprite() {
   }
 
   gl.enable(gl.BLEND);
+  gl.enable(gl.DEPTH_TEST);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   gl.useProgram(p.program);
   gl.enableVertexAttribArray(0);
@@ -49,4 +50,5 @@ export function renderSprite() {
 
   gl.disableVertexAttribArray(1);
   gl.disable(gl.BLEND);
+  gl.disable(gl.DEPTH_TEST);
 }
