@@ -3,8 +3,20 @@ import { gl } from '/game/cyber/global';
 import { cameraMatrix } from '/game/cyber/camera';
 import { spriteProgram } from '/game/cyber/shaders';
 import { levelTime } from '/game/cyber/time';
+import { vec2Set, vec3Set, vec3MulAdd } from '/game/cyber/vec';
 
 const vertexBuffer = gl.createBuffer();
+
+// A unit quad as two triangles. XY and UV coordinates.
+/* eslint no-multi-spaces: off, array-bracket-spacing: off */
+const quad = [
+  [-1, -1, 0, 1],
+  [ 1, -1, 1, 1],
+  [-1,  1, 0, 0],
+  [-1,  1, 0, 0],
+  [ 1, -1, 1, 1],
+  [ 1,  1, 1, 0],
+];
 
 export function renderSprite() {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -13,21 +25,22 @@ export function renderSprite() {
     { x: Math.cos(levelTime / 6), y: Math.sin(levelTime / 5) + 0.5, n: 1 },
     { x: Math.cos(levelTime), y: Math.sin(levelTime) + 0.5, n: 2 },
   ];
-  const arr = new Float32Array(4 * 6 * sprites.length);
+  const arr = new Float32Array(5 * 6 * sprites.length);
   let i = 0;
+  const right = [], up = [];
   for (const sprite of sprites) {
     // FIXME: Deoptimize for better gzip size?
     const { x, y, n } = sprite;
-    const a = 1/4, u = (n & 3)*a, v = (n >> 2)*a;
-    arr.set([
-      x-0.2, y-0.2, u, v+a,
-      x+0.2, y-0.2, u+a, v+a,
-      x-0.2, y+0.2, u, v,
-      x-0.2, y+0.2, u, v,
-      x+0.2, y-0.2, u+a, v+a,
-      x+0.2, y+0.2, u+a, v,
-    ], i);
-    i += 4 * 6;
+    vec3Set(right, 0.2, 0, 0);
+    vec3Set(up, 0, 0, 0.2);
+    for (let j = 0; j < 6; j++) {
+      const [r, s, u, v] = quad[j];
+      vec3Set(arr, x, 0, y, i + 5 * j);
+      vec3MulAdd(arr, right, r, i + 5 * j);
+      vec3MulAdd(arr, up, s, i + 5 * j);
+      vec2Set(arr, ((n & 3) + u) / 4, ((n >> 2) + v) / 4, i + 5 * j + 3);
+    }
+    i += 5 * 6;
   }
   gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STREAM_DRAW);
 
@@ -42,8 +55,8 @@ export function renderSprite() {
   gl.useProgram(p.program);
   gl.enableVertexAttribArray(0);
   gl.enableVertexAttribArray(1);
-  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
-  gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 20, 0);
+  gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 20, 12);
   gl.uniformMatrix4fv(p.M, false, cameraMatrix);
 
   gl.drawArrays(gl.TRIANGLES, 0, sprites.length * 6);

@@ -1,6 +1,6 @@
 import { buttonState } from '/game/cyber/input';
 import { frameDT } from '/game/cyber/time';
-import { vecSet } from '/game/cyber/vec';
+import { vec3Set } from '/game/cyber/vec';
 
 // Maximum player speed, units per second.
 const playerSpeed = 3;
@@ -68,11 +68,11 @@ export function updatePlayer() {
       yVel += yDV * accelDV / magDV;
     }
   }
-  vecSet(playerVel, xVel, yVel, zVel);
+  vec3Set(playerVel, xVel, yVel, zVel);
 
   // Update player position
   let [xPos, yPos, zPos] = playerPos;
   xPos += xVel * frameDT;
   yPos += yVel * frameDT;
-  vecSet(playerPos, xPos, yPos, zPos);
+  vec3Set(playerPos, xPos, yPos, zPos);
 }
