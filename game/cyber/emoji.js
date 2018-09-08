@@ -34,11 +34,13 @@ export function initEmoji() {
       + '\u{1F457}\u{1F45A}'
     // Shoes...
     // Men
-    + '\u{1F45E}'
+      + '\u{1F45E}'
     // Androgynous
-    + '\u{1F45F}'
+      + '\u{1F45F}'
     // Women
-    + '\u{1F462}'
+      + '\u{1F462}'
+    // Hats
+      + '\u{1F3A9}'
   ));
   for (let i = 0; i < 20; i++) {
     let female = Math.random() < 0.5;
@@ -57,6 +59,7 @@ export function initEmoji() {
       shirt: 13 + female * 2 + ((Math.random() * 3) | 0),
       shoe: 18 + female + ((Math.random() * 2) | 0),
       head: emoji.length - 1,
+      hat: Math.random() < 0.8 ? -1 : 21,
     });
   }
 

@@ -64,7 +64,7 @@ class Person {
     const person = people[i];
     this.phase = 0;
     this.stride = 2**(signedRandom() * 0.2);
-    this.offsets = new Float32Array(6 * 3);
+    this.offsets = new Float32Array(7 * 3);
     this.pos = [
       i - 10, // 4 * signedRandom(),
       0, // 4 * signedRandom(),
@@ -93,7 +93,13 @@ class Person {
       size: 0.15,
       flip: true,
     }];
-    for (let i = 0; i < 6; i++) {
+    if (person.hat) {
+      this.sprites.push({
+        n: person.hat,
+        size: 0.15,
+      });
+    }
+    for (let i = 0; i < this.sprites.length; i++) {
       this.sprites[i].offset = this.offsets.subarray(i * 3, i * 3 + 3);
     }
   }
@@ -104,10 +110,11 @@ class Person {
     this.offsets.set([
       0, 0.2 + Math.abs(s) * 0.05, 2,
       0, -0.1 + Math.abs(s) * 0.03, 1,
-      0.15, -0.2 - s * 0.04, 3,
-      -0.15, -0.2 + s * 0.04, 3,
+      0.15, -0.2 - s * 0.04, 4,
+      -0.15, -0.2 + s * 0.04, 4,
       0.15, -0.3 + Math.max(0, s) * 0.06, 0,
       -0.15, -0.3 + Math.max(0, -s) * 0.06, 0,
+      0, 0.4 + Math.abs(s) * 0.05, 3,
     ]);
   }
 }
