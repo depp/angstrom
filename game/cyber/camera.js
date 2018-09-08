@@ -1,5 +1,5 @@
 import { canvas } from '/game/cyber/global';
-import { vec3MulAdd } from '/game/cyber/vec';
+import { vec3SetMulAdd } from '/game/cyber/vec';
 import { playerPos, playerAngle } from '/game/cyber/player';
 
 // ========================================
@@ -84,6 +84,6 @@ export function updateCamera() {
   // ========================================
   // Translation matrix
   identity();
-  vec3MulAdd(componentMatrix, playerPos, -1, 12);
+  vec3SetMulAdd(componentMatrix, playerPos, -1, 12);
   matMul();
 }

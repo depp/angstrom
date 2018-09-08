@@ -3,12 +3,14 @@ import { gl } from '/game/cyber/global';
 import { cameraMatrix } from '/game/cyber/camera';
 import { spriteProgram } from '/game/cyber/shaders';
 import { levelTime } from '/game/cyber/time';
-import { vec2Set, vec3Set, vec3MulAdd } from '/game/cyber/vec';
+import { playerPos } from '/game/cyber/player';
+import {
+  vec2Set, vec3MulAdd, vec3SetMulAdd, vec3Norm, vec3Cross,
+} from '/game/cyber/vec';
 
 const vertexBuffer = gl.createBuffer();
 
 // A unit quad as two triangles. XY and UV coordinates.
-/* eslint no-multi-spaces: off, array-bracket-spacing: off */
 const quad = [
   [-1, -1, 0, 1],
   [ 1, -1, 1, 1],
@@ -18,26 +20,30 @@ const quad = [
   [ 1,  1, 1, 0],
 ];
 
+const vecZ = [0, 0, 1];
+
 export function renderSprite() {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   const sprites = [
-    { x: Math.cos(levelTime / 3), y: Math.sin(levelTime / 4) + 0.5, n: 0 },
-    { x: Math.cos(levelTime / 6), y: Math.sin(levelTime / 5) + 0.5, n: 1 },
-    { x: Math.cos(levelTime), y: Math.sin(levelTime) + 0.5, n: 2 },
+    { pos: [Math.cos(levelTime / 3), 0, Math.sin(levelTime / 4) + 0.5], n: 0 },
+    { pos: [Math.cos(levelTime / 6), 0, Math.sin(levelTime / 5) + 0.5], n: 1 },
+    { pos: [Math.cos(levelTime), 0, Math.sin(levelTime) + 0.5], n: 2 },
   ];
   const arr = new Float32Array(5 * 6 * sprites.length);
   let i = 0;
-  const right = [], up = [];
+  const relPos = [];
+  const right = [];
   for (const sprite of sprites) {
     // FIXME: Deoptimize for better gzip size?
-    const { x, y, n } = sprite;
-    vec3Set(right, 0.2, 0, 0);
-    vec3Set(up, 0, 0, 0.2);
+    const { pos, n } = sprite;
+    vec3MulAdd(relPos, pos, playerPos, -1);
+    vec3Cross(right, relPos, vecZ);
+    vec3Norm(right);
     for (let j = 0; j < 6; j++) {
       const [r, s, u, v] = quad[j];
-      vec3Set(arr, x, 0, y, i + 5 * j);
-      vec3MulAdd(arr, right, r, i + 5 * j);
-      vec3MulAdd(arr, up, s, i + 5 * j);
+      vec3SetMulAdd(arr, pos,   1,       i + 5 * j);
+      vec3SetMulAdd(arr, right, r * 0.2, i + 5 * j);
+      vec3SetMulAdd(arr, vecZ,  s * 0.2, i + 5 * j);
       vec2Set(arr, ((n & 3) + u) / 4, ((n >> 2) + v) / 4, i + 5 * j + 3);
     }
     i += 5 * 6;

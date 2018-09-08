@@ -63,5 +63,9 @@ module.exports = {
 
     // We want to put spaces freely.
     'space-infix-ops': 'off',
+
+    // We like to line data up.
+    'no-multi-spaces': 'off',
+    'array-bracket-spacing': 'off',
   },
 };

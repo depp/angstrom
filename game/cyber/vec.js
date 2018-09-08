@@ -24,10 +24,17 @@ export function vec3Set(out, x, y, z, offset=0) {
   out[offset+2] = z;
 }
 
-// Computes out[offset..offset+2] += x[...] * a.
-export function vec3MulAdd(out, x, a=1, offset=0) {
+// Computes out = x + y * a.
+export function vec3MulAdd(out, x, y, a, offset=0) {
   for (let i = 0; i < 3; i++) {
-    out[offset + i] += a * x[i];
+    out[offset + i] = x[i] + y[i] * a;
+  }
+}
+
+// Computes out += x * a.
+export function vec3SetMulAdd(out, x, a=1, offset=0) {
+  for (let i = 0; i < 3; i++) {
+    out[offset + i] += x[i] * a;
   }
 }
 
@@ -40,8 +47,10 @@ export function vec3Dot(x, y) {
   return a;
 }
 
-// Compute out = x / |x|, returns |x| (does NOT return x).
+// Compute out = x / |x|, returns |x| (does NOT return x). If x is
+// unspecified, out is used.
 export function vec3Norm(out, x) {
+  x = x || out;
   const r = vec3Dot(x, x);
   let i;
   if (r > 1e-8) {
@@ -54,6 +63,16 @@ export function vec3Norm(out, x) {
     out[2] = 1;
   }
   return r;
+}
+
+// Compute the cross product of x and y, store in out.
+export function vec3Cross(out, x, y) {
+  vec3Set(
+    out,
+    x[1] * y[2] - x[2] * y[1],
+    x[2] * y[0] - x[0] * y[2],
+    x[0] * y[1] - x[1] * y[0],
+  );
 }
 
 const traceC = [];
