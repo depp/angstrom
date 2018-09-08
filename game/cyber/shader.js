@@ -137,7 +137,6 @@ class ShaderProgramDefinition {
         console.warn(`Missing attribute: ${JSON.stringify(name)}`);
       }
     }
-    this.program = program;
     const obj = { program };
     const uCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
     for (let i = 0; i < uCount; i++) {
@@ -146,6 +145,10 @@ class ShaderProgramDefinition {
     }
     const { func } = this;
     func(new Proxy(obj, handler));
+    if (this.program) {
+      gl.deleteProgram(this.program);
+    }
+    this.program = program;
   }
 }
 
