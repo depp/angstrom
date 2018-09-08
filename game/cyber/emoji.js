@@ -2,9 +2,15 @@ import { gl } from '/game/cyber/global';
 
 export let emojiTexture;
 
+export const hands = [];
+export const people = [];
+
 export function initEmoji() {
-  const badFaces = Array.from('\u{1F608}\u{1F62D}\u{1F631}\u{1F911}'
-                              + '\u{1F92A}\u{1F92C}\u{1F92E}\u{1F92F}');
+  const emoji = [
+    // Bad faces.
+    ...('\u{1F608}\u{1F62D}\u{1F631}\u{1F911}'
+        + '\u{1F92A}\u{1F92C}\u{1F92E}\u{1F92F}'),
+  ];
 
   const gender = ['\u200D\u2642\uFE0F', '\u200D\u2640\uFE0F'];
   const person = Array.from(
@@ -23,12 +29,30 @@ export function initEmoji() {
     '\u{1F46E}\u{1F477}\u{1F482}\u{1F575}\u{1F9D9}',
   );
 
-  const emoji = [...badFaces];
-  emoji.length = 0;
+  for (let i = 0; i < 5; i++) {
+    emoji.push(String.fromCodePoint(0x1F91A, 0x1F3FB + i));
+  }
+  emoji.push(...(
+    // Shirts...
+    // Men
+    '\u{1F455}\u{1F454}'
+    // Androgynous
+      + '\u{1F9E5}'
+    // Women
+      + '\u{1F457}\u{1F45A}'
+    // Shoes...
+    // Men
+    + '\u{1F45E}'
+    // Androgynous
+    + '\u{1F45F}'
+    // Women
+    + '\u{1F462}'
+  ));
   for (let i = 0; i < 20; i++) {
     const r = Math.random();
     let female = Math.random() < 0.5;
-    const skin = String.fromCodePoint(0x1F3FB + ((Math.random() * 5) | 0));
+    const skinIdx = (Math.random() * 5) | 0;
+    const skin = String.fromCodePoint(0x1F3FB + skinIdx);
     if (r < 0.3) {
       const j = (Math.random() * person.length) | 0;
       if (j < 4) {
@@ -52,18 +76,25 @@ export function initEmoji() {
           + gender[female | 0],
       );
     }
+    people.push({
+      hand: 8 + skinIdx,
+      shirt: 13 + female * 2 + ((Math.random() * 3) | 0),
+      shoe: 18 + female + ((Math.random() * 2) | 0),
+      head: emoji.length - 1,
+    });
   }
+  console.log(emoji);
 
   const ecanvas = document.createElement('canvas');
-  ecanvas.width = 256;
-  ecanvas.height = 256;
+  ecanvas.width = 512;
+  ecanvas.height = 512;
   const ctx = ecanvas.getContext('2d');
   ctx.font = '48px "Noto Color Emoji"';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   let idx = 0;
   for (const e of emoji) {
-    ctx.fillText(e, (idx & 3) * 64 + 32, (idx >> 2) * 64 + 32);
+    ctx.fillText(e, (idx & 7) * 64 + 32, (idx >> 3) * 64 + 32);
     idx++;
   }
 
@@ -84,3 +115,5 @@ export function initEmoji() {
     img.src = URL.createObjectURL(b);
   });
 }
+
+initEmoji();

@@ -28,7 +28,7 @@ export function vec3Set(out, x, y, z, offset=0) {
 }
 
 // Computes out = x + y * a.
-export function vec3MulAdd(out, x, y, a, offset=0) {
+export function vec3MulAdd(out, x, y, a=1, offset=0) {
   for (let i = 0; i < 3; i++) {
     out[offset + i] = x[i] + y[i] * a;
   }

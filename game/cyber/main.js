@@ -3,7 +3,6 @@ import { loadedShaderSource } from '/game/cyber/shader';
 import {
   initInput, clearInput, updateInput,
 } from '/game/cyber/input';
-import { initEmoji } from '/game/cyber/emoji';
 import { updateCamera } from '/game/cyber/camera';
 import { startPlayer, updatePlayer } from '/game/cyber/player';
 import {
@@ -66,7 +65,6 @@ export function loadedData(name, data) {
 }
 
 if (gl) {
-  initEmoji();
   initInput();
   startPlayer();
   window.addEventListener('focus', unpause);

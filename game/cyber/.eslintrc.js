@@ -44,6 +44,7 @@ module.exports = {
     'no-plusplus': 'off',
     'no-restricted-syntax': 'off',
     'no-multi-assign': 'off',
+    'no-nested-ternary': 'off',
 
     // Good rule, except for code size.
     'no-shadow': 'off',
@@ -71,5 +72,8 @@ module.exports = {
     // We use square bracket notation to signal to Terser that the properties
     // should not be mangled. This is mostly used for input bindings.
     'dot-notation': 'off',
+
+    // Don't know why this one exists.
+    'class-methods-use-this': 'off',
   },
 };
