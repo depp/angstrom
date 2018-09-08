@@ -33,6 +33,7 @@ class Swarm {
     for (let i = 0; i < n; i++) {
       this.sprites.push({
         n: i % 8,
+        size: 0.2,
         pos: [signedRandom(), signedRandom(), signedRandom()],
         vel: [signedRandom(), signedRandom(), signedRandom()],
       });
@@ -70,30 +71,24 @@ class Person {
     ];
     this.sprites = [{
       n: person.head,
-      pos: [0, 0, 0],
       size: 0.2,
     }, {
       n: person.shirt,
-      pos: [0, 0, 0],
       size: 0.25,
     }, {
       n: person.hand,
-      pos: [0, 0, 0],
       size: 0.1,
       rotate: 180,
     }, {
       n: person.hand,
-      pos: [0, 0, 0],
       size: 0.1,
       flip: true,
       rotate: 180,
     }, {
       n: person.shoe,
-      pos: [0, 0, 0],
       size: 0.15,
     }, {
       n: person.shoe,
-      pos: [0, 0, 0],
       size: 0.15,
       flip: true,
     }];
@@ -115,11 +110,9 @@ class Person {
     ]);
   }
 }
-console.log(people);
 
 const groups = [];
 groups.push(new Swarm(20));
-groups.length = 0;
 for (let i = 0; i < 20; i++) {
   groups.push(new Person(i));
 }
@@ -133,7 +126,7 @@ export function renderSprite() {
   }
   const arr = new Float32Array(5 * 6 * nSprite);
   let i = 0;
-  const pos = [];
+  const spos = [];
   const right = [];
   const up = [];
   const forward = [];
@@ -145,11 +138,11 @@ export function renderSprite() {
     vec3Cross(up, right, forward);
     vec3Norm(up);
     for (const sprite of group.sprites) {
-      vec3MulAdd(pos, group.pos, sprite.pos);
       /* eslint prefer-const: off */
       const {
-        n, size, offset = vecZero, rotate = 0, flip = false,
+        n, size, pos = vecZero, offset = vecZero, rotate = 0, flip = false,
       } = sprite;
+      vec3MulAdd(spos, group.pos, pos);
       const cc = Math.cos(Math.PI / 180 * rotate);
       const ss = Math.sin(Math.PI / 180 * rotate);
       for (let j = 0; j < 6; j++) {
@@ -159,7 +152,7 @@ export function renderSprite() {
         }
         let r2 = r * cc - s * ss;
         let s2 = s * cc + r * ss;
-        vec3SetMulAdd(arr, pos,     1,                      i + 5 * j);
+        vec3SetMulAdd(arr, spos,    1,                      i + 5 * j);
         vec3SetMulAdd(arr, right,   r2 * size + offset[0],  i + 5 * j);
         vec3SetMulAdd(arr, up,      s2 * size + offset[1],  i + 5 * j);
         vec3SetMulAdd(arr, forward, -0.01 * offset[2],      i + 5 * j);
