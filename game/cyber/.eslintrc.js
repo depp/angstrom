@@ -4,6 +4,10 @@ module.exports = {
     es6: true,
   },
   extends: 'airbnb-base',
+  globals: {
+    DEBUG: true,
+    RELEASE: true,
+  },
   parserOptions: {
     ecmaVersion: 8, // 2017
     sourceType: 'module',
@@ -22,6 +26,8 @@ module.exports = {
 
     // Complete garbage.
     'import/prefer-default-export': 'off',
+
+    'max-len': ['error', { code: 80 }],
 
     // OpenGL demands otherwise.
     'no-bitwise': 'off',

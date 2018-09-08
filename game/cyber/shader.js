@@ -63,26 +63,18 @@ const shaderPrograms = {};
 // changes.
 class ShaderProgram {
   // Define a new shader program.
-  //
-  // options.attributes: space-delimited attributes.
-  // options.uniforms: space-separated scalar uniforms (optional).
-  // options.auniforms: space-separated array uniforms (optional).
-  // options.vname: name of vertex shader source, without .vert.glsl.
-  // options.fname: name of fragment shader source, without .frag.glsl.
-  // options.func: callback for successful compilation, takes program as
-  //               argument.
   constructor(options) {
     const {
       attributes,
-      uniforms='',
-      auniforms='',
+      scalarUniforms,
+      arrayUniforms,
       vname,
       fname,
       func,
-    }= options;
+    } = options;
     this.attributes = attributes;
-    this.uniforms = uniforms;
-    this.auniforms = auniforms;
+    this.scalarUniforms = scalarUniforms;
+    this.arrayUniforms = arrayUniforms;
     this.vname = `${vname}.vert.glsl`;
     this.fname = `${fname}.frag.glsl`;
     this.func = func;
@@ -97,7 +89,11 @@ class ShaderProgram {
     let prog;
     try {
       prog = compileShaderProgram(
-        this.attributes, this.uniforms, this.auniforms, vsource, fsource,
+        this.attributes,
+        this.scalarUniforms,
+        this.arrayUniforms,
+        vsource,
+        fsource,
       );
     } catch (e) {
       if (e instanceof ShaderError) {
@@ -112,7 +108,14 @@ class ShaderProgram {
 }
 
 // Define a shader program to be compiled when the sources are available.
-function defineShaderProgram(options) {
+//
+// options.attributes: space-delimited attributes.
+// options.scalarUniforms: space-separated scalar uniforms (optional).
+// options.arrayUniforms: space-separated array uniforms (optional).
+// options.vname: name of vertex shader source, without .vert.glsl.
+// options.fname: name of fragment shader source, without .frag.glsl.
+// options.func: callback for successful compilation, takes program as argument.
+export function defineShaderProgram(options) {
   const program = new ShaderProgram(options);
   for (const name of [program.vname, program.fname]) {
     let programs = shaderPrograms[name];
@@ -144,12 +147,3 @@ export function loadedShaderSource(name, data) {
     program.compile();
   }
 }
-
-export let spriteProgram;
-defineShaderProgram({
-  vname: 'sprite',
-  fname: 'sprite',
-  attributes: 'Pos TexCoord',
-  uniforms: 'Scale M',
-  func(prog) { spriteProgram = prog; },
-});

@@ -1,5 +1,6 @@
 import { gl } from '/game/cyber/global';
-import { spriteProgram, loadedShaderSource } from '/game/cyber/shader';
+import { loadedShaderSource } from '/game/cyber/shader';
+import { spriteProgram } from '/game/cyber/shaders';
 import {
   initInput, clearInput, updateInput,
 } from '/game/cyber/input';

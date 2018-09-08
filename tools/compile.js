@@ -8,6 +8,7 @@ const { CLIEngine } = require('eslint');
 const minimist = require('minimist');
 const terser = require('terser');
 const chokidar = require('chokidar');
+const _eval = require('eval');
 
 const close = promisify(fs.close);
 const fstat = promisify(fs.fstat);
@@ -137,7 +138,7 @@ async function compile(config) {
     plugins: [
       {
         // Resolve the modules to JS files.
-        async resolveId(id, origin) {
+        resolveId(id, origin) {
           let mpath = id;
           if (mpath.startsWith('/')) {
             mpath = path.normalize(mpath.replace(/^\/+/, ''));
@@ -150,20 +151,10 @@ async function compile(config) {
             });
             return null;
           }
-          const fpath = `${mpath}.js`;
-          const source = await files.load(fpath);
-          if (source === null) {
-            diagnostics[origin || ''].push({
-              severity: 2,
-              message: `Could not resolve module ${JSON.stringify(id)}`,
-              fatal: true,
-            });
-            return false;
-          }
-          return fpath;
+          return `${mpath}.js`;
         },
         // Load the files and store the modification time.
-        load(id) {
+        async load(id) {
           diagnostics[id] = [];
           return files.load(id);
         },
@@ -182,7 +173,38 @@ async function compile(config) {
       },
     });
   }
-  inputOptions.plugins.push(replace({ values: config.defines }));
+  inputOptions.plugins.push({
+    // Run ad-hoc source code generators.
+    async transform(source, id) {
+      if (!source.startsWith('// @generate_source\n')) {
+        return null;
+      }
+      try {
+        const generator = _eval(source, id);
+        const newSource = await generator(Object.assign({
+          loadGLSL(name) {
+            return files.load(name);
+          },
+        }, config.defines));
+        /*
+        process.stdout.write(newSource);
+        process.exit(1);
+        */
+        return { code: newSource, map: null };
+      } catch (e) {
+        diagnostics[id].push({
+          fatal: true,
+          severity: 2,
+          message: `Code generation failed: ${e.message}`,
+        });
+        return '';
+      }
+    },
+  });
+  inputOptions.plugins.push(replace({
+    // The replace plugin modifies the values, so we need to copy them.
+    values: Object.assign({}, config.defines),
+  }));
   if (config.minify) {
     inputOptions.plugins.push({
       renderChunk(code) {
