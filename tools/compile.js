@@ -128,6 +128,7 @@ async function compile(config) {
   // we added. The empty string marks the root level.
   const diagnostics = { '': [] };
   const files = new FileSet();
+  const generated = {};
   const inputOptions = {
     input: config.config === 'release'
       ? '/game/cyber/main.release'
@@ -186,10 +187,7 @@ async function compile(config) {
             return files.load(name);
           },
         }, config.defines));
-        /*
-        process.stdout.write(newSource);
-        process.exit(1);
-        */
+        generated[id] = newSource;
         return { code: newSource, map: null };
       } catch (e) {
         diagnostics[id].push({
@@ -243,6 +241,7 @@ async function compile(config) {
     success,
     errorCount,
     warningCount,
+    generated,
     inputs: Object.values(files.files).map(
       f => ({ file: f.file, mtime: f.mtime }),
     ),
