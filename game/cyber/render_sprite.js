@@ -7,6 +7,7 @@ import { playerPos } from '/game/cyber/player';
 import {
   vec2Set, vec3MulAdd, vec3SetMulAdd, vec3Norm, vec3Cross,
 } from '/game/cyber/vec';
+import { emojiTexture } from '/game/cyber/emoji';
 
 const vertexBuffer = gl.createBuffer();
 
@@ -51,7 +52,7 @@ export function renderSprite() {
   gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STREAM_DRAW);
 
   const p = spriteProgram;
-  if (!p) {
+  if (!p || !emojiTexture) {
     return;
   }
 
