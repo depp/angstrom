@@ -55,7 +55,6 @@ export function renderSprite() {
     return;
   }
 
-  gl.enable(gl.BLEND);
   gl.enable(gl.DEPTH_TEST);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   gl.useProgram(p.program);
@@ -68,6 +67,5 @@ export function renderSprite() {
   gl.drawArrays(gl.TRIANGLES, 0, sprites.length * 6);
 
   gl.disableVertexAttribArray(1);
-  gl.disable(gl.BLEND);
   gl.disable(gl.DEPTH_TEST);
 }
