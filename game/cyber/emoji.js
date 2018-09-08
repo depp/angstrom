@@ -59,7 +59,6 @@ export function initEmoji() {
       head: emoji.length - 1,
     });
   }
-  console.log(emoji);
 
   const ecanvas = document.createElement('canvas');
   ecanvas.width = 512;
