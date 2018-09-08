@@ -2,7 +2,6 @@
 package script
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -99,13 +98,36 @@ func WatchBuild(ctx context.Context, out chan<- *Script, compile string, args []
 	}
 	wp.Close()
 	wp = nil
-	sc := bufio.NewScanner(rp)
-	for sc.Scan() {
+	buf := make([]byte, 8*1024)
+	var pos int
+	for {
+		var lineLen int
+		for {
+			if pos == len(buf) {
+				nbuf := make([]byte, len(buf)*2)
+				copy(nbuf, buf)
+				buf = nbuf
+			}
+			req := buf[pos:]
+			n, err := rp.Read(req)
+			if err != nil {
+				return err
+			}
+			opos := pos
+			pos += n
+			i := bytes.IndexByte(req[:n], '\n')
+			if i != -1 {
+				lineLen = opos + i
+				break
+			}
+		}
+		line := buf[:lineLen]
 		scr := new(Script)
-		if err := json.Unmarshal(sc.Bytes(), scr); err != nil {
+		if err := json.Unmarshal(line, scr); err != nil {
 			return err
 		}
 		out <- scr
+		copy(buf, buf[lineLen+1:pos])
+		pos -= lineLen + 1
 	}
-	return sc.Err()
 }
