@@ -12,7 +12,6 @@ export function initEmoji() {
         + '\u{1F92A}\u{1F92C}\u{1F92E}\u{1F92F}'),
   ];
 
-  const gender = ['\u200D\u2642\uFE0F', '\u200D\u2640\uFE0F'];
   const person = Array.from(
     // Men
     '\u{1F466}\u{1F468}\u{1F474}\u{1F9D4}'
@@ -20,13 +19,6 @@ export function initEmoji() {
       + '\u{1F9D1}\u{1F9D2}\u{1F9D3}'
     // Women
       + '\u{1F467}\u{1F469}\u{1F475}',
-  );
-  const combineItems = Array.from(
-    '\u{1F33E}\u{1F373}\u{1F3A4}\u{1F3A8}\u{1F3ED}'
-      + '\u{1F4BC}\u{1F527}\u{1F52C}\u{1F680}\u{1F692}',
-  );
-  const professions = Array.from(
-    '\u{1F46E}\u{1F477}\u{1F482}\u{1F575}\u{1F9D9}',
   );
 
   for (let i = 0; i < 5; i++) {
@@ -49,33 +41,17 @@ export function initEmoji() {
     + '\u{1F462}'
   ));
   for (let i = 0; i < 20; i++) {
-    const r = Math.random();
     let female = Math.random() < 0.5;
     const skinIdx = (Math.random() * 5) | 0;
     const skin = String.fromCodePoint(0x1F3FB + skinIdx);
-    if (r < 0.3) {
-      const j = (Math.random() * person.length) | 0;
-      if (j < 4) {
-        female = false;
-      }
-      if (j > 6) {
-        female = true;
-      }
-      emoji.push(person[j] + skin);
-    } else if (r < 0.7) {
-      emoji.push(
-        String.fromCodePoint(0x1F468 + female)
-          + skin
-          + '\u200D'
-          + combineItems[(Math.random() * combineItems.length) | 0],
-      );
-    } else {
-      emoji.push(
-        professions[(Math.random() * professions.length) | 0]
-          + skin
-          + gender[female | 0],
-      );
+    const j = (Math.random() * person.length) | 0;
+    if (j < 4) {
+      female = false;
     }
+    if (j > 6) {
+      female = true;
+    }
+    emoji.push(person[j] + skin);
     people.push({
       hand: 8 + skinIdx,
       shirt: 13 + female * 2 + ((Math.random() * 3) | 0),
