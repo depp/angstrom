@@ -41,6 +41,8 @@ export function initEmoji() {
       + '\u{1F462}'
     // Hats
       + '\u{1F3A9}'
+    // Purses, etc.
+      + '\u{1F45B}\u{1F45C}\u{1F45D}'
   ));
   for (let i = 0; i < 20; i++) {
     let female = Math.random() < 0.5;
@@ -60,6 +62,9 @@ export function initEmoji() {
       shoe: 18 + female + ((Math.random() * 2) | 0),
       head: emoji.length - 1,
       hat: Math.random() < 0.8 ? -1 : 21,
+      item: Math.random() < 0.5
+        ? -1
+        : 22 + ((Math.random() * 3) | 0),
     });
   }
 
