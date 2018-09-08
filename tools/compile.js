@@ -8,7 +8,7 @@ const { CLIEngine } = require('eslint');
 const minimist = require('minimist');
 const terser = require('terser');
 const chokidar = require('chokidar');
-const _eval = require('eval');
+const evalModule = require('eval');
 
 const close = promisify(fs.close);
 const fstat = promisify(fs.fstat);
@@ -180,7 +180,7 @@ async function compile(config) {
         return null;
       }
       try {
-        const generator = _eval(source, id);
+        const generator = evalModule(source, id);
         const newSource = await generator(Object.assign({
           loadGLSL(name) {
             return files.load(name);
