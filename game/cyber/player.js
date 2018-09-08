@@ -23,7 +23,7 @@ export let playerAngle;
 let playerAngleVel;
 
 export function startPlayer() {
-  playerPos = [0, -1, 0];
+  playerPos = [0, -1, 0.5];
   playerVel = [0, 0, 0];
   playerAngle = [1.5, 0, 0];
   playerAngleVel = 0;

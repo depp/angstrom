@@ -9,6 +9,13 @@ const shaders = {
       'TexCoord',
     ],
   },
+  tileProgram: {
+    vname: 'tile',
+    fname: 'tile',
+    attributes: [
+      'Pos',
+    ],
+  },
 };
 
 module.exports = async function generate(build) {
