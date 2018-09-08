@@ -63,6 +63,7 @@ class Person {
   constructor(i) {
     const person = people[i];
     this.phase = 0;
+    this.stride = 2**(signedRandom() * 0.2);
     this.offsets = new Float32Array(6 * 3);
     this.pos = [
       i - 10, // 4 * signedRandom(),
@@ -98,7 +99,7 @@ class Person {
   }
 
   update() {
-    this.phase = (this.phase + frameDT * 4) % (2 * Math.PI);
+    this.phase = (this.phase + frameDT * 4 * this.stride) % (2 * Math.PI);
     const s = Math.sin(this.phase);
     this.offsets.set([
       0, 0.2 + Math.abs(s) * 0.05, 2,
