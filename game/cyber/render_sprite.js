@@ -27,7 +27,7 @@ const vecZ = [0, 0, 1];
 const sprites = [];
 for (let i = 0; i < 40; i++) {
   sprites.push({
-    n: i % 8,
+    n: i % 20,
     pos: [signedRandom(), signedRandom(), signedRandom()],
     vel: [signedRandom(), signedRandom(), signedRandom()],
   });
