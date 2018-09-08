@@ -2,6 +2,9 @@
 //
 // These are just 3-element numeric arrays.
 
+const vTemp = [];
+export const vecZero = [0, 0, 0];
+
 // Assigns [x, y] to out[offset..offset+1].
 export function vec2Set(out, x, y, offset=0) {
   out[offset+0] = x;
@@ -75,7 +78,22 @@ export function vec3Cross(out, x, y) {
   );
 }
 
-const traceC = [];
+export function quatSet(out, x, y, z, w) {
+  out[0] = x;
+  out[1] = y;
+  out[2] = z;
+  out[4] = w;
+}
+
+export function quatMul(out, x, y) {
+  quatSet(
+    out,
+    x[3] * y[0] + x[0] * y[3] + x[1] * y[2] - y[2] * x[1],
+    x[3] * y[1] + x[1] * y[3] + x[2] * y[0] - y[0] * x[2],
+    x[3] * y[2] + x[2] * y[3] + x[0] * y[1] - y[1] * x[0],
+    x[3] * y[3] - x[0] * y[0] - x[1] * y[1] - x[2] * y[2],
+  );
+}
 
 // Test ray intersection against sphere. If the ray intersects the sphere,
 // return the intersection distance along the ray. Otherwise, return Infinity.
@@ -95,9 +113,9 @@ export function traceSphere(origin, direction, length, center, radius2) {
   // |QC|^2 = |QP|^2 + |PC|^2
   // --> |QP|^2 = |QC|^2 - |PC|^2
   // --> |QP|^2 = |QC|^2 - |OC|^2 + |OP|^2
-  vec3MulAdd(traceC, origin, -1, center);
-  const op = vec3Dot(traceC, direction);
-  const qp2 = radius2 + op * op - vec3Dot(traceC, traceC);
+  vec3MulAdd(vTemp, origin, -1, center);
+  const op = vec3Dot(vTemp, direction);
+  const qp2 = radius2 + op * op - vec3Dot(vTemp, vTemp);
   if (qp2 < 0) {
     return Infinity;
   }

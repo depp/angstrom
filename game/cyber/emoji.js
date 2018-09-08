@@ -3,7 +3,9 @@ import { gl } from '/game/cyber/global';
 export let emojiTexture;
 
 export function initEmoji() {
-  const emoji = '💣 🌤 😭'.split(' ');
+  const emoji = ('\u{1f608} \u{1f62d} \u{1f631} \u{1f911} '
+                 + '\u{1f92a} \u{1f92c} \u{1f92e} \u{1f92f}')
+    .split(' ');
   const ecanvas = document.createElement('canvas');
   ecanvas.width = 256;
   ecanvas.height = 256;
@@ -13,7 +15,7 @@ export function initEmoji() {
   ctx.textBaseline = 'middle';
   let idx = 0;
   for (const e of emoji) {
-    ctx.fillText(e, idx * 64 + 32, 32);
+    ctx.fillText(e, (idx & 3) * 64 + 32, (idx >> 2) * 64 + 32);
     idx++;
   }
 

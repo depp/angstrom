@@ -2,12 +2,13 @@
 import { gl } from '/game/cyber/global';
 import { cameraMatrix } from '/game/cyber/camera';
 import { spriteProgram } from '/game/cyber/shaders';
-import { levelTime } from '/game/cyber/time';
+import { frameDT } from '/game/cyber/time';
 import { playerPos } from '/game/cyber/player';
 import {
   vec2Set, vec3MulAdd, vec3SetMulAdd, vec3Norm, vec3Cross,
 } from '/game/cyber/vec';
 import { emojiTexture } from '/game/cyber/emoji';
+import { signedRandom } from '/game/cyber/util';
 
 const vertexBuffer = gl.createBuffer();
 
@@ -23,19 +24,38 @@ const quad = [
 
 const vecZ = [0, 0, 1];
 
+const sprites = [];
+for (let i = 0; i < 40; i++) {
+  sprites.push({
+    n: i % 8,
+    pos: [signedRandom(), signedRandom(), signedRandom()],
+    vel: [signedRandom(), signedRandom(), signedRandom()],
+  });
+}
+
 export function renderSprite() {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  const sprites = [
-    { pos: [Math.cos(levelTime / 3), 0, Math.sin(levelTime / 4) + 0.5], n: 0 },
-    { pos: [Math.cos(levelTime / 6), 0, Math.sin(levelTime / 5) + 0.5], n: 1 },
-    { pos: [Math.cos(levelTime), 0, Math.sin(levelTime) + 0.5], n: 2 },
-  ];
   const arr = new Float32Array(5 * 6 * sprites.length);
   let i = 0;
+  const pos = [];
   const relPos = [];
   const right = [];
   for (const sprite of sprites) {
-    const { pos, n } = sprite;
+    for (let i = 0; i < 3; i++) {
+      let p = sprite.pos[i], v = sprite.vel[i];
+      p += v * frameDT;
+      if (p < -1) {
+        p = -2 - p;
+        v = -v;
+      } else if (p > 1) {
+        p = 2 - p;
+        v = -v;
+      }
+      sprite.pos[i] = p;
+      sprite.vel[i] = v;
+    }
+    vec3MulAdd(pos, vecZ, sprite.pos, 0.5);
+    const { n } = sprite;
     vec3MulAdd(relPos, pos, playerPos, -1);
     vec3Cross(right, relPos, vecZ);
     vec3Norm(right);
