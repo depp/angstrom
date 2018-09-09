@@ -76,9 +76,17 @@ export function initEmoji() {
   ctx.font = '48px "Noto Color Emoji"';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  ctx.save();
+  function inSprite(idx) {
+    ctx.restore();
+    ctx.save();
+    ctx.translate((idx & 7) * 64, (idx >> 3) * 63);
+  }
+
   let idx = 0;
   for (const e of emoji) {
-    ctx.fillText(e, (idx & 7) * 64 + 32, (idx >> 3) * 64 + 32);
+    inSprite(idx);
+    ctx.fillText(e, 32, 32);
     idx++;
   }
 
