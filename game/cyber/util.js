@@ -6,3 +6,7 @@ export function clamp(x, min, max) {
 export function signedRandom() {
   return 2 * Math.random() - 1;
 }
+
+export function randInt(n) {
+  return (Math.random() * n) | 0;
+}

@@ -1,4 +1,5 @@
 import { gl } from '/game/cyber/global';
+import { randInt } from '/game/cyber/util';
 
 export let emojiTexture;
 
@@ -45,10 +46,10 @@ export function initEmoji() {
       + '\u{1F45B}\u{1F45C}\u{1F45D}'
   ));
   for (let i = 0; i < 20; i++) {
-    let female = Math.random() < 0.5;
-    const skinIdx = (Math.random() * 5) | 0;
+    let female = !randInt(2);
+    const skinIdx = randInt(5);
     const skin = String.fromCodePoint(0x1F3FB + skinIdx);
-    const j = (Math.random() * person.length) | 0;
+    const j = randInt(person.length);
     if (j < 4) {
       female = false;
     }
@@ -58,13 +59,13 @@ export function initEmoji() {
     emoji.push(person[j] + skin);
     people.push({
       hand: 8 + skinIdx,
-      shirt: 13 + female * 2 + ((Math.random() * 3) | 0),
-      shoe: 18 + female + ((Math.random() * 2) | 0),
+      shirt: 13 + female * 2 + randInt(3),
+      shoe: 18 + female + randInt(2),
       head: emoji.length - 1,
       hat: Math.random() < 0.8 ? -1 : 21,
       item: Math.random() < 0.5
         ? -1
-        : 22 + ((Math.random() * 3) | 0),
+        : 22 + randInt(3),
     });
   }
 
