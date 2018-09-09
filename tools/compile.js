@@ -393,9 +393,10 @@ async function watch(config) {
 
 const command = minimist(process.argv.slice(2), {
   string: ['config'],
-  boolean: ['minify', 'lint', 'sourceMap', 'watch'],
+  boolean: ['minify', 'lint', 'sourceMap', 'watch', 'show-generated'],
   alias: {
     'source-map': 'sourceMap',
+    'show-generated': 'showGenerated',
   },
   default: {
     config: 'debug',
@@ -416,6 +417,14 @@ if (command.watch) {
     });
 } else {
   compile(getConfig(command)).then((r) => {
+    if (command.showGenerated) {
+      const { generated } = r;
+      Object.entries(generated).forEach(([name, source]) => {
+        process.stdout.write(`===== ${name} =====\n`);
+        process.stdout.write(source);
+      });
+      return;
+    }
     console.log(JSON.stringify(r, null, '  '));
   }).catch((e) => {
     console.error(e);
