@@ -6,6 +6,16 @@ export let emojiTexture;
 export const hands = [];
 export const people = [];
 
+// EMOJI:
+//  0.. 7: evil faces
+//  8..12: hands
+// 13..17: shirts
+// 18..20: shoes
+// 21..21: hats
+// 22..24: purses
+// 25..44: heads
+// 45..45: shot
+
 export function initEmoji() {
   const emoji = [
     // Bad faces.
@@ -77,18 +87,26 @@ export function initEmoji() {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.save();
-  function inSprite(idx) {
+  let idx = 0;
+  function nextSprite() {
     ctx.restore();
     ctx.save();
-    ctx.translate((idx & 7) * 64, (idx >> 3) * 63);
-  }
-
-  let idx = 0;
-  for (const e of emoji) {
-    inSprite(idx);
-    ctx.fillText(e, 32, 32);
+    ctx.translate((idx & 7) * 64 + 32, (idx >> 3) * 64 + 32);
     idx++;
   }
+
+  for (const e of emoji) {
+    nextSprite();
+    ctx.fillText(e, 0, 0);
+  }
+
+  nextSprite();
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 28);
+  g.addColorStop(0, 'white');
+  g.addColorStop(1, 'transparent');
+  ctx.fillStyle = g;
+  ctx.arc(0, 0, 28, 0, 2 * Math.PI);
+  ctx.fill();
 
   ecanvas.toBlob((b) => {
     const img = new Image();
