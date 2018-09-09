@@ -75,5 +75,8 @@ module.exports = {
 
     // Don't know why this one exists.
     'class-methods-use-this': 'off',
+
+    // Needed for GLSL minifier.
+    'import/no-extraneous-dependencies': 'dev-dependencies',
   },
 };

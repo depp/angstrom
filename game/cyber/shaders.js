@@ -1,5 +1,9 @@
 // @generate_source
 
+/* eslint no-loop-func: off */
+
+const minify = require('../../tools/lib/glsl-minify');
+
 const shaders = {
   spriteProgram: {
     vname: 'sprite',
@@ -19,7 +23,7 @@ const shaders = {
 };
 
 module.exports = async function generate(build) {
-  const { DEBUG, loadGLSL } = build;
+  const { DEBUG, load } = build;
   let body = '';
   if (DEBUG) {
     body += 'import { defineShaderProgram } from \'/game/cyber/shader\';\n';
@@ -66,10 +70,12 @@ module.exports = async function generate(build) {
       body += '});\n';
     } else {
       promises.push(Promise.all([
-        loadGLSL(`game/cyber/shader/${vname}.vert.glsl`),
-        loadGLSL(`game/cyber/shader/${vname}.frag.glsl`),
+        load(`game/cyber/shader/${vname}.vert.glsl`),
+        load(`game/cyber/shader/${vname}.frag.glsl`),
       ]).then((srcs) => {
-        const args = [attributes.join(' '), ...srcs];
+        const vsource = minify(srcs[0]);
+        const fsource = minify(srcs[1]);
+        const args = [attributes.join(' '), vsource, fsource];
         return `export const ${name} = compileShaderProgram(\n`
           + `  ${args.map(a => JSON.stringify(a)).join(',\n  ')},\n`
           + ');\n';

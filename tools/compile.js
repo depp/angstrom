@@ -182,9 +182,9 @@ async function compile(config) {
         return null;
       }
       try {
-        const generator = evalModule(source, id);
+        const generator = evalModule(source, id, null, true);
         const newSource = await generator(Object.assign({
-          loadGLSL(name) {
+          load(name) {
             return files.load(name);
           },
         }, config.defines));
