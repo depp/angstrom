@@ -1164,18 +1164,6 @@ crypto-browserify@^3.0.0:
     randombytes "^2.0.0"
     randomfill "^1.0.3"
 
-cssauron-glsl@X.X.X:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/cssauron-glsl/-/cssauron-glsl-1.0.0.tgz#9873641442b52bae08b9103f8546885af69c74cc"
-  dependencies:
-    cssauron "~1.0.0"
-
-cssauron@~1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/cssauron/-/cssauron-1.0.0.tgz#3c9891541075be90ee59c0c2a3d400e4fffec42d"
-  dependencies:
-    through X.X.X
-
 dashdash@^1.12.0:
   version "1.14.1"
   resolved "https://registry.yarnpkg.com/dashdash/-/dashdash-1.14.1.tgz#853cfa0f7cbe2fed5de20326b8dd581035f6e2f0"
@@ -1966,13 +1954,6 @@ globby@^5.0.0:
     object-assign "^4.0.1"
     pify "^2.0.0"
     pinkie-promise "^2.0.0"
-
-glsl-deparser@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/glsl-deparser/-/glsl-deparser-1.0.0.tgz#5e7eb363ec54af92916ccffc82ed03e9bfe33e0c"
-  dependencies:
-    cssauron-glsl X.X.X
-    through "~1.1.2"
 
 glsl-parser@^2.0.1:
   version "2.0.1"
@@ -3966,6 +3947,10 @@ shell-quote@^1.4.3, shell-quote@^1.6.1:
     array-reduce "~0.0.0"
     jsonify "~0.0.0"
 
+shortest@^0.0.0:
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/shortest/-/shortest-0.0.0.tgz#dc4c8d0722e7a9208ec7d2098e4cda8cac6e567d"
+
 signal-exit@^3.0.0, signal-exit@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
@@ -4289,17 +4274,13 @@ through2@^2.0.0:
     readable-stream "^2.1.5"
     xtend "~4.0.1"
 
-through@2, "through@>=2.2.7 <3", through@X.X.X, through@^2.3.6, through@^2.3.8:
+through@2, "through@>=2.2.7 <3", through@^2.3.6, through@^2.3.8:
   version "2.3.8"
   resolved "https://registry.yarnpkg.com/through/-/through-2.3.8.tgz#0dd4c9ffaabc357960b1b724115d7e0e86a2e1f5"
 
 through@2.3.4:
   version "2.3.4"
   resolved "https://registry.yarnpkg.com/through/-/through-2.3.4.tgz#495e40e8d8a8eaebc7c275ea88c2b8fc14c56455"
-
-through@~1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/through/-/through-1.1.2.tgz#344a5425a3773314ca7e0eb6512fbafaf76c0bfe"
 
 timers-browserify@^1.0.1:
   version "1.4.2"
