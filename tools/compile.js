@@ -195,6 +195,7 @@ async function compile(config) {
           fatal: true,
           severity: 2,
           message: `Code generation failed: ${e.message}`,
+          stack: e.stack,
         });
         return '';
       }
