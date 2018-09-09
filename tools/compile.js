@@ -9,6 +9,7 @@ const minimist = require('minimist');
 const terser = require('terser');
 const chokidar = require('chokidar');
 const evalModule = require('eval');
+const domprops = require('terser/tools/domprops.json');
 
 const close = promisify(fs.close);
 const fstat = promisify(fs.fstat);
@@ -204,6 +205,9 @@ async function compile(config) {
     values: Object.assign({}, config.defines),
   }));
   if (config.minify) {
+    const reserved = [];
+    reserved.push(...domprops);
+    reserved.push('movementX', 'movementY');
     inputOptions.plugins.push({
       renderChunk(code) {
         return terser.minify(code, {
@@ -215,6 +219,12 @@ async function compile(config) {
             unsafe_comps: true, // Does have an effect
             unsafe_math: true,
             unsafe_methods: true,
+          },
+          mangle: {
+            properties: {
+              reserved,
+              keep_quoted: true,
+            },
           },
           sourceMap: true,
         });

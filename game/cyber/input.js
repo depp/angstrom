@@ -4,24 +4,26 @@ import { canvas } from '/game/cyber/global';
 // consistent values regardless of layout. This does not work in Edge.
 
 // Map from key code OR mouse button to in-game action.
+/* eslint-disable quote-props */
 const buttonBindings = {
-  KeyW: 'f',
-  KeyA: 'l',
-  KeyS: 'b',
-  KeyD: 'r',
+  'KeyW': 'f',
+  'KeyA': 'l',
+  'KeyS': 'b',
+  'KeyD': 'r',
 
-  ArrowLeft: 'L',
-  ArrowUp: 'f',
-  ArrowDown: 'b',
-  ArrowRight: 'R',
+  'ArrowLeft': 'L',
+  'ArrowUp': 'f',
+  'ArrowDown': 'b',
+  'ArrowRight': 'R',
 
-  ControlLeft: 's',
-  ControlRight: 's',
+  'ControlLeft': 's',
+  'ControlRight': 's',
 
-  m0: 's', // Left mouse button
+  'm0': 's', // Left mouse button
   // m1 Middle mouse button
   // m2 Right mouse button
 };
+/* eslint-enable quote-props */
 
 export const buttonPress = {};
 export const buttonState = {};
@@ -61,9 +63,8 @@ function buttonUp(event) {
 }
 
 function mouseMove(event) {
-  const { movementX = 0, movementY = 0 } = event;
-  buttonPress['x'] += movementX;
-  buttonPress['y'] -= movementY;
+  buttonPress['x'] += event.movementX || 0;
+  buttonPress['y'] -= event.movementY || 0;
 }
 
 function pointerLockChange() {

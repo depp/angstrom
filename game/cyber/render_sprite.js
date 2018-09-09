@@ -185,7 +185,7 @@ export function renderSprite() {
   gl.enableVertexAttribArray(1);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 20, 0);
   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 20, 12);
-  gl.uniformMatrix4fv(p.M, false, cameraMatrix);
+  gl.uniformMatrix4fv(p['M'], false, cameraMatrix);
 
   gl.drawArrays(gl.TRIANGLES, 0, nSprite * 6);
 
