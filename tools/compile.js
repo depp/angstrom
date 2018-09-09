@@ -207,6 +207,15 @@ async function compile(config) {
     inputOptions.plugins.push({
       renderChunk(code) {
         return terser.minify(code, {
+          compress: {
+            drop_console: true,
+            ecma: 8, // 2017
+            keep_fargs: false,
+            unsafe_arrows: true,
+            unsafe_comps: true, // Does have an effect
+            unsafe_math: true,
+            unsafe_methods: true,
+          },
           sourceMap: true,
         });
       },
