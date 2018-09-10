@@ -1,7 +1,7 @@
 import { frameDT, levelTime } from '/game/cyber/time';
 import {
   makeColor,
-  crosshairSprite,
+  shotSprite,
 } from '/game/cyber/graphics';
 import { vecZero, vec3SetMulAdd, vec3MulAdd } from '/game/cyber/vec';
 import { Entity } from '/game/cyber/world';
@@ -22,7 +22,7 @@ class Projectile extends Entity {
       vec3SetMulAdd(pos, direction, -a/2);
       this.sprites.push({
         pos,
-        n: crosshairSprite,
+        n: shotSprite,
         size: 0.1 * (1 - a),
         transparent: true,
         color: makeColor(1, (1-a) ** 2, 0, 1-a),
