@@ -51,12 +51,6 @@ export function renderSprite() {
   let solidVertex = 0;
   let transparentVertex = S * nSolid;
   for (const entity of entities) {
-    vec3MulAdd(forward, entity.pos, playerPos, -1);
-    vec3Norm(forward);
-    vec3Cross(right, forward, vecZ);
-    vec3Norm(right);
-    vec3Cross(up, right, forward);
-    vec3Norm(up);
     for (const sprite of entity.sprites) {
       /* eslint prefer-const: off */
       let {
@@ -73,6 +67,12 @@ export function renderSprite() {
         flip = spriteFlip ? !flip : flip;
       }
       vec3MulAdd(spos, entity.pos, pos);
+      vec3MulAdd(forward, spos, playerPos, -1);
+      vec3Norm(forward);
+      vec3Cross(right, forward, vecZ);
+      vec3Norm(right);
+      vec3Cross(up, right, forward);
+      vec3Norm(up);
       const cc = Math.cos(Math.PI / 180 * rotate);
       const ss = Math.sin(Math.PI / 180 * rotate);
       for (let j = 0; j < 6; j++) {
@@ -92,7 +92,6 @@ export function renderSprite() {
     }
   }
   gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STREAM_DRAW);
-
 
   gl.enable(gl.DEPTH_TEST);
   gl.enableVertexAttribArray(0);
