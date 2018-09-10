@@ -127,6 +127,70 @@ function getConfig(options) {
   return obj;
 }
 
+function inlineConstants(tree) {
+  let inlined;
+  let defs;
+  function before(node) {
+    if (node instanceof terser.AST_SymbolRef) {
+      const { name, thedef } = node;
+      const list = defs[name];
+      if (list) {
+        for (const def of list) {
+          if (def.thedef === thedef) {
+            if (!def.inlined) {
+              def.inlined = true;
+              inlined.push(name);
+            }
+            return def.value.clone(true);
+          }
+        }
+      }
+    }
+    return undefined;
+  }
+  function after(node) {
+    if (node instanceof terser.AST_Const) {
+      for (const def of node.definitions) {
+        const { name, value } = def;
+        if ((name instanceof terser.AST_SymbolConst)
+            && ((value instanceof terser.AST_Number)
+                || (value instanceof terser.AST_String))) {
+          let list = defs[name.name];
+          if (!list) {
+            list = [];
+            defs[name.name] = list;
+          }
+          list.push({
+            value,
+            thedef: name.thedef,
+            inlined: false,
+          });
+        }
+      }
+    }
+  }
+  const xform = new terser.TreeTransformer(before, after);
+  let ast = tree;
+  do {
+    const code = terser.minify(ast, {
+      compress: {
+        defaults: false,
+        evaluate: true,
+      },
+      output: {
+        ast: true,
+        code: false,
+      },
+    });
+    ast = code.ast;
+    inlined = [];
+    defs = [];
+    ast = ast.transform(xform);
+    // console.log(`Inlined ${inlined.join(', ')}`);
+  } while (inlined.length !== 0);
+  return ast;
+}
+
 async function compile(config) {
   // Map from relative file path to list of ESLint diagnostics and our own that
   // we added. The empty string marks the root level.
@@ -222,6 +286,7 @@ async function compile(config) {
         for (const transform of transformers) {
           tree = tree.transform(new terser.TreeTransformer(transform));
         }
+        tree = inlineConstants(tree);
         return terser.minify(tree, {
           compress: {
             drop_console: true,
