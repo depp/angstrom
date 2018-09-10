@@ -40,7 +40,7 @@ const vTemp = [];
 
 class Player extends Entity {
   constructor() {
-    super();
+    super(0, 0.5);
     this.pos = playerPos;
     this.sprites = [{
       n: crosshairSprite,

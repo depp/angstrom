@@ -9,12 +9,9 @@ import { Entity } from '/game/cyber/world';
 
 class Projectile extends Entity {
   constructor(origin, direction) {
-    super();
-    this.pos = [...origin];
-    this.radius = 0.1;
+    super(origin, 0.1);
     this.velocity = [];
     vec3MulAdd(this.velocity, vecZero, direction, 4);
-    this.sprites = [];
     const nSprite = 15;
     const spos = new Float32Array(nSprite * 3);
     for (let i = 0; i < nSprite; i++) {

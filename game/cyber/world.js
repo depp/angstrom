@@ -1,4 +1,7 @@
-import { vec3Distance } from '/game/cyber/vec';
+import {
+  vecZero,
+  vec3Distance,
+} from '/game/cyber/vec';
 
 // List of all entities in the world.
 export const entities = [];
@@ -8,6 +11,12 @@ export const entities = [];
 export const hitGroups = [[], []];
 
 export class Entity {
+  constructor(pos, radius, ...sprites) {
+    this.pos = [...(pos || vecZero)];
+    this.radius = radius;
+    this.sprites = sprites;
+  }
+
   // Called for every world update, before any collisions, and at least once
   // before the entity is ever rendered.
   update() {}
@@ -17,6 +26,9 @@ export class Entity {
 
   // Called when the entity collides with another entity.
   collideEntity() {}
+
+  // Called whe when the entity is damaged.
+  damage() {}
 
   // Spawn the entity in the world.
   spawn(hitGroup) {

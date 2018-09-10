@@ -9,24 +9,17 @@ import {
 import {
   vecZero,
   vecZ,
+  vec3Set,
   vec3MulAdd,
   vec3SetMulAdd,
 } from '/game/cyber/vec';
 
-class DeadEvilFace extends Entity {
-  constructor(face) {
-    super();
-    this.pos = face.pos;
-    this.radius = 0.2;
-    this.sprites = face.sprites;
+class Chaff extends Entity {
+  constructor(src, velocity = vecZero) {
+    const [s] = src.sprites;
+    super(src.pos, src.radius, s);
     this.expiry = levelTime + 5;
-    this.vel = [];
-    vec3MulAdd(
-      this.vel, vecZero, face.u, -Math.sin(face.phase) * face.dist * 2,
-    );
-    vec3MulAdd(
-      this.vel, this.vel, face.v, Math.cos(face.phase) * face.dist * 2,
-    );
+    this.vel = [...velocity];
     this.bounce = 0;
     this.rspeed = signedRandom(0.5) * 1000;
   }
@@ -36,7 +29,7 @@ class DeadEvilFace extends Entity {
     this.dead = levelTime > this.expiry;
     const frac = (this.expiry - levelTime) / 5;
     s.color = makeColor(frac * 3, frac, frac, frac * 4 - 3);
-    s.size = 0.2 * Math.min(1, frac * 5);
+    s.size = this.radius * Math.min(1, frac * 5);
     if (!this.sleeping) {
       s.rotate = ((s.rotate || 0) + this.rspeed * frameDT) % 360;
       vec3SetMulAdd(this.pos, this.vel, frameDT);
@@ -58,9 +51,32 @@ class DeadEvilFace extends Entity {
   }
 }
 
+class EvilBrain extends Entity {
+  constructor(swarm) {
+    super(0, 0.3, {
+      n: brainSprite,
+      size: 0.3,
+    });
+    this.swarm = swarm;
+  }
+
+  update(pos) {
+    vec3Set(this.pos, ...pos);
+  }
+
+  damage() {
+    this.dead = true;
+    new Chaff(this).spawn();
+    this.swarm.dieTime = levelTime + 0.5;
+  }
+}
+
 class EvilFace extends Entity {
   constructor(dist) {
-    super();
+    super(0, 0.2, {
+      n: chooseRandom(evilSmileySprites),
+      size: 0.2,
+    });
     const theta = Math.PI * signedRandom();
     const phi = Math.asin(signedRandom());
     this.pos = [...vecZero];
@@ -77,10 +93,6 @@ class EvilFace extends Entity {
     ];
     this.phase = Math.PI * signedRandom();
     this.dist = dist;
-    this.sprites = [{
-      n: chooseRandom(evilSmileySprites),
-      size: 0.2,
-    }];
   }
 
   update(pos) {
@@ -91,36 +103,37 @@ class EvilFace extends Entity {
 
   damage() {
     this.dead = true;
-    new DeadEvilFace(this).spawn();
+    const vel = [];
+    vec3MulAdd(
+      vel, vecZero, this.u, -Math.sin(this.phase) * this.dist * 2,
+    );
+    vec3MulAdd(
+      vel, vel, this.v, Math.cos(this.phase) * this.dist * 2,
+    );
+    new Chaff(this, vel).spawn();
   }
 }
 
 class Swarm extends Entity {
   constructor(n) {
-    super();
-    this.sprites = [{
-      n: brainSprite,
-      size: 0.3,
-    }];
-    this.pos = [0, 2, 1];
-    this.radius = 0.9;
+    super([0, 2, 1], 0.9);
     this.light = [1, 0.6, 1.0];
-    this.children = [];
+    this.children = [new EvilBrain(this)];
     for (let i = 0; i < n; i++) {
       this.children.push(new EvilFace(0.5 + 0.2 * i / n));
     }
   }
 
   update() {
-    for (const sprite of this.sprites) {
-      /* eslint-disable prefer-const */
-      let {
-        phase, u, v, r, pos,
-      } = sprite;
-      if (u) {
-        sprite.phase = phase = (phase + frameDT * 2) % (2 * Math.PI);
-        vec3MulAdd(pos, vecZero, u, Math.cos(phase) * r);
-        vec3MulAdd(pos, pos, v, Math.sin(phase) * r);
+    if (this.dieTime) {
+      while (levelTime > this.dieTime) {
+        if (!this.children.length) {
+          this.dead = true;
+          break;
+        }
+        const child = this.children.pop();
+        child.damage();
+        this.dieTime += 0.05;
       }
     }
   }
