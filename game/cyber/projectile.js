@@ -1,4 +1,5 @@
 import { frameDT, levelTime } from '/game/cyber/time';
+import { makeColor } from '/game/cyber/graphics';
 import { vecZero, vec3SetMulAdd, vec3MulAdd } from '/game/cyber/vec';
 import { entities } from '/game/cyber/world';
 
@@ -7,11 +8,21 @@ class Projectile {
     this.pos = [...origin];
     this.velocity = [];
     vec3MulAdd(this.velocity, vecZero, direction, 4);
-    this.sprites = [{
-      n: 0,
-      size: 0.2,
-      transparent: true,
-    }];
+    this.sprites = [];
+    const nSprite = 15;
+    const spos = new Float32Array(nSprite * 3);
+    for (let i = 0; i < nSprite; i++) {
+      const a = i / nSprite;
+      const pos = spos.subarray(i * 3);
+      vec3SetMulAdd(pos, direction, -a/2);
+      this.sprites.push({
+        pos,
+        n: 0,
+        size: 0.1 * (1 - a),
+        transparent: true,
+        color: makeColor(1, (1-a) ** 2, 0, 1-a),
+      });
+    }
     this.expiry = levelTime + 2;
   }
 

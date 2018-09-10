@@ -7,6 +7,6 @@ uniform sampler2D Texture;
 
 void main() {
     float a = texture2D(Texture, TexPos).a;
-    a *= a;
+    a *= a * BlendColor.a;
     gl_FragColor = mix(a * BlendColor, vec4(1.0), a * a * a);
 }

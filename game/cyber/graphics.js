@@ -1,5 +1,5 @@
 import { gl } from '/game/cyber/global';
-import { randInt, chooseRandom } from '/game/cyber/util';
+import { randInt, chooseRandom, clamp } from '/game/cyber/util';
 import { vec3Distance } from '/game/cyber/vec';
 
 const tilesX = 8;
@@ -235,3 +235,10 @@ export function loadSprites() {
 }
 
 loadSprites();
+
+export function makeColor(r, g, b, a = 1) {
+  return (clamp((r * 256) | 0, 0, 255)
+          | (clamp((g * 256) | 0, 0, 255) << 8)
+          | (clamp((b * 256) | 0, 0, 255) << 16)
+          | (clamp((a * 256) | 0, 0, 255) << 24));
+}

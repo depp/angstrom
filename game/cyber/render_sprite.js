@@ -61,7 +61,7 @@ export function renderSprite() {
       /* eslint prefer-const: off */
       let {
         n, size, pos = vecZero, offset = vecZero, rotate = 0, flip = false,
-        transparent,
+        transparent, color = 0xffffffff,
       } = sprite;
       const i = (transparent
         ? (transparentVertex += S)
@@ -76,18 +76,18 @@ export function renderSprite() {
       const cc = Math.cos(Math.PI / 180 * rotate);
       const ss = Math.sin(Math.PI / 180 * rotate);
       for (let j = 0; j < 6; j++) {
-        let [r, s, u, v] = quad[j];
+        let [x, y, u, v] = quad[j];
         if (flip) {
           u = 1 - u;
         }
-        let r2 = r * cc - s * ss;
-        let s2 = s * cc + r * ss;
+        let x2 = x * cc - y * ss;
+        let y2 = y * cc + x * ss;
         vec3SetMulAdd(arr, spos,    1,                      i + V * j);
-        vec3SetMulAdd(arr, right,   r2 * size + offset[0],  i + V * j);
-        vec3SetMulAdd(arr, up,      s2 * size + offset[1],  i + V * j);
+        vec3SetMulAdd(arr, right,   x2 * size + offset[0],  i + V * j);
+        vec3SetMulAdd(arr, up,      y2 * size + offset[1],  i + V * j);
         vec3SetMulAdd(arr, forward, -0.01 * offset[2],      i + V * j);
         vec2Set(arr, ((n & 7) + u) / 8, ((n >> 3) + v) / 8, i + V * j + 3);
-        iarr[i + V * j + 5] = transparent ? 0xff : 0xffffff;
+        iarr[i + V * j + 5] = color;
       }
     }
   }
@@ -100,7 +100,7 @@ export function renderSprite() {
   gl.enableVertexAttribArray(2);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, V * 4, 0);
   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, V * 4, 12);
-  gl.vertexAttribPointer(2, 3, gl.UNSIGNED_BYTE, true, V * 4, 20);
+  gl.vertexAttribPointer(2, 4, gl.UNSIGNED_BYTE, true, V * 4, 20);
 
   let p = spriteSolidProgram;
   if (p && nSolid) {
