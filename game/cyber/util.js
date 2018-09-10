@@ -3,8 +3,9 @@ export function clamp(x, min, max) {
   return Math.max(min, Math.min(max, x));
 }
 
-export function signedRandom() {
-  return 2 * Math.random() - 1;
+export function signedRandom(minMag = 0) {
+  const x = 2 * Math.random() - 1;
+  return x > 0 ? x + minMag : x - minMag;
 }
 
 export function randInt(n = 2) {

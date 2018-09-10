@@ -28,7 +28,7 @@ class DeadEvilFace extends Entity {
       this.vel, this.vel, face.v, Math.cos(face.phase) * face.dist * 2,
     );
     this.bounce = 0;
-    this.rspeed = 800;
+    this.rspeed = signedRandom(0.5) * 1000;
   }
 
   update() {
