@@ -1,12 +1,18 @@
 import { entities } from '/game/cyber/world';
 import { frameDT } from '/game/cyber/time';
 import { chooseRandom, signedRandom } from '/game/cyber/util';
-import { evilSmileySprites } from '/game/cyber/graphics';
+import {
+  brainSprite,
+  evilSmileySprites,
+} from '/game/cyber/graphics';
 import { vecZero, vec3MulAdd } from '/game/cyber/vec';
 
 class Swarm {
   constructor(n) {
-    this.sprites = [];
+    this.sprites = [{
+      n: brainSprite,
+      size: 0.3,
+    }];
     this.pos = [0, 2, 1];
     for (let i = 0; i < n; i++) {
       const theta = Math.PI * signedRandom();
@@ -25,7 +31,7 @@ class Swarm {
           Math.cos(theta),
           0,
         ],
-        r: 0.5 + 0.5 * i/n,
+        r: 0.5 + 0.2 * i/n,
         pos: [...vecZero],
       });
     }
@@ -37,9 +43,11 @@ class Swarm {
       let {
         phase, u, v, r, pos,
       } = sprite;
-      sprite.phase = phase = (phase + frameDT * 2) % (2 * Math.PI);
-      vec3MulAdd(pos, vecZero, u, Math.cos(phase) * r);
-      vec3MulAdd(pos, pos, v, Math.sin(phase) * r);
+      if (u) {
+        sprite.phase = phase = (phase + frameDT * 2) % (2 * Math.PI);
+        vec3MulAdd(pos, vecZero, u, Math.cos(phase) * r);
+        vec3MulAdd(pos, pos, v, Math.sin(phase) * r);
+      }
     }
   }
 }

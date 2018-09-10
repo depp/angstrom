@@ -75,6 +75,7 @@ export let isAppleEmoji;
 export let isGoogleEmoji;
 export const spriteProperties = [];
 
+export let brainSprite;
 export const evilSmileySprites = [];
 export const personSprites = [[], []];
 export const shirtSprites = [[], []];
@@ -177,6 +178,8 @@ export function loadGraphics() {
   // ===========================================================================
   // Monsters
   // ===========================================================================
+
+  brainSprite = makeEmojiSprite('\u{1F9E0}');
 
   makeEmojiSpriteList(
     '\u{1F608}\u{1F62D}\u{1F631}\u{1F911}'
