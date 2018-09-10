@@ -1,7 +1,7 @@
 import { gl } from '/game/cyber/global';
 import { randInt } from '/game/cyber/util';
 
-export let emojiTexture;
+export const emojiTexture = gl.createTexture();
 
 export const hands = [];
 export const people = [];
@@ -108,22 +108,18 @@ export function initEmoji() {
   ctx.arc(0, 0, 28, 0, 2 * Math.PI);
   ctx.fill();
 
-  ecanvas.toBlob((b) => {
-    const img = new Image();
-    img.addEventListener('load', () => {
-      emojiTexture = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, emojiTexture);
-      gl.texImage2D(
-        gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img,
-      );
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      gl.texParameteri(
-        gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR,
-      );
-      gl.generateMipmap(gl.TEXTURE_2D);
-    });
-    img.src = URL.createObjectURL(b);
-  });
+  const { data } = ctx.getImageData(0, 0, 512, 512);
+  console.log('data', data.length);
+  gl.bindTexture(gl.TEXTURE_2D, emojiTexture);
+  gl.texImage2D(
+    gl.TEXTURE_2D, 0, gl.RGBA, 512, 512, 0,
+    gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data.buffer),
+  );
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(
+    gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR,
+  );
+  gl.generateMipmap(gl.TEXTURE_2D);
 }
 
 initEmoji();
