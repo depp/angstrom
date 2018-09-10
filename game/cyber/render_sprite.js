@@ -87,7 +87,7 @@ export function renderSprite() {
         vec3SetMulAdd(arr, up,      s2 * size + offset[1],  i + V * j);
         vec3SetMulAdd(arr, forward, -0.01 * offset[2],      i + V * j);
         vec2Set(arr, ((n & 7) + u) / 8, ((n >> 3) + v) / 8, i + V * j + 3);
-        iarr[i + V * j + 5] = 0xffffff;
+        iarr[i + V * j + 5] = transparent ? 0xff : 0xffffff;
       }
     }
   }
@@ -103,14 +103,14 @@ export function renderSprite() {
   gl.vertexAttribPointer(2, 3, gl.UNSIGNED_BYTE, true, V * 4, 20);
 
   let p = spriteSolidProgram;
-  if (p) {
+  if (p && nSolid) {
     gl.useProgram(p.program);
     gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
     gl.drawArrays(gl.TRIANGLES, 0, nSolid * 6);
   }
 
   p = spriteTransparentProgram;
-  if (p) {
+  if (p && nTransparent) {
     gl.useProgram(p.program);
     gl.depthMask(false);
     gl.enable(gl.BLEND);
@@ -120,8 +120,6 @@ export function renderSprite() {
     gl.depthMask(true);
     gl.disable(gl.BLEND);
   }
-
-  //
 
   gl.disableVertexAttribArray(1);
   gl.disableVertexAttribArray(2);

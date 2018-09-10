@@ -1,4 +1,4 @@
-import { frameDT } from '/game/cyber/time';
+import { frameDT, levelTime } from '/game/cyber/time';
 import { vecZero, vec3SetMulAdd, vec3MulAdd } from '/game/cyber/vec';
 import { entities } from '/game/cyber/world';
 
@@ -12,9 +12,13 @@ class Projectile {
       size: 0.2,
       transparent: true,
     }];
+    this.expiry = levelTime + 2;
   }
 
   update() {
+    if (levelTime > this.expiry) {
+      this.dead = true;
+    }
     vec3SetMulAdd(this.pos, this.velocity, frameDT);
   }
 }
