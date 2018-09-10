@@ -1,4 +1,4 @@
-import { entities } from '/game/cyber/world';
+import { spawn } from '/game/cyber/world';
 import { frameDT } from '/game/cyber/time';
 import { chooseRandom, signedRandom } from '/game/cyber/util';
 import {
@@ -14,6 +14,7 @@ class Swarm {
       size: 0.3,
     }];
     this.pos = [0, 2, 1];
+    this.radius = 0.9;
     for (let i = 0; i < n; i++) {
       const theta = Math.PI * signedRandom();
       const phi = Math.asin(signedRandom());
@@ -52,4 +53,4 @@ class Swarm {
   }
 }
 
-entities.push(new Swarm(20));
+spawn(new Swarm(20), 0);

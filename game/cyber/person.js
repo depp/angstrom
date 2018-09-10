@@ -11,8 +11,7 @@ import {
   signedRandom,
   chooseRandom,
 } from '/game/cyber/util';
-
-import { entities } from '/game/cyber/world';
+import { spawn } from '/game/cyber/world';
 
 export class Person {
   constructor(i) {
@@ -79,5 +78,5 @@ export class Person {
 }
 
 for (let i = 0; i < 20; i++) {
-  entities.push(new Person(i));
+  spawn(new Person(i));
 }
