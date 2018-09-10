@@ -2,6 +2,7 @@
 
 /* eslint no-loop-func: off */
 
+const terser = require('terser');
 const minify = require('../../tools/lib/glsl-minify');
 
 const shaders = {
@@ -34,6 +35,7 @@ module.exports = async function generate(build) {
   const identifier = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
 
   const promises = [];
+  const uniformMap = {};
   for (const [name, shader] of Object.entries(shaders)) {
     const {
       vname, fname, attributes,
@@ -73,9 +75,21 @@ module.exports = async function generate(build) {
         load(`game/cyber/shader/${vname}.vert.glsl`),
         load(`game/cyber/shader/${vname}.frag.glsl`),
       ]).then((srcs) => {
-        const vsource = minify(srcs[0]);
-        const fsource = minify(srcs[1]);
-        const args = [attributes.join(' '), vsource, fsource];
+        const attributeMap = {};
+        for (let i = 0; i < attributes.length; i++) {
+          attributeMap[attributes[i]] = `A${i}`;
+        }
+        const varyingMap = {};
+        const vsource = minify(srcs[0], {
+          attributeMap,
+          uniformMap,
+          varyingMap,
+        });
+        const fsource = minify(srcs[1], {
+          uniformMap,
+          varyingMap,
+        });
+        const args = [attributes.length, vsource, fsource];
         return `export const ${name} = compileShaderProgram(\n`
           + `  ${args.map(a => JSON.stringify(a)).join(',\n  ')},\n`
           + ');\n';
@@ -85,5 +99,28 @@ module.exports = async function generate(build) {
   for (const chunk of await Promise.all(promises)) {
     body += chunk;
   }
+  build.addTransformer((node) => {
+    //    .
+    //   / \
+    //  .   <name>
+    // / \
+    //    uniforms
+    if (node instanceof terser.AST_Dot) {
+      const { expression, property } = node;
+      if (expression instanceof terser.AST_Dot
+          && expression.property === 'uniforms') {
+        const uName = uniformMap[property];
+        if (uName) {
+          const r = new terser.AST_Sub(node);
+          r.expression = expression.expression;
+          r.property = new terser.AST_String({
+            value: uName,
+          });
+          return r;
+        }
+      }
+    }
+    return undefined;
+  });
   return body;
 };

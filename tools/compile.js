@@ -133,6 +133,7 @@ async function compile(config) {
   const diagnostics = { '': [] };
   const files = new FileSet();
   const generated = {};
+  const transformers = [];
   const inputOptions = {
     input: config.config === 'release'
       ? '/game/cyber/main.release'
@@ -190,6 +191,9 @@ async function compile(config) {
           load(name) {
             return files.load(name);
           },
+          addTransformer(transform) {
+            transformers.push(transform);
+          },
         }, config.defines));
         generated[id] = newSource;
         return { code: newSource, map: null };
@@ -214,7 +218,11 @@ async function compile(config) {
     reserved.push('movementX', 'movementY');
     inputOptions.plugins.push({
       renderChunk(code) {
-        return terser.minify(code, {
+        let tree = terser.parse(code);
+        for (const transform of transformers) {
+          tree = tree.transform(new terser.TreeTransformer(transform));
+        }
+        return terser.minify(tree, {
           compress: {
             drop_console: true,
             ecma: 8, // 2017

@@ -13,7 +13,7 @@ import { gl } from '/game/cyber/global';
 
 // Compile a shader program.
 //
-// attributes: string, space-separated list of attribute names.
+// attributes: number of attributes (must be named A0..AN).
 // vSource: string, vertex shader source code.
 // fSource: string, fragment shader source code.
 export function compileShaderProgram(
@@ -32,9 +32,8 @@ export function compileShaderProgram(
     gl.attachShader(program, shader);
     gl.deleteShader(shader);
   }
-  const attribs = attributes.split(' ');
-  for (let i = 0; i < attribs.length; i++) {
-    gl.bindAttribLocation(program, i, attribs[i]);
+  for (let i = 0; i < attributes; i++) {
+    gl.bindAttribLocation(program, i, `A${i}`);
   }
   gl.linkProgram(program);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
@@ -137,14 +136,17 @@ class ShaderProgramDefinition {
         console.warn(`Missing attribute: ${JSON.stringify(name)}`);
       }
     }
-    const obj = { program };
+    const uniforms = {};
     const uCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
     for (let i = 0; i < uCount; i++) {
       const { name } = gl.getActiveUniform(program, i);
-      obj[name] = gl.getUniformLocation(program, name);
+      uniforms[name] = gl.getUniformLocation(program, name);
     }
     const { func } = this;
-    func(new Proxy(obj, handler));
+    func({
+      program,
+      uniforms: new Proxy(uniforms, handler),
+    });
     if (this.program) {
       gl.deleteProgram(this.program);
     }
