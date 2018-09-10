@@ -46,6 +46,7 @@ class Swarm {
     }];
     this.pos = [0, 2, 1];
     this.radius = 0.9;
+    this.light = [1, 0.6, 1.0];
     this.children = [];
     for (let i = 0; i < n; i++) {
       this.children.push(new EvilFace(0.5 + 0.2 * i / n));
