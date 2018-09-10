@@ -7,8 +7,19 @@ import { playerPos } from '/game/cyber/player';
 import {
   vecZero, vec2Set, vec3MulAdd, vec3SetMulAdd, vec3Norm, vec3Cross,
 } from '/game/cyber/vec';
-import { people } from '/game/cyber/graphics';
-import { signedRandom } from '/game/cyber/util';
+import {
+  evilSmileySprites,
+  personSprites,
+  shirtSprites,
+  shoeSprites,
+  topHatSprite,
+  purseSprites,
+} from '/game/cyber/graphics';
+import {
+  randInt,
+  signedRandom,
+  chooseRandom,
+} from '/game/cyber/util';
 
 const vertexBuffer = gl.createBuffer();
 
@@ -30,7 +41,7 @@ class Swarm {
     this.pos = [0, 0, 1];
     for (let i = 0; i < n; i++) {
       this.sprites.push({
-        n: i % 8,
+        n: chooseRandom(evilSmileySprites),
         size: 0.2,
         pos: [signedRandom(), signedRandom(), signedRandom()],
         vel: [signedRandom(), signedRandom(), signedRandom()],
@@ -59,7 +70,9 @@ class Swarm {
 
 class Person {
   constructor(i) {
-    const person = people[i];
+    const female = randInt();
+    const { head, hand } = chooseRandom(personSprites[female]);
+    const shoe = chooseRandom(shoeSprites[female]);
     this.phase = 0;
     this.stride = 2**(signedRandom() * 0.2);
     this.offsets = new Float32Array(8 * 3);
@@ -69,38 +82,38 @@ class Person {
       0.5,
     ];
     this.sprites = [{
-      n: person.head,
+      n: head,
       size: 0.2,
     }, {
-      n: person.shirt,
+      n: chooseRandom(shirtSprites[female]),
       size: 0.25,
     }, {
-      n: person.hand,
+      n: hand,
       size: 0.1,
       rotate: 180,
     }, {
-      n: person.hand,
+      n: hand,
       size: 0.1,
       flip: true,
       rotate: 180,
     }, {
-      n: person.shoe,
+      n: shoe,
       size: 0.15,
     }, {
-      n: person.shoe,
+      n: shoe,
       size: 0.15,
       flip: true,
     }, {
-      n: person.hat,
+      n: Math.random() < 0.2 ? topHatSprite : null,
       size: 0.15,
     }, {
-      n: person.item,
+      n: Math.random() < 0.3 ? chooseRandom(purseSprites[female]) : null,
       size: 0.15,
     }];
     for (let i = 0; i < this.sprites.length; i++) {
       this.sprites[i].offset = this.offsets.subarray(i * 3, i * 3 + 3);
     }
-    this.sprites = this.sprites.filter(s => s.n >= 0);
+    this.sprites = this.sprites.filter(s => s.n != null);
   }
 
   update() {
