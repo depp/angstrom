@@ -64,7 +64,7 @@ export function renderSprite() {
         n, size, pos = vecZero, offset = vecZero, rotate = 0, flip = false,
         mode = modeOpaque, color = 0xffffffff,
       } = sprite;
-      const i = S * spriteOffsets[mode]++;
+      let i = S * spriteOffsets[mode]++;
       const props = spriteProperties[n];
       if (props) {
         const { spriteFlip, spriteRotate = 0 } = props;
@@ -80,19 +80,17 @@ export function renderSprite() {
       vec3Norm(up);
       const cc = Math.cos(Math.PI / 180 * rotate);
       const ss = Math.sin(Math.PI / 180 * rotate);
-      for (let j = 0; j < 6; j++) {
-        let [x, y, u, v] = quad[j];
+      for (let [x, y, u, v] of quad) {
         if (flip) {
           u = 1 - u;
         }
-        let x2 = x * cc - y * ss;
-        let y2 = y * cc + x * ss;
-        vec3SetMulAdd(arr, spos,    1,                      i + V * j);
-        vec3SetMulAdd(arr, right,   x2 * size + offset[0],  i + V * j);
-        vec3SetMulAdd(arr, up,      y2 * size + offset[1],  i + V * j);
-        vec3SetMulAdd(arr, forward, -0.01 * offset[2],      i + V * j);
-        vec2Set(arr, ((n & 7) + u) / 8, ((n >> 3) + v) / 8, i + V * j + 3);
-        iarr[i + V * j + 5] = color;
+        vec3SetMulAdd(arr, spos,    1,                      i);
+        vec3SetMulAdd(arr, right,   (x * cc - y * ss) * size + offset[0],  i);
+        vec3SetMulAdd(arr, up,      (y * cc + x * ss) * size + offset[1],  i);
+        vec3SetMulAdd(arr, forward, -0.01 * offset[2],      i);
+        vec2Set(arr, ((n & 7) + u) / 8, ((n >> 3) + v) / 8, i + 3);
+        iarr[i + 5] = color;
+        i += V;
       }
     }
   }
