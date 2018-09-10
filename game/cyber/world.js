@@ -62,12 +62,18 @@ function removeDead(list) {
 export function testCollisionList(entity, list) {
   const { pos, radius } = entity;
   for (const other of list) {
+    if (other.dead) {
+      continue;
+    }
     const { pos: pos2, radius: radius2, children } = other;
     if (vec3Distance(pos, pos2) < radius + radius2) {
       if (children) {
         testCollisionList(entity, children);
       } else {
         entity.collideEntity(other);
+      }
+      if (entity.dead) {
+        return;
       }
     }
   }

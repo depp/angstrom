@@ -31,13 +31,14 @@ class Projectile extends Entity {
 
   update() {
     if (levelTime > this.expiry) {
-      this.dead = true;
+      this.dead = 1;
     }
     vec3SetMulAdd(this.pos, this.velocity, frameDT);
   }
 
   collideEntity(other) {
     other.damage();
+    this.dead = 1;
   }
 }
 
