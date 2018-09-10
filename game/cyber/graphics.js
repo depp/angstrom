@@ -73,6 +73,7 @@ function loadSprite(idx, data) {
 
 export let isAppleEmoji;
 export let isGoogleEmoji;
+export const spriteProperties = [];
 
 export const evilSmileySprites = [];
 export const personSprites = [[], []];
@@ -84,6 +85,16 @@ export const purseSprites = [[], []];
 // Current sprite index.
 let curSprite = 0;
 
+const charProperties = {};
+
+function setCharProperties(...propList) {
+  for (const prop of propList) {
+    for (const chr of prop.chars) {
+      charProperties[chr] = Object.assign(charProperties[chr] || {}, prop);
+    }
+  }
+}
+
 // Add an emoji to the sprite texture and return its index.
 function makeEmojiSprite(str) {
   const { data } = renderEmoji(str);
@@ -91,6 +102,8 @@ function makeEmojiSprite(str) {
     return null;
   }
   loadSprite(curSprite, data);
+  const [c] = str;
+  spriteProperties[curSprite] = charProperties[c] || {};
   return curSprite++;
 }
 
@@ -135,6 +148,14 @@ export function initEmoji() {
     console.log(`Color for U+${codePoint}: ${colorText}`);
     console.log(`Is Apple Emoji: ${isAppleEmoji}`);
     console.log(`Is Google Emoji: ${isGoogleEmoji}`);
+  }
+  if (isAppleEmoji) {
+    setCharProperties(
+      // Rotate shoes.
+      { chars: '\u{1F45E}\u{1F45F}', spriteRotate: 30 },
+      // Flip hands.
+      { chars: '\u{1F91A}', spriteFlip: true },
+    );
   }
 
   // ===========================================================================

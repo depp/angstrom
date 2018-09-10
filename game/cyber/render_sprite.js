@@ -8,6 +8,7 @@ import {
   vecZero, vec2Set, vec3MulAdd, vec3SetMulAdd, vec3Norm, vec3Cross,
 } from '/game/cyber/vec';
 import {
+  spriteProperties,
   evilSmileySprites,
   personSprites,
   shirtSprites,
@@ -160,9 +161,12 @@ export function renderSprite() {
     vec3Norm(up);
     for (const sprite of group.sprites) {
       /* eslint prefer-const: off */
-      const {
+      let {
         n, size, pos = vecZero, offset = vecZero, rotate = 0, flip = false,
       } = sprite;
+      const { spriteFlip, spriteRotate = 0 } = spriteProperties[n];
+      rotate += flip ? -spriteRotate : spriteRotate;
+      flip = spriteFlip ? !flip : flip;
       vec3MulAdd(spos, group.pos, pos);
       const cc = Math.cos(Math.PI / 180 * rotate);
       const ss = Math.sin(Math.PI / 180 * rotate);
