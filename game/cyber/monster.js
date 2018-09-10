@@ -27,11 +27,14 @@ class DeadEvilFace extends Entity {
       this.vel, this.vel, face.v, Math.cos(face.phase) * face.dist * 2,
     );
     this.bounce = 0;
+    this.rspeed = 800;
   }
 
   update() {
     this.dead = levelTime > this.expiry;
     if (!this.sleeping) {
+      const s = this.sprites[0];
+      s.rotate = ((s.rotate || 0) + this.rspeed * frameDT) % 360;
       vec3SetMulAdd(this.pos, this.vel, frameDT);
       vec3SetMulAdd(this.vel, vecZ, -10 * frameDT);
     }
@@ -48,6 +51,7 @@ class DeadEvilFace extends Entity {
     } else {
       this.pos[2] = 0.4 - this.pos[2];
       this.vel[2] *= -1;
+      this.rspeed *= -0.5;
       vec3MulAdd(this.vel, vecZero, this.vel, 0.5);
     }
   }
