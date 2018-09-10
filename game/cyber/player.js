@@ -1,8 +1,13 @@
+import { Entity } from '/game/cyber/world';
 import { buttonState, buttonPress } from '/game/cyber/input';
 import { frameDT, levelTime } from '/game/cyber/time';
 import { vecZ, vec3Set, vec3MulAdd } from '/game/cyber/vec';
 import { clamp } from '/game/cyber/util';
 import { spawnProjectile } from '/game/cyber/projectile';
+import {
+  modeUI,
+  crosshairSprite,
+} from '/game/cyber/graphics';
 
 // Maximum player speed, units per second.
 const playerSpeed = 3;
@@ -31,79 +36,93 @@ export const playerDirection = [];
 let playerAngleVel;
 let weaponCooldown;
 
+const vTemp = [];
+
+class Player extends Entity {
+  constructor() {
+    super();
+    this.pos = playerPos;
+    this.sprites = [{
+      n: crosshairSprite,
+      pos: [0, 0, 0],
+      mode: modeUI,
+      size: 0.1,
+    }];
+  }
+
+  update() {
+    // Update player angles.
+    {
+      const xLook = playerTurnSensitivity * buttonPress['x'];
+      const yLook = playerTurnSensitivity * buttonPress['y'];
+      let rMove = (buttonState['L'] - buttonState['R']) * playerTurnSpeed;
+      let accelDV = frameDT * playerTurnAccel;
+      playerAngleVel = Math.abs(rMove - playerAngleVel) <= accelDV
+        ? rMove
+        : playerAngleVel + accelDV * Math.sign(rMove - playerAngleVel);
+      let xAngle = playerAngle[0] = (
+        (playerAngle[0] + playerAngleVel * frameDT - xLook)
+          % (2 * Math.PI)
+      );
+      let yAngle = playerAngle[1] = clamp(playerAngle[1] + yLook, -1.5, 1.5);
+      vec3Set(
+        playerDirection,
+        Math.cos(yAngle) * Math.cos(xAngle),
+        Math.cos(yAngle) * Math.sin(xAngle),
+        Math.sin(yAngle),
+      );
+    }
+
+    // Update player velocity.
+    /* eslint prefer-const: off */
+    let [xVel, yVel, zVel] = playerVel;
+    {
+      const forwardMove = buttonState['f'] - buttonState['b'];
+      const strafeMove = buttonState['r'] - buttonState['l'];
+      const scale = playerSpeed
+            / Math.max(1, Math.hypot(forwardMove, strafeMove));
+      const c = Math.cos(playerAngle[0]) * scale;
+      const s = Math.sin(playerAngle[0]) * scale;
+      const xMove = c * forwardMove + s * strafeMove;
+      const yMove = s * forwardMove - c * strafeMove;
+      const accelDV = playerAccel * frameDT;
+      const xDV = xMove - xVel;
+      const yDV = yMove - yVel;
+      const magDV = Math.hypot(xDV, yDV);
+      if (magDV <= accelDV) {
+        xVel = xMove;
+        yVel = yMove;
+      } else {
+        xVel += xDV * accelDV / magDV;
+        yVel += yDV * accelDV / magDV;
+      }
+    }
+    vec3Set(playerVel, xVel, yVel, zVel);
+
+    // Update player position
+    let [xPos, yPos, zPos] = playerPos;
+    xPos += xVel * frameDT;
+    yPos += yVel * frameDT;
+    vec3Set(playerPos, xPos, yPos, zPos);
+
+    // Fire the weapon.
+    if (levelTime > weaponCooldown) {
+      if (buttonState['s'] || buttonPress['s']) {
+        vec3MulAdd(vTemp, playerPos, vecZ, -0.1);
+        weaponCooldown = (weaponCooldown || levelTime) + weaponCooldownTime;
+        spawnProjectile(vTemp, playerDirection);
+      } else {
+        weaponCooldown = 0;
+      }
+    }
+  }
+}
+
 export function startPlayer() {
   playerPos = [0, -1, 0.5];
   playerVel = [0, 0, 0];
   playerAngle = [1.5, 0, 0];
   playerAngleVel = 0;
   weaponCooldown = 0;
-}
-
-const vTemp = [];
-
-export function updatePlayer() {
-  // Update player angles.
-  {
-    const xLook = playerTurnSensitivity * buttonPress['x'];
-    const yLook = playerTurnSensitivity * buttonPress['y'];
-    let rMove = (buttonState['L'] - buttonState['R']) * playerTurnSpeed;
-    let accelDV = frameDT * playerTurnAccel;
-    playerAngleVel = Math.abs(rMove - playerAngleVel) <= accelDV
-      ? rMove
-      : playerAngleVel + accelDV * Math.sign(rMove - playerAngleVel);
-    let xAngle = playerAngle[0] = (
-      (playerAngle[0] + playerAngleVel * frameDT - xLook)
-        % (2 * Math.PI)
-    );
-    let yAngle = playerAngle[1] = clamp(playerAngle[1] + yLook, -1.5, 1.5);
-    vec3Set(
-      playerDirection,
-      Math.cos(yAngle) * Math.cos(xAngle),
-      Math.cos(yAngle) * Math.sin(xAngle),
-      Math.sin(yAngle),
-    );
-  }
-
-  // Update player velocity.
-  /* eslint prefer-const: off */
-  let [xVel, yVel, zVel] = playerVel;
-  {
-    const forwardMove = buttonState['f'] - buttonState['b'];
-    const strafeMove = buttonState['r'] - buttonState['l'];
-    const scale = playerSpeed
-          / Math.max(1, Math.hypot(forwardMove, strafeMove));
-    const c = Math.cos(playerAngle[0]) * scale;
-    const s = Math.sin(playerAngle[0]) * scale;
-    const xMove = c * forwardMove + s * strafeMove;
-    const yMove = s * forwardMove - c * strafeMove;
-    const accelDV = playerAccel * frameDT;
-    const xDV = xMove - xVel;
-    const yDV = yMove - yVel;
-    const magDV = Math.hypot(xDV, yDV);
-    if (magDV <= accelDV) {
-      xVel = xMove;
-      yVel = yMove;
-    } else {
-      xVel += xDV * accelDV / magDV;
-      yVel += yDV * accelDV / magDV;
-    }
-  }
-  vec3Set(playerVel, xVel, yVel, zVel);
-
-  // Update player position
-  let [xPos, yPos, zPos] = playerPos;
-  xPos += xVel * frameDT;
-  yPos += yVel * frameDT;
-  vec3Set(playerPos, xPos, yPos, zPos);
-
-  // Fire the weapon.
-  if (levelTime > weaponCooldown) {
-    if (buttonState['s'] || buttonPress['s']) {
-      vec3MulAdd(vTemp, playerPos, vecZ, -0.1);
-      weaponCooldown = (weaponCooldown || levelTime) + weaponCooldownTime;
-      spawnProjectile(vTemp, playerDirection);
-    } else {
-      weaponCooldown = 0;
-    }
-  }
+  new Player().spawn();
 }

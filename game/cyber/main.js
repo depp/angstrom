@@ -5,7 +5,7 @@ import {
   initInput, clearInput, updateInput,
 } from '/game/cyber/input';
 import { updateCamera } from '/game/cyber/camera';
-import { startPlayer, updatePlayer } from '/game/cyber/player';
+import { startPlayer } from '/game/cyber/player';
 import {
   frameDT, startTime, updateTime,
 } from '/game/cyber/time';
@@ -23,7 +23,6 @@ function main(curTimeMS) {
 
   updateTime(curTimeMS);
   if (frameDT) {
-    updatePlayer();
     updateWorld();
     updateInput();
   }

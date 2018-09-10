@@ -1,17 +1,29 @@
 // Module render_sprite contains the sprite rendering code.
 import { gl } from '/game/cyber/global';
-import { cameraMatrix } from '/game/cyber/camera';
+import {
+  cameraMatrix,
+  uiMatrix,
+} from '/game/cyber/camera';
 import {
   spriteOpaqueProgram,
   spriteTransparentProgram,
 } from '/game/cyber/shaders';
 import { playerPos } from '/game/cyber/player';
 import {
-  vecZero, vecZ, vec2Set, vec3MulAdd, vec3SetMulAdd, vec3Norm, vec3Cross,
+  vecZero,
+  vecX,
+  vecY,
+  vecZ,
+  vec2Set,
+  vec3MulAdd,
+  vec3SetMulAdd,
+  vec3Norm,
+  vec3Cross,
 } from '/game/cyber/vec';
 import {
   modeOpaque,
   modeTransparent,
+  modeUI,
   spriteProperties,
 } from '/game/cyber/graphics';
 import { entities } from '/game/cyber/world';
@@ -32,7 +44,7 @@ export function renderSprite() {
   const V = 6; // vertex size
   const S = 6 * 6; // sprite size
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  const spriteCounts = [0, 0]; // mode count
+  const spriteCounts = [0, 0, 0]; // mode count
   const flat = [...entities];
   for (let i = 0; i < flat.length; i++) {
     const { children, sprites } = flat[i];
@@ -45,7 +57,7 @@ export function renderSprite() {
   }
   let spriteCount = 0;
   const spriteOffsets = [];
-  for (let i = 0; i < 2; i++) { // mode count
+  for (let i = 0; i < 3; i++) { // mode count
     spriteOffsets[i] = spriteCount;
     spriteCount += spriteCounts[i];
   }
@@ -54,10 +66,7 @@ export function renderSprite() {
   }
   const arr = new Float32Array(S * spriteCount);
   const iarr = new Uint32Array(arr.buffer);
-  const spos = [];
-  const right = [];
-  const up = [];
-  const forward = [];
+  const tempVec = [[], [], [], []];
   for (const entity of flat) {
     for (const sprite of entity.sprites) {
       /* eslint prefer-const: off */
@@ -72,20 +81,22 @@ export function renderSprite() {
         rotate += flip ? -spriteRotate : spriteRotate;
         flip = spriteFlip ? !flip : flip;
       }
-      vec3MulAdd(spos, entity.pos, pos);
-      vec3MulAdd(forward, spos, playerPos, -1);
-      vec3Norm(forward);
-      vec3Cross(right, forward, vecZ);
-      vec3Norm(right);
-      vec3Cross(up, right, forward);
-      vec3Norm(up);
+      let right = vecX;
+      let up = vecY;
+      let forward = vecZ;
+      if (mode < modeUI) {
+        pos = vec3MulAdd(tempVec[0], entity.pos, pos);
+        forward = vec3Norm(vec3MulAdd(tempVec[1], pos, playerPos, -1));
+        right = vec3Norm(vec3Cross(tempVec[2], forward, vecZ));
+        up = vec3Norm(vec3Cross(tempVec[3], right, forward));
+      }
       const cc = Math.cos(Math.PI / 180 * rotate);
       const ss = Math.sin(Math.PI / 180 * rotate);
       for (let [x, y, u, v] of quad) {
         if (flip) {
           u = 1 - u;
         }
-        vec3SetMulAdd(arr, spos,    1,                      i);
+        vec3SetMulAdd(arr, pos,     1,                      i);
         vec3SetMulAdd(arr, right,   (x * cc - y * ss) * size + offset[0],  i);
         vec3SetMulAdd(arr, up,      (y * cc + x * ss) * size + offset[1],  i);
         vec3SetMulAdd(arr, forward, -0.01 * offset[2],      i);
@@ -129,8 +140,14 @@ export function renderSprite() {
     gl.depthMask(false);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
+
     gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
     drawGroup(modeTransparent);
+
+    gl.disable(gl.DEPTH_TEST);
+    gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, uiMatrix);
+    drawGroup(modeUI);
+
     gl.depthMask(true);
     gl.disable(gl.BLEND);
   }

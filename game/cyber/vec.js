@@ -4,6 +4,8 @@
 
 const vTemp = [];
 export const vecZero = [0, 0, 0];
+export const vecX = [1, 0, 0];
+export const vecY = [0, 1, 0];
 export const vecZ = [0, 0, 1];
 
 // Assigns [x, y] to out[offset..offset+1].
@@ -37,11 +39,14 @@ export function vec3Distance(x, y = vecZero) {
   );
 }
 
-// Computes out = x + y * a.
+// Computes out = x + y * a. If x is not specified, defaults to out. Returns
+// out.
 export function vec3MulAdd(out, x, y, a=1, offset=0) {
+  x = x || out;
   for (let i = 0; i < 3; i++) {
     out[offset + i] = x[i] + y[i] * a;
   }
+  return out;
 }
 
 // Computes out += x * a.
@@ -60,8 +65,7 @@ export function vec3Dot(x, y) {
   return a;
 }
 
-// Compute out = x / |x|, returns |x| (does NOT return x). If x is
-// unspecified, out is used.
+// Compute out = x / |x|, returns out. If x is unspecified, out is used.
 export function vec3Norm(out, x) {
   x = x || out;
   const r = vec3Dot(x, x);
@@ -75,10 +79,10 @@ export function vec3Norm(out, x) {
     out[1] = 0;
     out[2] = 1;
   }
-  return r;
+  return out;
 }
 
-// Compute the cross product of x and y, store in out.
+// Compute the cross product of x and y, store in out. Returns out.
 export function vec3Cross(out, x, y) {
   vec3Set(
     out,
@@ -86,6 +90,7 @@ export function vec3Cross(out, x, y) {
     x[2] * y[0] - x[0] * y[2],
     x[0] * y[1] - x[1] * y[0],
   );
+  return out;
 }
 
 export function quatSet(out, x, y, z, w) {
