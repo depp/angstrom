@@ -2,7 +2,6 @@
 import { gl } from '/game/cyber/global';
 import { cameraMatrix } from '/game/cyber/camera';
 import { tileProgram } from '/game/cyber/shaders';
-import { noiseTexture } from '/game/cyber/graphics';
 
 const vertexBuffer = gl.createBuffer();
 
