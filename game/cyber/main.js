@@ -63,6 +63,7 @@ export function loadedData(name, data) {
     switch (dir) {
       case 'shader':
         loadedShaderSource(base, data);
+        render();
         return;
     }
   }
