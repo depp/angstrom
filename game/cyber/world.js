@@ -30,8 +30,10 @@ export class Entity {
 function updateList(list, parentPos) {
   for (const entity of list) {
     entity.update(parentPos);
-    const { children, pos, radius } = entity;
-    if (pos[2] < radius) {
+    const {
+      children, pos, radius, sleeping,
+    } = entity;
+    if (!sleeping && pos[2] < radius) {
       entity.collideWorld();
     }
     if (children) {

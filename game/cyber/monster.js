@@ -44,9 +44,6 @@ class DeadEvilFace extends Entity {
   }
 
   collideWorld() {
-    if (this.sleeping) {
-      return;
-    }
     this.bounce++;
     if (this.bounce > 2) {
       this.sleeping = 1;
