@@ -74,6 +74,9 @@ export function renderSprite() {
         n, size, pos = vecZero, offset = vecZero, rotate = 0, flip = false,
         mode = modeOpaque, color = 0xffffffff,
       } = sprite;
+      if (DEBUG && size == null) {
+        throw new Error('Sprite is missing size');
+      }
       let i = S * spriteOffsets[mode]++;
       const props = spriteProperties[n];
       if (props) {
