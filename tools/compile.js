@@ -56,7 +56,7 @@ class FileSet {
 }
 
 function pushDiagnostic(diagnostics, e, severity = 2, fatal = false) {
-  const { loc } = e;
+  const { loc, stack } = e;
   const msg = {
     severity,
     message: e.message,
@@ -82,6 +82,9 @@ function pushDiagnostic(diagnostics, e, severity = 2, fatal = false) {
   }
   if (fatal) {
     msg.fatal = true;
+  }
+  if (stack) {
+    msg.stack = stack;
   }
   diagnostics[file].push(msg);
 }

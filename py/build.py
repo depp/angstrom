@@ -65,7 +65,12 @@ def build_html() -> bytes:
                 severity ="warning"
             print("{}{}: {}".format(prefix, severity, msg["message"]),
                   file=sys.stderr)
-            if msg["fatal"]:
+            stack = msg.get("stack")
+            prefix2 = prefix + '  '
+            if stack:
+                for line in stack.splitlines():
+                    print(prefix2 + line, file=sys.stderr)
+            if msg.get("fatal"):
                 fatalError = True
     if fatalError:
         print("error: compilation failed", file=sys.stderr)
