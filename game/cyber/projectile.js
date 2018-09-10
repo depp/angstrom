@@ -10,6 +10,7 @@ class Projectile {
     this.sprites = [{
       n: 0,
       size: 0.2,
+      transparent: true,
     }];
   }
 

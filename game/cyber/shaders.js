@@ -6,12 +6,22 @@ const terser = require('terser');
 const minify = require('../../tools/lib/glsl-minify');
 
 const shaders = {
-  spriteProgram: {
+  spriteSolidProgram: {
     vname: 'sprite',
-    fname: 'sprite',
+    fname: 'sprite_solid',
     attributes: [
       'Pos',
       'TexCoord',
+      'Color',
+    ],
+  },
+  spriteTransparentProgram: {
+    vname: 'sprite',
+    fname: 'sprite_transparent',
+    attributes: [
+      'Pos',
+      'TexCoord',
+      'Color',
     ],
   },
   tileProgram: {

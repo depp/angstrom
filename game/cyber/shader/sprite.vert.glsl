@@ -1,9 +1,14 @@
-precision mediump float;
 attribute vec3 Pos;
 attribute vec2 TexCoord;
+attribute vec4 Color;
+
 varying vec2 TexPos;
-uniform mat4 M;
+varying vec4 BlendColor;
+
+uniform mat4 ModelViewProjection;
+
 void main() {
     TexPos = TexCoord;
-    gl_Position = M * vec4(Pos, 1.0);
+    BlendColor = Color;
+    gl_Position = ModelViewProjection * vec4(Pos, 1.0);
 }

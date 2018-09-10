@@ -1,7 +1,10 @@
 // Module render_sprite contains the sprite rendering code.
 import { gl } from '/game/cyber/global';
 import { cameraMatrix } from '/game/cyber/camera';
-import { spriteProgram } from '/game/cyber/shaders';
+import {
+  spriteSolidProgram,
+  spriteTransparentProgram,
+} from '/game/cyber/shaders';
 import { playerPos } from '/game/cyber/player';
 import {
   vecZero, vecZ, vec2Set, vec3MulAdd, vec3SetMulAdd, vec3Norm, vec3Cross,
@@ -22,20 +25,31 @@ const quad = [
 ];
 
 export function renderSprite() {
+  const V = 6; // vertex size
+  const S = 6 * 6; // sprite size
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  let nSprite = 0;
+  let nSolid = 0;
+  let nTransparent = 0;
   for (const entity of entities) {
-    nSprite += entity.sprites.length;
+    for (const { transparent } of entity.sprites) {
+      if (transparent) {
+        nTransparent++;
+      } else {
+        nSolid++;
+      }
+    }
   }
-  if (!nSprite) {
+  if (!(nSolid + nTransparent)) {
     return;
   }
-  const arr = new Float32Array(5 * 6 * nSprite);
-  let i = 0;
+  const arr = new Float32Array(S * (nSolid + nTransparent));
+  const iarr = new Uint32Array(arr.buffer);
   const spos = [];
   const right = [];
   const up = [];
   const forward = [];
+  let solidVertex = 0;
+  let transparentVertex = S * nSolid;
   for (const entity of entities) {
     vec3MulAdd(forward, entity.pos, playerPos, -1);
     vec3Norm(forward);
@@ -47,7 +61,11 @@ export function renderSprite() {
       /* eslint prefer-const: off */
       let {
         n, size, pos = vecZero, offset = vecZero, rotate = 0, flip = false,
+        transparent,
       } = sprite;
+      const i = (transparent
+        ? (transparentVertex += S)
+        : (solidVertex += S)) - S;
       const props = spriteProperties[n];
       if (props) {
         const { spriteFlip, spriteRotate = 0 } = props;
@@ -64,33 +82,48 @@ export function renderSprite() {
         }
         let r2 = r * cc - s * ss;
         let s2 = s * cc + r * ss;
-        vec3SetMulAdd(arr, spos,    1,                      i + 5 * j);
-        vec3SetMulAdd(arr, right,   r2 * size + offset[0],  i + 5 * j);
-        vec3SetMulAdd(arr, up,      s2 * size + offset[1],  i + 5 * j);
-        vec3SetMulAdd(arr, forward, -0.01 * offset[2],      i + 5 * j);
-        vec2Set(arr, ((n & 7) + u) / 8, ((n >> 3) + v) / 8, i + 5 * j + 3);
+        vec3SetMulAdd(arr, spos,    1,                      i + V * j);
+        vec3SetMulAdd(arr, right,   r2 * size + offset[0],  i + V * j);
+        vec3SetMulAdd(arr, up,      s2 * size + offset[1],  i + V * j);
+        vec3SetMulAdd(arr, forward, -0.01 * offset[2],      i + V * j);
+        vec2Set(arr, ((n & 7) + u) / 8, ((n >> 3) + v) / 8, i + V * j + 3);
+        iarr[i + V * j + 5] = 0xffffff;
       }
-      i += 5 * 6;
     }
   }
   gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STREAM_DRAW);
 
-  const p = spriteProgram;
-  if (!p) {
-    return;
-  }
 
   gl.enable(gl.DEPTH_TEST);
-  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  gl.useProgram(p.program);
   gl.enableVertexAttribArray(0);
   gl.enableVertexAttribArray(1);
-  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 20, 0);
-  gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 20, 12);
-  gl.uniformMatrix4fv(p.uniforms.M, false, cameraMatrix);
+  gl.enableVertexAttribArray(2);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, V * 4, 0);
+  gl.vertexAttribPointer(1, 2, gl.FLOAT, false, V * 4, 12);
+  gl.vertexAttribPointer(2, 3, gl.UNSIGNED_BYTE, true, V * 4, 20);
 
-  gl.drawArrays(gl.TRIANGLES, 0, nSprite * 6);
+  let p = spriteSolidProgram;
+  if (p) {
+    gl.useProgram(p.program);
+    gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
+    gl.drawArrays(gl.TRIANGLES, 0, nSolid * 6);
+  }
+
+  p = spriteTransparentProgram;
+  if (p) {
+    gl.useProgram(p.program);
+    gl.depthMask(false);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
+    gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
+    gl.drawArrays(gl.TRIANGLES, nSolid * 6, nTransparent * 6);
+    gl.depthMask(true);
+    gl.disable(gl.BLEND);
+  }
+
+  //
 
   gl.disableVertexAttribArray(1);
+  gl.disableVertexAttribArray(2);
   gl.disable(gl.DEPTH_TEST);
 }
