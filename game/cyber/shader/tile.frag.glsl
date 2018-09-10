@@ -3,8 +3,8 @@ precision lowp float;
 varying vec3 TexPos;
 
 uniform sampler2D Texture;
-
-const vec3 Light = vec3(0.0, 0.0, 1.0);
+uniform vec3 LightPos[4];
+uniform vec3 LightColor[4];
 
 vec4 voronoi(in vec2 v) {
     vec2 tile = floor(v), center;
@@ -35,7 +35,14 @@ vec4 voronoi(in vec2 v) {
 
 void main() {
     vec4 vor = voronoi(TexPos.xy);
-    vec3 light = Light - TexPos;
+    vec3 lighting, light;
+    for (int i = 0; i < 4; i++) {
+        light = LightPos[i] - TexPos;
+        float d = dot(vor.xyz, light);
+        if (d > 0.0) {
+            lighting += d / dot(light, light) * LightColor[i];
+        }
+    }
     gl_FragColor =
-        vec4(dot(vor.xyz, light) * min(1.0, vor.w * 5.0) / dot(light, light));
+        vec4((1.0 - 1.0 / (lighting + 1.0)) * min(1.0, vor.w * 5.0), 1.0);
 }

@@ -28,7 +28,8 @@ export function compileShaderProgram(
     gl.compileShader(shader);
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
       throw new Error('Failed to compile shader.\n'
-                      + gl.getShaderInfoLog(shader));
+                      + gl.getShaderInfoLog(shader)
+                      + source);
     }
     gl.attachShader(program, shader);
     gl.deleteShader(shader);
@@ -45,7 +46,7 @@ export function compileShaderProgram(
   const uCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
   for (let i = 0; i < uCount; i++) {
     const { name } = gl.getActiveUniform(program, i);
-    obj[name] = gl.getUniformLocation(program, name);
+    obj[name.split('[')[0]] = gl.getUniformLocation(program, name);
   }
   return obj;
 }
@@ -142,7 +143,7 @@ class ShaderProgramDefinition {
     const uCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
     for (let i = 0; i < uCount; i++) {
       const { name } = gl.getActiveUniform(program, i);
-      uniforms[name] = gl.getUniformLocation(program, name);
+      uniforms[name.split('[')[0]] = gl.getUniformLocation(program, name);
     }
     const { func } = this;
     func({

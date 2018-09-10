@@ -24,6 +24,7 @@ class Projectile {
       });
     }
     this.expiry = levelTime + 2;
+    this.light = [1, 1, 0.1];
   }
 
   update() {
