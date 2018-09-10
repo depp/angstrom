@@ -36,6 +36,7 @@ class DeadEvilFace extends Entity {
     this.dead = levelTime > this.expiry;
     const frac = (this.expiry - levelTime) / 5;
     s.color = makeColor(frac * 3, frac, frac, frac * 4 - 3);
+    s.size = 0.2 * Math.min(1, frac * 5);
     if (!this.sleeping) {
       s.rotate = ((s.rotate || 0) + this.rspeed * frameDT) % 360;
       vec3SetMulAdd(this.pos, this.vel, frameDT);
