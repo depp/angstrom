@@ -75,6 +75,14 @@ export let isAppleEmoji;
 export let isGoogleEmoji;
 export const spriteProperties = [];
 
+// Predefined sprite indexes.
+export const shotSprite = 0;
+export const crosshairSprite = 1;
+
+// Current sprite index (must start after predefined sprites).
+let curSprite = 2;
+
+// Emoji sprites.
 export let brainSprite;
 export const evilSmileySprites = [];
 export const personSprites = [[], []];
@@ -82,9 +90,6 @@ export const shirtSprites = [[], []];
 export const shoeSprites = [[], []];
 export let topHatSprite;
 export const purseSprites = [[], []];
-
-// Current sprite index.
-let curSprite = 0;
 
 const charProperties = {};
 
@@ -131,20 +136,32 @@ function makeGenderedEmojiSprites(list, sprites) {
 export const noiseTexture = gl.createTexture();
 
 export function loadGraphics() {
-  if (charProperties != null) {
-    ctx.clearRect(0, 0, tileSize, tileSize);
-    ctx.save();
-    ctx.translate(32, 32);
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 28);
-    g.addColorStop(0, 'white');
-    g.addColorStop(1, 'transparent');
-    ctx.fillStyle = g;
-    ctx.arc(0, 0, 28, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.restore();
-    loadSprite(curSprite, getSpriteData());
-    curSprite++;
+  ctx.clearRect(0, 0, tileSize, tileSize);
+  ctx.save();
+  ctx.translate(32, 32);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 28);
+  g.addColorStop(0, 'white');
+  g.addColorStop(1, 'transparent');
+  ctx.fillStyle = g;
+  ctx.arc(0, 0, 28, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.restore();
+  loadSprite(shotSprite, getSpriteData());
+
+  ctx.clearRect(0, 0, tileSize, tileSize);
+  ctx.save();
+  ctx.beginPath();
+  ctx.translate(32, 32);
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 4;
+  for (let i = 0; i < 4; i++) {
+    ctx.rotate(Math.PI / 2);
+    ctx.moveTo(0, 10);
+    ctx.lineTo(0, 20);
   }
+  ctx.stroke();
+  ctx.restore();
+  loadSprite(crosshairSprite, getSpriteData());
 
   // Some emoji have very different colors in different fonts, we can take the
   // average color to detect the font.
