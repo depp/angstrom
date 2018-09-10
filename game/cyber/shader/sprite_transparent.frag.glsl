@@ -6,5 +6,7 @@ varying vec4 BlendColor;
 uniform sampler2D Texture;
 
 void main() {
-    gl_FragColor = BlendColor * texture2D(Texture, TexPos).a;
+    float a = texture2D(Texture, TexPos).a;
+    a *= a;
+    gl_FragColor = mix(a * BlendColor, vec4(1.0), a * a * a);
 }

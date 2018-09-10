@@ -87,7 +87,7 @@ export function renderSprite() {
         vec3SetMulAdd(arr, up,      s2 * size + offset[1],  i + V * j);
         vec3SetMulAdd(arr, forward, -0.01 * offset[2],      i + V * j);
         vec2Set(arr, ((n & 7) + u) / 8, ((n >> 3) + v) / 8, i + V * j + 3);
-        iarr[i + V * j + 5] = 0xffffff;
+        iarr[i + V * j + 5] = transparent ? 0xff : 0xffffff;
       }
     }
   }
