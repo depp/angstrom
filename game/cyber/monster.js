@@ -43,7 +43,7 @@ class Chaff extends Entity {
       this.sleeping = 1;
       this.pos[2] = this.radius;
     } else {
-      this.pos[2] = 0.4 - this.pos[2];
+      this.pos[2] = this.radius * 2 - this.pos[2];
       this.vel[2] *= -1;
       this.rspeed *= -0.5;
       vec3MulAdd(this.vel, vecZero, this.vel, 0.5);
