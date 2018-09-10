@@ -1,11 +1,41 @@
 import { spawn } from '/game/cyber/world';
-import { frameDT } from '/game/cyber/time';
+import { frameDT, levelTime } from '/game/cyber/time';
 import { chooseRandom, signedRandom } from '/game/cyber/util';
 import {
   brainSprite,
   evilSmileySprites,
 } from '/game/cyber/graphics';
-import { vecZero, vec3MulAdd } from '/game/cyber/vec';
+import {
+  vecZero,
+  vecZ,
+  vec3MulAdd,
+  vec3SetMulAdd,
+} from '/game/cyber/vec';
+
+class DeadEvilFace {
+  constructor(face) {
+    this.pos = face.pos;
+    this.sprites = face.sprites;
+    this.expiry = levelTime + 5;
+    this.vel = [];
+    vec3MulAdd(
+      this.vel, vecZero, face.u, -Math.sin(face.phase) * face.dist * 2,
+    );
+    vec3MulAdd(
+      this.vel, this.vel, face.v, Math.cos(face.phase) * face.dist * 2,
+    );
+  }
+
+  update() {
+    this.dead = levelTime > this.expiry;
+    vec3SetMulAdd(this.pos, this.vel, frameDT);
+    vec3SetMulAdd(this.vel, vecZ, -10 * frameDT);
+    if (this.pos[2] < 0) {
+      this.pos[2] *= -1;
+      this.vel[2] *= -0.5;
+    }
+  }
+}
 
 class EvilFace {
   constructor(dist) {
@@ -39,6 +69,7 @@ class EvilFace {
 
   damage() {
     this.dead = true;
+    spawn(new DeadEvilFace(this));
   }
 }
 
