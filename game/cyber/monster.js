@@ -2,36 +2,44 @@ import { entities } from '/game/cyber/world';
 import { frameDT } from '/game/cyber/time';
 import { chooseRandom, signedRandom } from '/game/cyber/util';
 import { evilSmileySprites } from '/game/cyber/graphics';
+import { vecZero, vec3MulAdd } from '/game/cyber/vec';
 
 class Swarm {
   constructor(n) {
     this.sprites = [];
-    this.pos = [0, 0, 1];
+    this.pos = [0, 2, 1];
     for (let i = 0; i < n; i++) {
+      const theta = Math.PI * signedRandom();
+      const phi = Math.asin(signedRandom());
       this.sprites.push({
         n: chooseRandom(evilSmileySprites),
         size: 0.2,
-        pos: [signedRandom(), signedRandom(), signedRandom()],
-        vel: [signedRandom(), signedRandom(), signedRandom()],
+        phase: Math.PI * signedRandom(),
+        u: [
+          Math.cos(theta) * Math.cos(phi),
+          Math.sin(theta) * Math.cos(phi),
+          Math.sin(phi),
+        ],
+        v: [
+          -Math.sin(theta),
+          Math.cos(theta),
+          0,
+        ],
+        r: 0.5 + 0.5 * i/n,
+        pos: [...vecZero],
       });
     }
   }
 
   update() {
     for (const sprite of this.sprites) {
-      for (let i = 0; i < 3; i++) {
-        let p = sprite.pos[i], v = sprite.vel[i];
-        p += v * frameDT;
-        if (p < -1) {
-          p = -2 - p;
-          v = -v;
-        } else if (p > 1) {
-          p = 2 - p;
-          v = -v;
-        }
-        sprite.pos[i] = p;
-        sprite.vel[i] = v;
-      }
+      /* eslint-disable prefer-const */
+      let {
+        phase, u, v, r, pos,
+      } = sprite;
+      sprite.phase = phase = (phase + frameDT * 2) % (2 * Math.PI);
+      vec3MulAdd(pos, vecZero, u, Math.cos(phase) * r);
+      vec3MulAdd(pos, pos, v, Math.sin(phase) * r);
     }
   }
 }
