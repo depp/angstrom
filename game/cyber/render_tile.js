@@ -9,6 +9,7 @@ const vertexBuffer = gl.createBuffer();
 export function renderTile() {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   const arr = new Float32Array([
+    // Top
     -4, -4, 0,
     4, -4, 0,
     -4, 4, 0,
