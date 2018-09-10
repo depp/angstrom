@@ -1,4 +1,8 @@
-import { Entity } from '/game/cyber/world';
+import {
+  hitMonster,
+  hitMonsterShot,
+  Entity,
+} from '/game/cyber/world';
 import { frameDT, levelTime } from '/game/cyber/time';
 import { chooseRandom, signedRandom } from '/game/cyber/util';
 import {
@@ -11,8 +15,13 @@ import {
   vecZ,
   vec3Set,
   vec3MulAdd,
+  vec3Norm,
   vec3SetMulAdd,
 } from '/game/cyber/vec';
+import {
+  playerPos,
+} from '/game/cyber/player';
+import { spawnProjectile } from '/game/cyber/projectile';
 
 class Chaff extends Entity {
   constructor(src, velocity = vecZero) {
@@ -115,6 +124,7 @@ class EvilFace extends Entity {
 }
 
 const swarmLight = [1, 0.6, 1.0];
+const tempVec = [];
 
 class Swarm extends Entity {
   constructor(count) {
@@ -125,6 +135,7 @@ class Swarm extends Entity {
     for (let i = 0; i < count; i++) {
       this.children.push(new EvilFace(0.5 + 0.2 * i / count));
     }
+    this.shotTime = 0;
   }
 
   update() {
@@ -140,8 +151,14 @@ class Swarm extends Entity {
         child.damage();
         this.dieTime += 0.05;
       }
+      return;
+    }
+    if (this.shotTime < levelTime) {
+      vec3Norm(vec3MulAdd(tempVec, playerPos, this.pos, -1));
+      spawnProjectile(this.pos, tempVec, hitMonsterShot);
+      this.shotTime += 1;
     }
   }
 }
 
-new Swarm(20).spawn(0);
+new Swarm(20).spawn(hitMonster);

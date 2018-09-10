@@ -1,4 +1,8 @@
-import { Entity } from '/game/cyber/world';
+import {
+  hitPlayer,
+  hitPlayerShot,
+  Entity,
+} from '/game/cyber/world';
 import { buttonState, buttonPress } from '/game/cyber/input';
 import { frameDT, levelTime } from '/game/cyber/time';
 import { vecZ, vec3Set, vec3MulAdd } from '/game/cyber/vec';
@@ -110,7 +114,7 @@ class Player extends Entity {
       if (buttonState['s'] || buttonPress['s']) {
         vec3MulAdd(vTemp, playerPos, vecZ, -0.1);
         weaponCooldown = (weaponCooldown || levelTime) + weaponCooldownTime;
-        spawnProjectile(vTemp, playerDirection);
+        spawnProjectile(vTemp, playerDirection, hitPlayerShot);
       } else {
         weaponCooldown = 0;
       }
@@ -124,5 +128,5 @@ export function startPlayer() {
   playerAngle = [1.5, 0, 0];
   playerAngleVel = 0;
   weaponCooldown = 0;
-  new Player().spawn();
+  new Player().spawn(hitPlayer);
 }

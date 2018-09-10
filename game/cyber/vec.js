@@ -65,19 +65,19 @@ export function vec3Dot(x, y) {
   return a;
 }
 
-// Compute out = x / |x|, returns out. If x is unspecified, out is used.
-export function vec3Norm(out, x) {
+// Compute out = x * scale / |x|, returns out. If x is unspecified, out is used.
+export function vec3Norm(out, x, scale = 1) {
   x = x || out;
   const r = vec3Dot(x, x);
   let i;
   if (r > 1e-8) {
     for (i = 0; i < 3; i++) {
-      out[i] = x[i] / Math.sqrt(r);
+      out[i] = scale / Math.sqrt(r) * x[i];
     }
   } else {
     out[0] = 0;
     out[1] = 0;
-    out[2] = 1;
+    out[2] = scale;
   }
   return out;
 }

@@ -43,6 +43,6 @@ class Projectile extends Entity {
   }
 }
 
-export function spawnProjectile(origin, direction) {
-  new Projectile(origin, direction).spawn(1);
+export function spawnProjectile(origin, direction, hitGroup) {
+  new Projectile(origin, direction).spawn(hitGroup);
 }

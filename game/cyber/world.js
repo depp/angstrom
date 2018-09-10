@@ -8,7 +8,12 @@ export const entities = [];
 
 // Hit groups. Each entity is only tested for collisions against certain entity
 // groups, depending on the entity's own group.
-export const hitGroups = [[], []];
+export const hitMonster = 0;
+export const hitPlayer = 1;
+export const hitMonsterShot = 2;
+export const hitPlayerShot = 3;
+
+export const hitGroups = [[], [], [], []];
 
 export class Entity {
   constructor(pos, radius, ...sprites) {
@@ -101,7 +106,8 @@ export function testCollisions(group1, group2) {
 
 export function updateWorld() {
   updateList(entities);
-  testCollisions(1, 0);
+  testCollisions(hitPlayerShot, hitMonster);
+  testCollisions(hitMonsterShot, hitPlayer);
   removeDead(entities);
   for (const group of hitGroups) {
     removeDead(group);
