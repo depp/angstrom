@@ -6,7 +6,7 @@ export function updateWorld() {
     entity.update();
   }
   let i = 0, n = entities.length;
-  while (i < entities.length) {
+  while (i < n) {
     if (entities[i].dead) {
       n--;
       entities[i] = entities[n];
