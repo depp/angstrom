@@ -83,8 +83,14 @@ module.exports = async function generate(build) {
     } else {
       promises.push(Promise.all([
         load(`game/cyber/shader/${vname}.vert.glsl`),
-        load(`game/cyber/shader/${vname}.frag.glsl`),
+        load(`game/cyber/shader/${fname}.frag.glsl`),
       ]).then((srcs) => {
+        if (srcs[0] == null) {
+          throw new Error("could not load vertex shader");
+        }
+        if (srcs[1] == null) {
+          throw new Error("could not load fragment shader");
+        }
         const attributeMap = {};
         for (let i = 0; i < attributes.length; i++) {
           attributeMap[attributes[i]] = `A${i}`;
