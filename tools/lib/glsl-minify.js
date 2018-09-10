@@ -124,12 +124,43 @@ function mapNames(ast, options) {
   return nameMap;
 }
 
+const components = {};
+for (const s of 'xyzw rgba stpq'.split(' ')) {
+  for (let j = 0; j < 4; j++) {
+    components[s[j]] = [s, j];
+  }
+}
+
+function mapComponents(c) {
+  let info = components[c];
+  if (!info) {
+    return null;
+  }
+  const [type] = info;
+  let r = '';
+  for (let i = 0; i < c.length; i++) {
+    info = components[c[i]];
+    if (!info) {
+      return null;
+    }
+    const [t, n] = info;
+    if (t != type) {
+      return null;
+    }
+    r += 'xyzw'[n];
+  }
+  return r;
+}
+
 function emit(tokens, nameMap) {
   // There is a glsl-deparser, but it doesn't seem to work or its error handling
   // leaves something to be desired.
   let result = '';
   let needWhite = false;
+  let isDot = false;
   for (const tok of tokens) {
+    let wasDot = isDot;
+    isDot = false;
     switch (tok.type) {
       case 'block-comment':
       case 'line-comment':
@@ -166,7 +197,8 @@ function emit(tokens, nameMap) {
         if (needWhite) {
           result += ' ';
         }
-        result += nameMap[tok.data] || tok.data;
+        result += (wasDot && mapComponents(tok.data))
+          || nameMap[tok.data] || tok.data;
         needWhite = true;
         break;
       case 'integer': {
@@ -176,7 +208,7 @@ function emit(tokens, nameMap) {
         const m = tok.data.match(/^0*([1-9][0-9]*)?$/);
         if (m) {
           const d = m[1];
-          if (d == '') {
+          if (d === '') {
             result += '0';
           } else {
             result += d;
@@ -187,6 +219,9 @@ function emit(tokens, nameMap) {
         needWhite = true;
       } break;
       case 'operator':
+        if (tok.data === '.') {
+          isDot = true;
+        }
         result += tok.data;
         needWhite = false;
         break;
