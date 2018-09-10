@@ -114,17 +114,22 @@ class EvilFace extends Entity {
   }
 }
 
+const swarmLight = [1, 0.6, 1.0];
+
 class Swarm extends Entity {
-  constructor(n) {
+  constructor(count) {
     super([0, 2, 1], 0.9);
-    this.light = [1, 0.6, 1.0];
+    this.count = count;
+    this.light = [];
     this.children = [new EvilBrain(this)];
-    for (let i = 0; i < n; i++) {
-      this.children.push(new EvilFace(0.5 + 0.2 * i / n));
+    for (let i = 0; i < count; i++) {
+      this.children.push(new EvilFace(0.5 + 0.2 * i / count));
     }
   }
 
   update() {
+    vec3MulAdd(this.light, vecZero, swarmLight,
+      this.children.length / this.count);
     if (this.dieTime) {
       while (levelTime > this.dieTime) {
         if (!this.children.length) {
