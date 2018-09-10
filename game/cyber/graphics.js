@@ -71,6 +71,10 @@ function loadSprite(idx, data) {
   );
 }
 
+// Sprite modes.
+export const modeOpaque = 0;
+export const modeTransparent = 1;
+
 export let isAppleEmoji;
 export let isGoogleEmoji;
 export const spriteProperties = [];

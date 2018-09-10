@@ -1,5 +1,6 @@
 import { frameDT, levelTime } from '/game/cyber/time';
 import {
+  modeTransparent,
   makeColor,
   shotSprite,
 } from '/game/cyber/graphics';
@@ -24,7 +25,7 @@ class Projectile extends Entity {
         pos,
         n: shotSprite,
         size: 0.1 * (1 - a),
-        transparent: true,
+        mode: modeTransparent,
         color: makeColor(1, (1-a) ** 2, 0, 1-a),
       });
     }

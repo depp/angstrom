@@ -9,7 +9,10 @@ import { playerPos } from '/game/cyber/player';
 import {
   vecZero, vecZ, vec2Set, vec3MulAdd, vec3SetMulAdd, vec3Norm, vec3Cross,
 } from '/game/cyber/vec';
-import { spriteProperties } from '/game/cyber/graphics';
+import {
+  modeOpaque,
+  spriteProperties,
+} from '/game/cyber/graphics';
 import { entities } from '/game/cyber/world';
 
 const vertexBuffer = gl.createBuffer();
@@ -28,43 +31,40 @@ export function renderSprite() {
   const V = 6; // vertex size
   const S = 6 * 6; // sprite size
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  let nSolid = 0;
-  let nTransparent = 0;
+  const spriteCounts = [0, 0]; // mode count
   const flat = [...entities];
   for (let i = 0; i < flat.length; i++) {
     const { children, sprites } = flat[i];
     if (children) {
       flat.push(...children);
     }
-    for (const { transparent } of sprites) {
-      if (transparent) {
-        nTransparent++;
-      } else {
-        nSolid++;
-      }
+    for (const { mode = modeOpaque } of sprites) {
+      spriteCounts[mode]++;
     }
   }
-  if (!(nSolid + nTransparent)) {
+  let spriteCount = 0;
+  const spriteOffsets = [];
+  for (let i = 0; i < 2; i++) { // mode count
+    spriteOffsets[i] = spriteCount;
+    spriteCount += spriteCounts[i];
+  }
+  if (!spriteCount) {
     return;
   }
-  const arr = new Float32Array(S * (nSolid + nTransparent));
+  const arr = new Float32Array(S * spriteCount);
   const iarr = new Uint32Array(arr.buffer);
   const spos = [];
   const right = [];
   const up = [];
   const forward = [];
-  let solidVertex = 0;
-  let transparentVertex = S * nSolid;
   for (const entity of flat) {
     for (const sprite of entity.sprites) {
       /* eslint prefer-const: off */
       let {
         n, size, pos = vecZero, offset = vecZero, rotate = 0, flip = false,
-        transparent, color = 0xffffffff,
+        mode = modeOpaque, color = 0xffffffff,
       } = sprite;
-      const i = (transparent
-        ? (transparentVertex += S)
-        : (solidVertex += S)) - S;
+      const i = S * spriteOffsets[mode]++;
       const props = spriteProperties[n];
       if (props) {
         const { spriteFlip, spriteRotate = 0 } = props;
@@ -107,20 +107,20 @@ export function renderSprite() {
   gl.vertexAttribPointer(2, 4, gl.UNSIGNED_BYTE, true, V * 4, 20);
 
   let p = spriteSolidProgram;
-  if (p && nSolid) {
+  if (p && spriteCounts[0]) {
     gl.useProgram(p.program);
     gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
-    gl.drawArrays(gl.TRIANGLES, 0, nSolid * 6);
+    gl.drawArrays(gl.TRIANGLES, 0, spriteCounts[0] * 6);
   }
 
   p = spriteTransparentProgram;
-  if (p && nTransparent) {
+  if (p && spriteCounts[1]) {
     gl.useProgram(p.program);
     gl.depthMask(false);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
     gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
-    gl.drawArrays(gl.TRIANGLES, nSolid * 6, nTransparent * 6);
+    gl.drawArrays(gl.TRIANGLES, spriteCounts[0] * 6, spriteCounts[1] * 6);
     gl.depthMask(true);
     gl.disable(gl.BLEND);
   }
