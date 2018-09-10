@@ -10,6 +10,9 @@ import {
   frameDT, startTime, updateTime,
 } from '/game/cyber/time';
 import { render } from '/game/cyber/render';
+import { updateWorld } from '/game/cyber/world';
+import '/game/cyber/person';
+import '/game/cyber/monster';
 
 // Handle to RequestAnimationFrame request.
 let handle;
@@ -21,6 +24,7 @@ function main(curTimeMS) {
   updateTime(curTimeMS);
   if (frameDT) {
     updatePlayer();
+    updateWorld();
     updateInput();
   }
   updateCamera();

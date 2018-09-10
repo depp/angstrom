@@ -2,25 +2,12 @@
 import { gl } from '/game/cyber/global';
 import { cameraMatrix } from '/game/cyber/camera';
 import { spriteProgram } from '/game/cyber/shaders';
-import { frameDT } from '/game/cyber/time';
 import { playerPos } from '/game/cyber/player';
 import {
   vecZero, vec2Set, vec3MulAdd, vec3SetMulAdd, vec3Norm, vec3Cross,
 } from '/game/cyber/vec';
-import {
-  spriteProperties,
-  evilSmileySprites,
-  personSprites,
-  shirtSprites,
-  shoeSprites,
-  topHatSprite,
-  purseSprites,
-} from '/game/cyber/graphics';
-import {
-  randInt,
-  signedRandom,
-  chooseRandom,
-} from '/game/cyber/util';
+import { spriteProperties } from '/game/cyber/graphics';
+import { entities } from '/game/cyber/world';
 
 const vertexBuffer = gl.createBuffer();
 
@@ -36,115 +23,14 @@ const quad = [
 
 const vecZ = [0, 0, 1];
 
-class Swarm {
-  constructor(n) {
-    this.sprites = [];
-    this.pos = [0, 0, 1];
-    for (let i = 0; i < n; i++) {
-      this.sprites.push({
-        n: chooseRandom(evilSmileySprites),
-        size: 0.2,
-        pos: [signedRandom(), signedRandom(), signedRandom()],
-        vel: [signedRandom(), signedRandom(), signedRandom()],
-      });
-    }
-  }
-
-  update() {
-    for (const sprite of this.sprites) {
-      for (let i = 0; i < 3; i++) {
-        let p = sprite.pos[i], v = sprite.vel[i];
-        p += v * frameDT;
-        if (p < -1) {
-          p = -2 - p;
-          v = -v;
-        } else if (p > 1) {
-          p = 2 - p;
-          v = -v;
-        }
-        sprite.pos[i] = p;
-        sprite.vel[i] = v;
-      }
-    }
-  }
-}
-
-class Person {
-  constructor(i) {
-    const female = randInt();
-    const { head, hand } = chooseRandom(personSprites[female]);
-    const shoe = chooseRandom(shoeSprites[female]);
-    this.phase = 0;
-    this.stride = 2**(signedRandom() * 0.2);
-    this.offsets = new Float32Array(8 * 3);
-    this.pos = [
-      i - 10, // 4 * signedRandom(),
-      0, // 4 * signedRandom(),
-      0.5,
-    ];
-    this.sprites = [{
-      n: head,
-      size: 0.2,
-    }, {
-      n: chooseRandom(shirtSprites[female]),
-      size: 0.25,
-    }, {
-      n: hand,
-      size: 0.1,
-      rotate: 180,
-    }, {
-      n: hand,
-      size: 0.1,
-      flip: true,
-      rotate: 180,
-    }, {
-      n: shoe,
-      size: 0.15,
-    }, {
-      n: shoe,
-      size: 0.15,
-      flip: true,
-    }, {
-      n: Math.random() < 0.2 ? topHatSprite : null,
-      size: 0.15,
-    }, {
-      n: Math.random() < 0.3 ? chooseRandom(purseSprites[female]) : null,
-      size: 0.15,
-    }];
-    for (let i = 0; i < this.sprites.length; i++) {
-      this.sprites[i].offset = this.offsets.subarray(i * 3, i * 3 + 3);
-    }
-    this.sprites = this.sprites.filter(s => s.n != null);
-  }
-
-  update() {
-    this.phase = (this.phase + frameDT * 4 * this.stride) % (2 * Math.PI);
-    const s = Math.sin(this.phase);
-    this.offsets.set([
-      0, 0.2 + Math.abs(s) * 0.05, 2,
-      0, -0.1 + Math.abs(s) * 0.03, 1,
-      0.15, -0.2 - s * 0.04, 5,
-      -0.15, -0.2 + s * 0.04, 5,
-      0.15, -0.3 + Math.max(0, s) * 0.06, 0,
-      -0.15, -0.3 + Math.max(0, -s) * 0.06, 0,
-      0, 0.4 + Math.abs(s) * 0.05, 3,
-      0.15, -0.25 - s * 0.04, 4,
-    ]);
-  }
-}
-
-const groups = [];
-groups.push(new Swarm(20));
-for (let i = 0; i < 20; i++) {
-  groups.push(new Person(i));
-}
-
 export function renderSprite() {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   let nSprite = 0;
-  for (const group of groups) {
-    group.update();
-    nSprite += group.sprites.length;
+  for (const entity of entities) {
+    nSprite += entity.sprites.length;
+  }
+  if (!nSprite) {
+    return;
   }
   const arr = new Float32Array(5 * 6 * nSprite);
   let i = 0;
@@ -152,14 +38,14 @@ export function renderSprite() {
   const right = [];
   const up = [];
   const forward = [];
-  for (const group of groups) {
-    vec3MulAdd(forward, group.pos, playerPos, -1);
+  for (const entity of entities) {
+    vec3MulAdd(forward, entity.pos, playerPos, -1);
     vec3Norm(forward);
     vec3Cross(right, forward, vecZ);
     vec3Norm(right);
     vec3Cross(up, right, forward);
     vec3Norm(up);
-    for (const sprite of group.sprites) {
+    for (const sprite of entity.sprites) {
       /* eslint prefer-const: off */
       let {
         n, size, pos = vecZero, offset = vecZero, rotate = 0, flip = false,
@@ -170,7 +56,7 @@ export function renderSprite() {
         rotate += flip ? -spriteRotate : spriteRotate;
         flip = spriteFlip ? !flip : flip;
       }
-      vec3MulAdd(spos, group.pos, pos);
+      vec3MulAdd(spos, entity.pos, pos);
       const cc = Math.cos(Math.PI / 180 * rotate);
       const ss = Math.sin(Math.PI / 180 * rotate);
       for (let j = 0; j < 6; j++) {
