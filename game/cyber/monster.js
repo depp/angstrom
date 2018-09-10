@@ -36,6 +36,10 @@ class EvilFace {
     vec3MulAdd(this.pos, pos, this.u, Math.cos(this.phase) * this.dist);
     vec3MulAdd(this.pos, this.pos, this.v, Math.sin(this.phase) * this.dist);
   }
+
+  damage() {
+    this.dead = true;
+  }
 }
 
 class Swarm {

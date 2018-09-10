@@ -36,7 +36,7 @@ class Projectile {
   }
 
   collide(other) {
-    console.error('HIT', other.constructor.name);
+    other.damage();
   }
 }
 

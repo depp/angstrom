@@ -24,6 +24,10 @@ function removeDead(list) {
       n--;
       list[i] = list[n];
     } else {
+      const { children } = list[i];
+      if (children) {
+        removeDead(children);
+      }
       i++;
     }
   }
