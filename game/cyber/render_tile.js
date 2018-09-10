@@ -2,6 +2,7 @@
 import { gl } from '/game/cyber/global';
 import { cameraMatrix } from '/game/cyber/camera';
 import { tileProgram } from '/game/cyber/shaders';
+import { noiseTexture } from '/game/cyber/graphics';
 
 const vertexBuffer = gl.createBuffer();
 
@@ -26,7 +27,8 @@ export function renderTile() {
   gl.useProgram(p.program);
   gl.enableVertexAttribArray(0);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-  gl.uniformMatrix4fv(p.uniforms.M, false, cameraMatrix);
+  gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
+  gl.uniform1i(p.uniforms.Texture, 1);
 
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 

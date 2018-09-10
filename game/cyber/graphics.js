@@ -127,7 +127,9 @@ function makeGenderedEmojiSprites(list, sprites) {
   makeEmojiSpriteList(female, list[1]);
 }
 
-export function loadSprites() {
+export const noiseTexture = gl.createTexture();
+
+export function loadGraphics() {
   if (charProperties != null) {
     ctx.clearRect(0, 0, tileSize, tileSize);
     ctx.save();
@@ -232,9 +234,27 @@ export function loadSprites() {
 
   gl.bindTexture(gl.TEXTURE_2D, spriteTexture);
   gl.generateMipmap(gl.TEXTURE_2D);
+
+  // ===========================================================================
+  // Noise
+  // ===========================================================================
+
+  const noiseSize = 256;
+  const noise = new Uint8Array(noiseSize * noiseSize * 4);
+  for (let i = 0; i < noise.length; i++) {
+    noise[i] = Math.random() * 256;
+  }
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, noiseTexture);
+  gl.texImage2D(
+    gl.TEXTURE_2D, 0, gl.RGBA, noiseSize, noiseSize, 0,
+    gl.RGBA, gl.UNSIGNED_BYTE, noise,
+  );
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 }
 
-loadSprites();
+loadGraphics();
 
 export function makeColor(r, g, b, a = 1) {
   return (clamp((r * 256) | 0, 0, 255)
