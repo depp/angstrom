@@ -36,7 +36,7 @@ export function renderTile() {
   }
 
   const p = tileProgram;
-  if (!p) {
+  if (DEBUG && !p) {
     return;
   }
 

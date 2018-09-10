@@ -117,14 +117,14 @@ export function renderSprite() {
   gl.vertexAttribPointer(2, 4, gl.UNSIGNED_BYTE, true, V * 4, 20);
 
   let p = spriteOpaqueProgram;
-  if (p && spriteCounts[0]) {
+  if (!DEBUG || p) {
     gl.useProgram(p.program);
     gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
     drawGroup(modeOpaque);
   }
 
   p = spriteTransparentProgram;
-  if (p && spriteCounts[1]) {
+  if (!DEBUG || p) {
     gl.useProgram(p.program);
     gl.depthMask(false);
     gl.enable(gl.BLEND);
