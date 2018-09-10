@@ -127,7 +127,23 @@ function makeGenderedEmojiSprites(list, sprites) {
   makeEmojiSpriteList(female, list[1]);
 }
 
-export function initEmoji() {
+export function loadSprites() {
+  if (charProperties != null) {
+    ctx.clearRect(0, 0, tileSize, tileSize);
+    ctx.save();
+    ctx.translate(32, 32);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 28);
+    g.addColorStop(0, 'white');
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.arc(0, 0, 28, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+    loadSprite(curSprite, getSpriteData());
+    curSprite++;
+  }
+  console.log('cur sprite', curSprite);
+
   // Some emoji have very different colors in different fonts, we can take the
   // average color to detect the font.
   //
@@ -216,18 +232,8 @@ export function initEmoji() {
     ',,\u{1F45B}\u{1F45C}\u{1F45D}',
   );
 
-  ctx.clearRect(0, 0, tileSize, tileSize);
-  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 28);
-  g.addColorStop(0, 'white');
-  g.addColorStop(1, 'transparent');
-  ctx.fillStyle = g;
-  ctx.arc(0, 0, 28, 0, 2 * Math.PI);
-  ctx.fill();
-  loadSprite(curSprite, getSpriteData());
-  curSprite++;
-
   gl.bindTexture(gl.TEXTURE_2D, spriteTexture);
   gl.generateMipmap(gl.TEXTURE_2D);
 }
 
-initEmoji();
+loadSprites();

@@ -164,9 +164,12 @@ export function renderSprite() {
       let {
         n, size, pos = vecZero, offset = vecZero, rotate = 0, flip = false,
       } = sprite;
-      const { spriteFlip, spriteRotate = 0 } = spriteProperties[n];
-      rotate += flip ? -spriteRotate : spriteRotate;
-      flip = spriteFlip ? !flip : flip;
+      const props = spriteProperties[n];
+      if (props) {
+        const { spriteFlip, spriteRotate = 0 } = props;
+        rotate += flip ? -spriteRotate : spriteRotate;
+        flip = spriteFlip ? !flip : flip;
+      }
       vec3MulAdd(spos, group.pos, pos);
       const cc = Math.cos(Math.PI / 180 * rotate);
       const ss = Math.sin(Math.PI / 180 * rotate);
