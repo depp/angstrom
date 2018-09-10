@@ -30,8 +30,13 @@ export function renderSprite() {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   let nSolid = 0;
   let nTransparent = 0;
-  for (const entity of entities) {
-    for (const { transparent } of entity.sprites) {
+  const flat = [...entities];
+  for (let i = 0; i < flat.length; i++) {
+    const { children, sprites } = flat[i];
+    if (children) {
+      flat.push(...children);
+    }
+    for (const { transparent } of sprites) {
       if (transparent) {
         nTransparent++;
       } else {
@@ -50,7 +55,7 @@ export function renderSprite() {
   const forward = [];
   let solidVertex = 0;
   let transparentVertex = S * nSolid;
-  for (const entity of entities) {
+  for (const entity of flat) {
     for (const sprite of entity.sprites) {
       /* eslint prefer-const: off */
       let {

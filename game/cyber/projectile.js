@@ -35,8 +35,8 @@ class Projectile {
     vec3SetMulAdd(this.pos, this.velocity, frameDT);
   }
 
-  collide() {
-    console.error('HIT');
+  collide(other) {
+    console.error('HIT', other.constructor.name);
   }
 }
 

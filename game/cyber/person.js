@@ -77,6 +77,6 @@ export class Person {
   }
 }
 
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 0; i++) {
   spawn(new Person(i));
 }

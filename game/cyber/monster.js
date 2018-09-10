@@ -7,6 +7,37 @@ import {
 } from '/game/cyber/graphics';
 import { vecZero, vec3MulAdd } from '/game/cyber/vec';
 
+class EvilFace {
+  constructor(dist) {
+    const theta = Math.PI * signedRandom();
+    const phi = Math.asin(signedRandom());
+    this.pos = [...vecZero];
+    this.radius = 0.2;
+    this.u = [
+      Math.cos(theta) * Math.cos(phi),
+      Math.sin(theta) * Math.cos(phi),
+      Math.sin(phi),
+    ];
+    this.v = [
+      -Math.sin(theta),
+      Math.cos(theta),
+      0,
+    ];
+    this.phase = Math.PI * signedRandom();
+    this.dist = dist;
+    this.sprites = [{
+      n: chooseRandom(evilSmileySprites),
+      size: 0.2,
+    }];
+  }
+
+  update(pos) {
+    this.phase = (this.phase + frameDT * 2) % (2 * Math.PI);
+    vec3MulAdd(this.pos, pos, this.u, Math.cos(this.phase) * this.dist);
+    vec3MulAdd(this.pos, this.pos, this.v, Math.sin(this.phase) * this.dist);
+  }
+}
+
 class Swarm {
   constructor(n) {
     this.sprites = [{
@@ -15,26 +46,9 @@ class Swarm {
     }];
     this.pos = [0, 2, 1];
     this.radius = 0.9;
+    this.children = [];
     for (let i = 0; i < n; i++) {
-      const theta = Math.PI * signedRandom();
-      const phi = Math.asin(signedRandom());
-      this.sprites.push({
-        n: chooseRandom(evilSmileySprites),
-        size: 0.2,
-        phase: Math.PI * signedRandom(),
-        u: [
-          Math.cos(theta) * Math.cos(phi),
-          Math.sin(theta) * Math.cos(phi),
-          Math.sin(phi),
-        ],
-        v: [
-          -Math.sin(theta),
-          Math.cos(theta),
-          0,
-        ],
-        r: 0.5 + 0.2 * i/n,
-        pos: [...vecZero],
-      });
+      this.children.push(new EvilFace(0.5 + 0.2 * i / n));
     }
   }
 
