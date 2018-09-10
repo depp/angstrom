@@ -4,6 +4,7 @@ import { chooseRandom, signedRandom } from '/game/cyber/util';
 import {
   brainSprite,
   evilSmileySprites,
+  makeColor,
 } from '/game/cyber/graphics';
 import {
   vecZero,
@@ -31,9 +32,11 @@ class DeadEvilFace extends Entity {
   }
 
   update() {
+    const [s] = this.sprites;
     this.dead = levelTime > this.expiry;
+    const frac = (this.expiry - levelTime) / 5;
+    s.color = makeColor(frac * 3, frac, frac, frac * 4 - 3);
     if (!this.sleeping) {
-      const s = this.sprites[0];
       s.rotate = ((s.rotate || 0) + this.rspeed * frameDT) % 360;
       vec3SetMulAdd(this.pos, this.vel, frameDT);
       vec3SetMulAdd(this.vel, vecZ, -10 * frameDT);
