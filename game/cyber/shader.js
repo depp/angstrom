@@ -27,7 +27,8 @@ export function compileShaderProgram(
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      return null;
+      throw new Error('Failed to compile shader.\n'
+                      + gl.getShaderInfoLog(shader));
     }
     gl.attachShader(program, shader);
     gl.deleteShader(shader);
@@ -37,7 +38,8 @@ export function compileShaderProgram(
   }
   gl.linkProgram(program);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    return null;
+    throw new Error('Failed to link shader.\n'
+                    + gl.getProgramInfoLog(program));
   }
   const obj = { program };
   const uCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
