@@ -1,4 +1,5 @@
 import { gl } from '/game/cyber/global';
+import '/game/cyber/graphics';
 import { loadedShaderSource } from '/game/cyber/shader';
 import {
   initInput, clearInput, updateInput,

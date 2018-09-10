@@ -1,10 +1,51 @@
 import { gl } from '/game/cyber/global';
 import { randInt } from '/game/cyber/util';
 
-export const emojiTexture = gl.createTexture();
+const tilesX = 8;
+const tilesY = 8;
+const tileSize = 64;
+
+export const spriteTexture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, spriteTexture);
+gl.texImage2D(
+  gl.TEXTURE_2D, 0, gl.RGBA, tilesX * tileSize, tilesY * tileSize, 0,
+  gl.RGBA, gl.UNSIGNED_BYTE, null,
+);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(
+  gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR,
+);
+gl.generateMipmap(gl.TEXTURE_2D);
 
 export const hands = [];
 export const people = [];
+
+const offscreenCanvas = document.createElement('canvas');
+const ctx = offscreenCanvas.getContext('2d');
+offscreenCanvas.width = tileSize;
+offscreenCanvas.height = tileSize;
+
+// Render a single emoji character and return the image data as a typed array.
+function renderEmoji(str) {
+  ctx.clearRect(0, 0, tileSize, tileSize);
+  ctx.save();
+  ctx.font = '48px "Noto Color Emoji"';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(str, tileSize / 2, tileSize / 2);
+  ctx.restore();
+}
+
+// Load a single sprite from the offscreen canvas into the sprite texture.
+function loadSprite(idx) {
+  console.log('LOAD SPRITE');
+  const { data } = ctx.getImageData(0, 0, tileSize, tileSize);
+  gl.texSubImage2D(
+    gl.TEXTURE_2D, 0,
+    (idx & 7) * tileSize, (idx >> 3) * tileSize, tileSize, tileSize,
+    gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data.buffer),
+  );
+}
 
 // EMOJI:
 //  0.. 7: evil faces
@@ -79,46 +120,24 @@ export function initEmoji() {
     });
   }
 
-  const ecanvas = document.createElement('canvas');
-  ecanvas.width = 512;
-  ecanvas.height = 512;
-  const ctx = ecanvas.getContext('2d');
-  ctx.font = '48px "Noto Color Emoji"';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.save();
   let idx = 0;
-  function nextSprite() {
-    ctx.restore();
-    ctx.save();
-    ctx.translate((idx & 7) * 64 + 32, (idx >> 3) * 64 + 32);
+  for (const e of emoji) {
+    renderEmoji(e);
+    loadSprite(idx);
     idx++;
   }
 
-  for (const e of emoji) {
-    nextSprite();
-    ctx.fillText(e, 0, 0);
-  }
-
-  nextSprite();
+  ctx.clearRect(0, 0, tileSize, tileSize);
   const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 28);
   g.addColorStop(0, 'white');
   g.addColorStop(1, 'transparent');
   ctx.fillStyle = g;
   ctx.arc(0, 0, 28, 0, 2 * Math.PI);
   ctx.fill();
+  loadSprite(idx);
+  idx++;
 
-  const { data } = ctx.getImageData(0, 0, 512, 512);
-  console.log('data', data.length);
-  gl.bindTexture(gl.TEXTURE_2D, emojiTexture);
-  gl.texImage2D(
-    gl.TEXTURE_2D, 0, gl.RGBA, 512, 512, 0,
-    gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data.buffer),
-  );
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(
-    gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR,
-  );
+  gl.bindTexture(gl.TEXTURE_2D, spriteTexture);
   gl.generateMipmap(gl.TEXTURE_2D);
 }
 
