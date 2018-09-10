@@ -6,9 +6,9 @@ const terser = require('terser');
 const minify = require('../../tools/lib/glsl-minify');
 
 const shaders = {
-  spriteSolidProgram: {
+  spriteOpaqueProgram: {
     vname: 'sprite',
-    fname: 'sprite_solid',
+    fname: 'sprite_opaque',
     attributes: [
       'Pos',
       'TexCoord',

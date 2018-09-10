@@ -2,7 +2,7 @@
 import { gl } from '/game/cyber/global';
 import { cameraMatrix } from '/game/cyber/camera';
 import {
-  spriteSolidProgram,
+  spriteOpaqueProgram,
   spriteTransparentProgram,
 } from '/game/cyber/shaders';
 import { playerPos } from '/game/cyber/player';
@@ -106,7 +106,7 @@ export function renderSprite() {
   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, V * 4, 12);
   gl.vertexAttribPointer(2, 4, gl.UNSIGNED_BYTE, true, V * 4, 20);
 
-  let p = spriteSolidProgram;
+  let p = spriteOpaqueProgram;
   if (p && spriteCounts[0]) {
     gl.useProgram(p.program);
     gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
