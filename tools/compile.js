@@ -191,6 +191,15 @@ function inlineConstants(tree) {
   return ast;
 }
 
+function constToLet(tree) {
+  return tree.transform(new terser.TreeTransformer(function before(node) {
+    if ((node instanceof terser.AST_Const)) {
+      return new terser.AST_Let(node);
+    }
+    return undefined;
+  }));
+}
+
 async function compile(config) {
   // Map from relative file path to list of ESLint diagnostics and our own that
   // we added. The empty string marks the root level.
@@ -287,6 +296,7 @@ async function compile(config) {
           tree = tree.transform(new terser.TreeTransformer(transform));
         }
         tree = inlineConstants(tree);
+        tree = constToLet(tree);
         return terser.minify(tree, {
           compress: {
             drop_console: true,
