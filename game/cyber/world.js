@@ -7,10 +7,33 @@ export const entities = [];
 // groups, depending on the entity's own group.
 export const hitGroups = [[], []];
 
+export class Entity {
+  // Called for every world update, before any collisions, and at least once
+  // before the entity is ever rendered.
+  update() {}
+
+  // Called when the entity collides with the world.
+  collideWorld() {}
+
+  // Called when the entity collides with another entity.
+  collideEntity() {}
+
+  // Spawn the entity in the world.
+  spawn(hitGroup) {
+    entities.push(this);
+    if (hitGroup != null) {
+      hitGroups[hitGroup].push(this);
+    }
+  }
+}
+
 function updateList(list, parentPos) {
   for (const entity of list) {
     entity.update(parentPos);
-    const { children, pos } = entity;
+    const { children, pos, radius } = entity;
+    if (pos[2] < radius) {
+      entity.collideWorld();
+    }
     if (children) {
       updateList(children, pos);
     }
@@ -42,7 +65,7 @@ export function testCollisionList(entity, list) {
       if (children) {
         testCollisionList(entity, children);
       } else {
-        entity.collide(other);
+        entity.collideEntity(other);
       }
     }
   }
@@ -62,12 +85,5 @@ export function updateWorld() {
   removeDead(entities);
   for (const group of hitGroups) {
     removeDead(group);
-  }
-}
-
-export function spawn(entity, hitGroup) {
-  entities.push(entity);
-  if (hitGroup != null) {
-    hitGroups[hitGroup].push(entity);
   }
 }

@@ -1,10 +1,11 @@
 import { frameDT, levelTime } from '/game/cyber/time';
 import { makeColor } from '/game/cyber/graphics';
 import { vecZero, vec3SetMulAdd, vec3MulAdd } from '/game/cyber/vec';
-import { spawn } from '/game/cyber/world';
+import { Entity } from '/game/cyber/world';
 
-class Projectile {
+class Projectile extends Entity {
   constructor(origin, direction) {
+    super();
     this.pos = [...origin];
     this.radius = 0.1;
     this.velocity = [];
@@ -35,11 +36,11 @@ class Projectile {
     vec3SetMulAdd(this.pos, this.velocity, frameDT);
   }
 
-  collide(other) {
+  collideEntity(other) {
     other.damage();
   }
 }
 
 export function spawnProjectile(origin, direction) {
-  spawn(new Projectile(origin, direction), 1);
+  new Projectile(origin, direction).spawn(1);
 }

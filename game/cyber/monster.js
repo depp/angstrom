@@ -1,4 +1,4 @@
-import { spawn } from '/game/cyber/world';
+import { Entity } from '/game/cyber/world';
 import { frameDT, levelTime } from '/game/cyber/time';
 import { chooseRandom, signedRandom } from '/game/cyber/util';
 import {
@@ -12,9 +12,11 @@ import {
   vec3SetMulAdd,
 } from '/game/cyber/vec';
 
-class DeadEvilFace {
+class DeadEvilFace extends Entity {
   constructor(face) {
+    super();
     this.pos = face.pos;
+    this.radius = 0.2;
     this.sprites = face.sprites;
     this.expiry = levelTime + 5;
     this.vel = [];
@@ -24,21 +26,36 @@ class DeadEvilFace {
     vec3MulAdd(
       this.vel, this.vel, face.v, Math.cos(face.phase) * face.dist * 2,
     );
+    this.bounce = 0;
   }
 
   update() {
     this.dead = levelTime > this.expiry;
-    vec3SetMulAdd(this.pos, this.vel, frameDT);
-    vec3SetMulAdd(this.vel, vecZ, -10 * frameDT);
-    if (this.pos[2] < 0) {
-      this.pos[2] *= -1;
-      this.vel[2] *= -0.5;
+    if (!this.sleeping) {
+      vec3SetMulAdd(this.pos, this.vel, frameDT);
+      vec3SetMulAdd(this.vel, vecZ, -10 * frameDT);
+    }
+  }
+
+  collideWorld() {
+    if (this.sleeping) {
+      return;
+    }
+    this.bounce++;
+    if (this.bounce > 2) {
+      this.sleeping = 1;
+      this.pos[2] = this.radius;
+    } else {
+      this.pos[2] = 0.4 - this.pos[2];
+      this.vel[2] *= -1;
+      vec3MulAdd(this.vel, vecZero, this.vel, 0.5);
     }
   }
 }
 
-class EvilFace {
+class EvilFace extends Entity {
   constructor(dist) {
+    super();
     const theta = Math.PI * signedRandom();
     const phi = Math.asin(signedRandom());
     this.pos = [...vecZero];
@@ -69,12 +86,13 @@ class EvilFace {
 
   damage() {
     this.dead = true;
-    spawn(new DeadEvilFace(this));
+    new DeadEvilFace(this).spawn();
   }
 }
 
-class Swarm {
+class Swarm extends Entity {
   constructor(n) {
+    super();
     this.sprites = [{
       n: brainSprite,
       size: 0.3,
@@ -103,4 +121,4 @@ class Swarm {
   }
 }
 
-spawn(new Swarm(20), 0);
+new Swarm(20).spawn(0);

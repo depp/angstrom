@@ -11,10 +11,11 @@ import {
   signedRandom,
   chooseRandom,
 } from '/game/cyber/util';
-import { spawn } from '/game/cyber/world';
+import { Entity } from '/game/cyber/world';
 
-export class Person {
+export class Person extends Entity {
   constructor(i) {
+    super();
     const female = randInt();
     const { head, hand } = chooseRandom(personSprites[female]);
     const shoe = chooseRandom(shoeSprites[female]);
@@ -78,5 +79,5 @@ export class Person {
 }
 
 for (let i = 0; i < 0; i++) {
-  spawn(new Person(i));
+  new Person(i).spawn();
 }

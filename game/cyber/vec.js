@@ -29,7 +29,7 @@ export function vec3Set(out, x, y, z, offset=0) {
 }
 
 // Returns the distance between x and y.
-export function vec3Distance(x, y) {
+export function vec3Distance(x, y = vecZero) {
   return Math.sqrt(
     ((x[0] - y[0]) ** 2)
       + ((x[1] - y[1]) ** 2)
