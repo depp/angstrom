@@ -1,5 +1,6 @@
 import { gl } from '/game/cyber/global';
 import { randInt } from '/game/cyber/util';
+import { vec3Distance } from '/game/cyber/vec';
 
 const tilesX = 8;
 const tilesY = 8;
@@ -36,15 +37,36 @@ function renderEmoji(str) {
   ctx.restore();
 }
 
-// Load a single sprite from the offscreen canvas into the sprite texture.
-function loadSprite(idx) {
-  console.log('LOAD SPRITE');
-  const { data } = ctx.getImageData(0, 0, tileSize, tileSize);
+// Get the image data for the sprite currently in the offscreen canvas.
+function getSpriteData() {
+  return ctx.getImageData(0, 0, tileSize, tileSize).data;
+}
+
+// Load a single sprite into the sprite texture.
+function loadSprite(idx, data) {
   gl.texSubImage2D(
     gl.TEXTURE_2D, 0,
     (idx & 7) * tileSize, (idx >> 3) * tileSize, tileSize, tileSize,
     gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data.buffer),
   );
+}
+
+// Get the average color of an image.
+function imageColor(data) {
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let a = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    r += data[i + 0] * data[i + 3];
+    g += data[i + 1] * data[i + 3];
+    b += data[i + 2] * data[i + 3];
+    a += data[i + 3];
+  }
+  if (!a) {
+    return [0, 0, 0];
+  }
+  return [r/a, g/a, b/a];
 }
 
 // EMOJI:
@@ -57,7 +79,33 @@ function loadSprite(idx) {
 // 25..44: heads
 // 45..45: shot
 
+export let isAppleEmoji;
+export let isGoogleEmoji;
+
 export function initEmoji() {
+  // Some emoji have very different colors in different fonts, we can take the
+  // average color to detect the font.
+  //
+  // Code
+  // Point   Name        Apple       Google      Distance
+  // ----------------------------------------------------
+  // U+2604  Comet       239,145,87  177,214,244 182
+  // U+1F3AB Ticket      197,189,100 220,56,114  136
+  //
+  // Other candidates: U+1F386 U+1F387 U+1F39F
+  const testEmoji = '\u{1F3AB}';
+  renderEmoji(testEmoji);
+  const testColor = imageColor(getSpriteData());
+  isAppleEmoji = vec3Distance(testColor, [197, 189, 100]) < 80;
+  isGoogleEmoji = vec3Distance(testColor, [220, 56, 114]) < 80;
+  if (DEBUG) {
+    const codePoint = testEmoji.codePointAt(0).toString(16).padStart(4, '0');
+    const color = testColor.map(x => Math.round(x).toString()).join(',');
+    console.log(`Color for U+${codePoint}: ${color}`);
+    console.log(`Is Apple Emoji: ${isAppleEmoji}`);
+    console.log(`Is Google Emoji: ${isGoogleEmoji}`);
+  }
+
   const emoji = [
     // Bad faces.
     ...('\u{1F608}\u{1F62D}\u{1F631}\u{1F911}'
@@ -123,7 +171,7 @@ export function initEmoji() {
   let idx = 0;
   for (const e of emoji) {
     renderEmoji(e);
-    loadSprite(idx);
+    loadSprite(idx, getSpriteData());
     idx++;
   }
 
@@ -134,7 +182,7 @@ export function initEmoji() {
   ctx.fillStyle = g;
   ctx.arc(0, 0, 28, 0, 2 * Math.PI);
   ctx.fill();
-  loadSprite(idx);
+  loadSprite(idx, getSpriteData());
   idx++;
 
   gl.bindTexture(gl.TEXTURE_2D, spriteTexture);

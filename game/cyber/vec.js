@@ -27,6 +27,15 @@ export function vec3Set(out, x, y, z, offset=0) {
   out[offset+2] = z;
 }
 
+// Returns the distance between x and y.
+export function vec3Distance(x, y) {
+  return Math.sqrt(
+    ((x[0] - y[0]) ** 2)
+      + ((x[1] - y[1]) ** 2)
+      + ((x[2] - y[2]) ** 2),
+  );
+}
+
 // Computes out = x + y * a.
 export function vec3MulAdd(out, x, y, a=1, offset=0) {
   for (let i = 0; i < 3; i++) {
