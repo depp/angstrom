@@ -103,14 +103,14 @@ export function renderSprite() {
   gl.vertexAttribPointer(2, 3, gl.UNSIGNED_BYTE, true, V * 4, 20);
 
   let p = spriteSolidProgram;
-  if (p) {
+  if (p && nSolid) {
     gl.useProgram(p.program);
     gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
     gl.drawArrays(gl.TRIANGLES, 0, nSolid * 6);
   }
 
   p = spriteTransparentProgram;
-  if (p) {
+  if (p && nTransparent) {
     gl.useProgram(p.program);
     gl.depthMask(false);
     gl.enable(gl.BLEND);
@@ -120,8 +120,6 @@ export function renderSprite() {
     gl.depthMask(true);
     gl.disable(gl.BLEND);
   }
-
-  //
 
   gl.disableVertexAttribArray(1);
   gl.disableVertexAttribArray(2);
