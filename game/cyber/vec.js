@@ -4,6 +4,7 @@
 
 const vTemp = [];
 export const vecZero = [0, 0, 0];
+export const vecZ = [0, 0, 1];
 
 // Assigns [x, y] to out[offset..offset+1].
 export function vec2Set(out, x, y, offset=0) {

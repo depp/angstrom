@@ -4,7 +4,7 @@ import { cameraMatrix } from '/game/cyber/camera';
 import { spriteProgram } from '/game/cyber/shaders';
 import { playerPos } from '/game/cyber/player';
 import {
-  vecZero, vec2Set, vec3MulAdd, vec3SetMulAdd, vec3Norm, vec3Cross,
+  vecZero, vecZ, vec2Set, vec3MulAdd, vec3SetMulAdd, vec3Norm, vec3Cross,
 } from '/game/cyber/vec';
 import { spriteProperties } from '/game/cyber/graphics';
 import { entities } from '/game/cyber/world';
@@ -20,8 +20,6 @@ const quad = [
   [ 1, -1, 1, 1],
   [ 1,  1, 1, 0],
 ];
-
-const vecZ = [0, 0, 1];
 
 export function renderSprite() {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);

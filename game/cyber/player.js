@@ -1,7 +1,8 @@
 import { buttonState, buttonPress } from '/game/cyber/input';
-import { frameDT } from '/game/cyber/time';
-import { vec3Set } from '/game/cyber/vec';
+import { frameDT, levelTime } from '/game/cyber/time';
+import { vecZ, vec3Set, vec3MulAdd } from '/game/cyber/vec';
 import { clamp } from '/game/cyber/util';
+import { spawnProjectile } from '/game/cyber/projectile';
 
 // Maximum player speed, units per second.
 const playerSpeed = 3;
@@ -13,6 +14,8 @@ const playerTurnSpeed = 3;
 const playerTurnAccel = 15;
 // Mouse turning speed, radians per pixel.
 const playerTurnSensitivity = 3e-3;
+// Time after firing before weapon can be fired again, seconds.
+const weaponCooldownTime = 0.3;
 
 // The player position [x, y, z] in the world.
 export let playerPos;
@@ -22,15 +25,21 @@ let playerVel;
 // Yaw: 0: +X, pi/2: +Y.
 // Pitch: 0: horizontal, pi/2: +Z.
 export let playerAngle;
+// Unit direction vector for where the player is facing.
+export const playerDirection = [];
 // Current angular velocity, yaw only.
 let playerAngleVel;
+let weaponCooldown;
 
 export function startPlayer() {
   playerPos = [0, -1, 0.5];
   playerVel = [0, 0, 0];
   playerAngle = [1.5, 0, 0];
   playerAngleVel = 0;
+  weaponCooldown = 0;
 }
+
+const vTemp = [];
 
 export function updatePlayer() {
   // Update player angles.
@@ -42,9 +51,17 @@ export function updatePlayer() {
     playerAngleVel = Math.abs(rMove - playerAngleVel) <= accelDV
       ? rMove
       : playerAngleVel + accelDV * Math.sign(rMove - playerAngleVel);
-    playerAngle[0] = (playerAngle[0] + playerAngleVel * frameDT - xLook)
-      % (2 * Math.PI);
-    playerAngle[1] = clamp(playerAngle[1] + yLook, -1.5, 1.5);
+    let xAngle = playerAngle[0] = (
+      (playerAngle[0] + playerAngleVel * frameDT - xLook)
+        % (2 * Math.PI)
+    );
+    let yAngle = playerAngle[1] = clamp(playerAngle[1] + yLook, -1.5, 1.5);
+    vec3Set(
+      playerDirection,
+      Math.cos(yAngle) * Math.cos(xAngle),
+      Math.cos(yAngle) * Math.sin(xAngle),
+      Math.sin(yAngle),
+    );
   }
 
   // Update player velocity.
@@ -78,4 +95,15 @@ export function updatePlayer() {
   xPos += xVel * frameDT;
   yPos += yVel * frameDT;
   vec3Set(playerPos, xPos, yPos, zPos);
+
+  // Fire the weapon.
+  if (levelTime > weaponCooldown) {
+    if (buttonState['s'] || buttonPress['s']) {
+      vec3MulAdd(vTemp, playerPos, vecZ, -0.1);
+      weaponCooldown = (weaponCooldown || levelTime) + weaponCooldownTime;
+      spawnProjectile(vTemp, playerDirection);
+    } else {
+      weaponCooldown = 0;
+    }
+  }
 }
