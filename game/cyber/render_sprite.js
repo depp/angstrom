@@ -11,6 +11,7 @@ import {
 } from '/game/cyber/vec';
 import {
   modeOpaque,
+  modeTransparent,
   spriteProperties,
 } from '/game/cyber/graphics';
 import { entities } from '/game/cyber/world';
@@ -96,6 +97,17 @@ export function renderSprite() {
   }
   gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STREAM_DRAW);
 
+  function drawGroup(g) {
+    const n = spriteCounts[g];
+    if (n) {
+      gl.drawArrays(
+        gl.TRIANGLES,
+        6 * (spriteOffsets[g] - n),
+        6 * n,
+      );
+    }
+  }
+
   gl.enable(gl.DEPTH_TEST);
   gl.enableVertexAttribArray(0);
   gl.enableVertexAttribArray(1);
@@ -108,7 +120,7 @@ export function renderSprite() {
   if (p && spriteCounts[0]) {
     gl.useProgram(p.program);
     gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
-    gl.drawArrays(gl.TRIANGLES, 0, spriteCounts[0] * 6);
+    drawGroup(modeOpaque);
   }
 
   p = spriteTransparentProgram;
@@ -118,7 +130,7 @@ export function renderSprite() {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
     gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
-    gl.drawArrays(gl.TRIANGLES, spriteCounts[0] * 6, spriteCounts[1] * 6);
+    drawGroup(modeTransparent);
     gl.depthMask(true);
     gl.disable(gl.BLEND);
   }
