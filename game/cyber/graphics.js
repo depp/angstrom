@@ -142,7 +142,6 @@ export function loadSprites() {
     loadSprite(curSprite, getSpriteData());
     curSprite++;
   }
-  console.log('cur sprite', curSprite);
 
   // Some emoji have very different colors in different fonts, we can take the
   // average color to detect the font.
@@ -161,9 +160,8 @@ export function loadSprites() {
   if (DEBUG) {
     const codePoint = testEmoji.codePointAt(0).toString(16).padStart(4, '0');
     const colorText = color.map(x => Math.round(x).toString()).join(',');
-    console.log(`Color for U+${codePoint}: ${colorText}`);
-    console.log(`Is Apple Emoji: ${isAppleEmoji}`);
-    console.log(`Is Google Emoji: ${isGoogleEmoji}`);
+    console.log(`Color for U+${codePoint}: ${colorText}`
+                + ` (apple: ${isAppleEmoji}, google: ${isGoogleEmoji})`);
   }
   if (isAppleEmoji) {
     setCharProperties(
