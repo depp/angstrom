@@ -1,4 +1,5 @@
 import { canvas } from '/game/cyber/global';
+import { startAudio } from '/game/cyber/audio';
 
 // Compatibility note: We use UI Events here to bind keys, since they give us
 // consistent values regardless of layout. This does not work in Edge.
@@ -43,6 +44,7 @@ function buttonDown(event) {
     binding = buttonBindings['m' + event.button];
   }
   if (binding) {
+    startAudio();
     buttonPress[binding] = 1;
     buttonState[binding] = 1;
     event.preventDefault();
@@ -81,6 +83,7 @@ function pointerLockChange() {
 
 export function initInput() {
   canvas.addEventListener('click', () => {
+    startAudio();
     canvas.requestPointerLock();
   });
   window.addEventListener('keydown', buttonDown);
