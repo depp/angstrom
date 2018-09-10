@@ -208,7 +208,7 @@ function emit(tokens, nameMap) {
         const m = tok.data.match(/^0*([1-9][0-9]*)?$/);
         if (m) {
           const d = m[1];
-          if (d === '') {
+          if (!d) {
             result += '0';
           } else {
             result += d;
