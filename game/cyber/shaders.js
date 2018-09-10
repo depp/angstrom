@@ -86,10 +86,10 @@ module.exports = async function generate(build) {
         load(`game/cyber/shader/${fname}.frag.glsl`),
       ]).then((srcs) => {
         if (srcs[0] == null) {
-          throw new Error("could not load vertex shader");
+          throw new Error('could not load vertex shader');
         }
         if (srcs[1] == null) {
-          throw new Error("could not load fragment shader");
+          throw new Error('could not load fragment shader');
         }
         const attributeMap = {};
         for (let i = 0; i < attributes.length; i++) {
