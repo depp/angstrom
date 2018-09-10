@@ -43,12 +43,12 @@ class FileSet {
       let text;
       try {
         st = await fstat(fd);
+        source.mtime = st.mtime;
         text = await readFile(fd, 'UTF-8');
       } finally {
         await close(fd);
       }
       source.contents = text;
-      source.mtime = st.mtime;
       return text;
     })();
     return source.contents;
