@@ -324,10 +324,13 @@ export function makeColor(r, g, b, a = 1) {
 function renderText(text) {
   ctx.clearRect(0, 0, textTextureSize, textTextureSize);
   ctx.save();
-  ctx.font = 'bold 24px sans';
+  ctx.font = 'bold 32px sans';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#fff';
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 3;
+  ctx.strokeText(text, textTextureSize / 2, textTextureSize / 2);
   ctx.fillText(text, textTextureSize / 2, textTextureSize / 2);
   ctx.restore();
   const { data } = ctx.getImageData(0, 0, textTextureSize, textTextureSize);

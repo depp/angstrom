@@ -1,7 +1,7 @@
 // Module render_text contains the text rendering code.
 import { gl } from '/game/cyber/global';
 import { uiMatrix } from '/game/cyber/camera';
-import { spriteOpaqueProgram } from '/game/cyber/shaders';
+import { spriteCompositeProgram } from '/game/cyber/shaders';
 import { quad } from '/game/cyber/render_util';
 
 const vertexBuffer = gl.createBuffer();
@@ -20,7 +20,7 @@ export function renderText() {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STREAM_DRAW);
 
-  const p = spriteOpaqueProgram;
+  const p = spriteCompositeProgram;
   if (DEBUG && !p) {
     return;
   }
@@ -32,9 +32,14 @@ export function renderText() {
   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
   gl.vertexAttribPointer(2, 4, gl.UNSIGNED_BYTE, true, 0, 6 * 4 * 4);
 
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
   gl.useProgram(p.program);
   gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, uiMatrix);
   gl.uniform1i(p.uniforms.Texture, 2);
   gl.drawArrays(gl.TRIANGLES, 0, 6);
   gl.uniform1i(p.uniforms.Texture, 0);
+
+  gl.disable(gl.BLEND);
 }

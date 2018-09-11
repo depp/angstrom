@@ -24,6 +24,15 @@ const shaders = {
       'Color',
     ],
   },
+  spriteCompositeProgram: {
+    vname: 'sprite',
+    fname: 'sprite_composite',
+    attributes: [
+      'Pos',
+      'TexCoord',
+      'Color',
+    ],
+  },
   tileProgram: {
     vname: 'tile',
     fname: 'tile',
