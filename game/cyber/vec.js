@@ -30,6 +30,14 @@ export function vec3Set(out, x, y, z, offset=0) {
   out[offset+2] = z;
 }
 
+// Assigns out = x, returns out.
+export function vec3Copy(out, x) {
+  for (let i = 0; i < 3; i++) {
+    out[i] = x[i] || 0;
+  }
+  return out;
+}
+
 // Returns the distance between x and y.
 export function vec3Distance(x, y = vecZero) {
   return Math.sqrt(

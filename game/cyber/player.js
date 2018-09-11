@@ -53,6 +53,34 @@ class Player extends Entity {
       pos: [0, 0, 0],
       mode: modeUI,
       size: 0.1,
+    }, {
+      n: crosshairSprite,
+      pos: [0.1, 0.1, 0],
+      mode: modeUI,
+      size: 0.1,
+      anchor: [-1, -1],
+      color: 0xa00000ff,
+    }, {
+      n: crosshairSprite,
+      pos: [-0.1, 0.1, 0],
+      mode: modeUI,
+      size: 0.1,
+      anchor: [1, -1],
+      color: 0xa000ffff,
+    }, {
+      n: crosshairSprite,
+      pos: [0.1, -0.1, 0],
+      mode: modeUI,
+      size: 0.1,
+      anchor: [-1, 1],
+      color: 0xa000ff00,
+    }, {
+      n: crosshairSprite,
+      pos: [-0.1, -0.1, 0],
+      mode: modeUI,
+      size: 0.1,
+      anchor: [1, 1],
+      color: 0xa0ff0000,
     }];
   }
 

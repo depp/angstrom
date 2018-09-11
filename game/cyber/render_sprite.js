@@ -1,5 +1,5 @@
 // Module render_sprite contains the sprite rendering code.
-import { gl } from '/game/cyber/global';
+import { canvas, gl } from '/game/cyber/global';
 import {
   cameraMatrix,
   uiMatrix,
@@ -15,6 +15,7 @@ import {
   vecY,
   vecZ,
   vec2Set,
+  vec3Copy,
   vec3MulAdd,
   vec3SetMulAdd,
   vec3Norm,
@@ -67,12 +68,20 @@ export function renderSprite() {
   const arr = new Float32Array(S * spriteCount);
   const iarr = new Uint32Array(arr.buffer);
   const tempVec = [[], [], [], []];
+  const aspect = canvas.clientWidth / canvas.clientHeight;
   for (const entity of flat) {
     for (const sprite of entity.sprites) {
       /* eslint prefer-const: off */
       let {
-        n, size, pos = vecZero, offset = vecZero, rotate = 0, flip = false,
-        mode = modeOpaque, color = 0xffffffff,
+        n,
+        size,
+        pos = vecZero,
+        offset = vecZero,
+        rotate = 0,
+        flip = false,
+        mode = modeOpaque,
+        color = 0xffffffff,
+        anchor,
       } = sprite;
       if (DEBUG && size == null) {
         throw new Error('Sprite is missing size');
@@ -92,6 +101,10 @@ export function renderSprite() {
         forward = vec3Norm(vec3MulAdd(tempVec[1], pos, playerPos, -1));
         right = vec3Norm(vec3Cross(tempVec[2], forward, vecZ));
         up = vec3Norm(vec3Cross(tempVec[3], right, forward));
+      } else if (anchor) {
+        pos = vec3Copy(tempVec[0], pos);
+        vec3SetMulAdd(pos, right, anchor[0] * aspect);
+        vec3SetMulAdd(pos, up, anchor[1]);
       }
       const cc = Math.cos(Math.PI / 180 * rotate);
       const ss = Math.sin(Math.PI / 180 * rotate);
