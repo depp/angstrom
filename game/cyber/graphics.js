@@ -74,7 +74,8 @@ function loadSprite(idx, data) {
 // Sprite modes.
 export const modeOpaque = 0;
 export const modeTransparent = 1;
-export const modeUI = 2;
+export const modeUIOpaque = 2;
+export const modeUITransparent = 3;
 
 export let isAppleEmoji;
 export let isGoogleEmoji;

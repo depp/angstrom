@@ -24,7 +24,8 @@ import {
 import {
   modeOpaque,
   modeTransparent,
-  modeUI,
+  modeUIOpaque,
+  modeUITransparent,
   spriteProperties,
 } from '/game/cyber/graphics';
 import { entities } from '/game/cyber/world';
@@ -45,7 +46,7 @@ export function renderSprite() {
   const V = 6; // vertex size
   const S = 6 * 6; // sprite size
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  const spriteCounts = [0, 0, 0]; // mode count
+  const spriteCounts = [0, 0, 0, 0]; // mode count
   const flat = [...entities];
   for (let i = 0; i < flat.length; i++) {
     const { children, sprites } = flat[i];
@@ -58,7 +59,7 @@ export function renderSprite() {
   }
   let spriteCount = 0;
   const spriteOffsets = [];
-  for (let i = 0; i < 3; i++) { // mode count
+  for (let i = 0; i < 4; i++) { // mode count
     spriteOffsets[i] = spriteCount;
     spriteCount += spriteCounts[i];
   }
@@ -96,7 +97,7 @@ export function renderSprite() {
       let right = vecX;
       let up = vecY;
       let forward = vecZ;
-      if (mode < modeUI) {
+      if (mode < modeUIOpaque) {
         pos = vec3MulAdd(tempVec[0], entity.pos, pos);
         forward = vec3Norm(vec3MulAdd(tempVec[1], pos, playerPos, -1));
         right = vec3Norm(vec3Cross(tempVec[2], forward, vecZ));
@@ -135,7 +136,7 @@ export function renderSprite() {
     }
   }
 
-  gl.enable(gl.DEPTH_TEST);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
   gl.enableVertexAttribArray(0);
   gl.enableVertexAttribArray(1);
   gl.enableVertexAttribArray(2);
@@ -143,32 +144,43 @@ export function renderSprite() {
   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, V * 4, 12);
   gl.vertexAttribPointer(2, 4, gl.UNSIGNED_BYTE, true, V * 4, 20);
 
-  let p = spriteOpaqueProgram;
-  if (!DEBUG || p) {
-    gl.useProgram(p.program);
-    gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
+  let p1 = spriteOpaqueProgram;
+  let p2 = spriteTransparentProgram;
+
+  gl.enable(gl.DEPTH_TEST);
+
+  if (!DEBUG || p1) {
+    gl.useProgram(p1.program);
+    gl.uniformMatrix4fv(p1.uniforms.ModelViewProjection, false, cameraMatrix);
     drawGroup(modeOpaque);
   }
 
-  p = spriteTransparentProgram;
-  if (!DEBUG || p) {
-    gl.useProgram(p.program);
+  if (!DEBUG || p2) {
+    gl.useProgram(p2.program);
     gl.depthMask(false);
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
-
-    gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
+    gl.uniformMatrix4fv(p2.uniforms.ModelViewProjection, false, cameraMatrix);
     drawGroup(modeTransparent);
-
-    gl.disable(gl.DEPTH_TEST);
-    gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, uiMatrix);
-    drawGroup(modeUI);
-
+    gl.disable(gl.BLEND);
     gl.depthMask(true);
+  }
+
+  gl.disable(gl.DEPTH_TEST);
+
+  if (!DEBUG || p1) {
+    gl.useProgram(p1.program);
+    gl.uniformMatrix4fv(p1.uniforms.ModelViewProjection, false, uiMatrix);
+    drawGroup(modeUIOpaque);
+  }
+
+  if (!DEBUG || p2) {
+    gl.useProgram(p2.program);
+    gl.enable(gl.BLEND);
+    gl.uniformMatrix4fv(p2.uniforms.ModelViewProjection, false, uiMatrix);
+    drawGroup(modeUITransparent);
     gl.disable(gl.BLEND);
   }
 
   gl.disableVertexAttribArray(1);
   gl.disableVertexAttribArray(2);
-  gl.disable(gl.DEPTH_TEST);
 }
