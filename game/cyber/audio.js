@@ -68,8 +68,8 @@ function convertFreq(n) {
 }
 
 function envelope(param, values, convert) {
-  param.value = convert(values[2]);
   let curTime = audioCtx.currentTime;
+  param.setValueAtTime(convert(values[2]), curTime);
   for (let i = 3; i < values.length; i += 2) {
     param.linearRampToValueAtTime(
       convert(values[i+1]),
