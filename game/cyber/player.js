@@ -12,6 +12,8 @@ import {
   modeUI,
   crosshairSprite,
 } from '/game/cyber/graphics';
+import { shotSFX } from '/game/cyber/sfx';
+import { playSFX } from '/game/cyber/audio';
 
 // Maximum player speed, units per second.
 const playerSpeed = 3;
@@ -114,6 +116,7 @@ class Player extends Entity {
       if (buttonState['s'] || buttonPress['s']) {
         vec3MulAdd(vTemp, playerPos, vecZ, -0.1);
         weaponCooldown = (weaponCooldown || levelTime) + weaponCooldownTime;
+        playSFX(shotSFX);
         spawnProjectile(vTemp, playerDirection, hitPlayerShot);
       } else {
         weaponCooldown = 0;

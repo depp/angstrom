@@ -11,6 +11,8 @@ import { gl } from '/game/cyber/global';
 // Release build
 // =============================================================================
 
+/* START.RELEASE_ONLY */
+
 // Compile a shader program.
 //
 // attributes: number of attributes (must be named A0..AN).
@@ -51,9 +53,13 @@ export function compileShaderProgram(
   return obj;
 }
 
+/* END.RELEASE_ONLY */
+
 // =============================================================================
 // Debug build
 // =============================================================================
+
+/* START.DEBUG_ONLY */
 
 // Map from filename to shader source.
 const shaderSource = {};
@@ -196,3 +202,5 @@ export function loadedShaderSource(name, data) {
     def.compile();
   }
 }
+
+/* END.DEBUG_ONLY */

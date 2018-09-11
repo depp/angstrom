@@ -3,8 +3,10 @@
   "devDependencies": {
     "@types/bootstrap": "^4.1.2",
     "@types/jquery": "^3.3.6",
+    "acorn": "^5.7.3",
     "bootstrap-vue": "^2.0.0-rc.11",
     "chokidar": "^2.0.4",
+    "cjs-es": "^0.5.0",
     "eslint": "^5.5.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.14.0",
@@ -17,6 +19,7 @@
     "popper": "^1.0.1",
     "rollup": "^0.65.0",
     "rollup-plugin-replace": "^2.0.0",
+    "rollup-plugin-strip-code": "^0.2.6",
     "shortest": "^0.0.0",
     "split": "^1.0.1",
     "terser": "^3.8.2",

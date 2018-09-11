@@ -1,33 +1,29 @@
 const cmap = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
-// Nodes
-export const funcGain = 0;
-export const funcOscillator = 1;
+const operations = [
+  'gain',
+  'oscillator',
+  'output',
+  'envFrequency',
+  'envGain',
+];
 
-// Wiring
-export const funcOutput = 2;
-
-// Parameters
-export const funcEnvelope = 3;
-
-export const oscillatorTypes = [
+const oscillators = [
   'sine',
   'square',
   'sawtooth',
   'triangle',
 ];
 
-// Parse an encoded audio program.
-export function parseData(text) {
-  return text.split(' ').map(str => Array.from(str).map(c => cmap.indexOf(c)));
+function operation(name) {
+  const idx = operations.indexOf(name);
+  if (idx == null) {
+    throw new Error(`Invalid operation ${JSON.stringify(name)}`);
+  }
+  return idx;
 }
 
-// Encode an audio program.
-export function encodeData(data) {
-  return data.map(a => a.map(x => cmap[x]).join('')).join(' ');
-}
-
-export class ParseError extends Error {
+class ParseError extends Error {
   constructor(msg, lineno) {
     super(msg);
     this.line = lineno;
@@ -36,11 +32,16 @@ export class ParseError extends Error {
 
 const nameRE = /^[-_a-zA-Z][-_a-zA-Z0-9]*$/;
 
+const envMap = {
+  frequency: 'envFrequency',
+  gain: 'envGain',
+};
+
 // Parse an audio script, returning an audio program.
-export function parseScript(text) {
+function parseScript(text) {
   let curNode;
-  let itemCount = 0;
-  const names = {};
+  let itemCount = 1;
+  const names = { out: 0 };
   const program = [];
   function emitNode(name, ...parameters) {
     names[name] = itemCount++;
@@ -68,7 +69,7 @@ export function parseScript(text) {
       if (name in names) {
         fail(`Duplicate name ${JSON.stringify(name)}`);
       }
-    } else if (name == '.out') {
+    } else if (name === '.out') {
       if (fields.length > 3) {
         fail('Too many arguments');
       }
@@ -83,7 +84,7 @@ export function parseScript(text) {
       if (dest == null) {
         fail(`Unknown node ${JSON.stringify(destName)}`);
       }
-      program.push([funcOutput, dest]);
+      program.push([operation('output'), dest]);
       return;
     } else {
       if (curNode == null) {
@@ -128,7 +129,7 @@ export function parseScript(text) {
         if (fields.length > 0) {
           fail(`Got ${fields.length} arguments, expected 0`);
         }
-        program.push([funcGain]);
+        program.push([operation('gain')]);
         emitNode(name, 'gain');
         break;
 
@@ -137,21 +138,25 @@ export function parseScript(text) {
         if (fields.length !== 1) {
           fail(`Got ${fields.length} arguments, expected 1`);
         }
-        const waveform = oscillatorTypes.indexOf(fields[0]);
+        const waveform = oscillators.indexOf(fields[0]);
         if (waveform == null) {
           fail(`Unknown waveform ${JSON.stringify(fields[0])}`);
         }
-        program.push([funcOscillator, waveform]);
+        program.push([operation('oscillator'), waveform]);
         emitNode(name, 'frequency');
       } break;
 
-      case 'env':
+      case 'env': {
         isParameter();
-        if ((fields.length & 1) !== 1) {
+        if ((fields.length % 2) !== 1) {
           fail(`Got ${fields.length} arguments, must be an odd number`);
         }
-        program.push([funcEnvelope, parameter, ...parseFields()]);
-        break;
+        const opName = envMap[name.substring(1)];
+        if (opName == null) {
+          fail(`Unknown envelope type for ${JSON.stringify(name)}`);
+        }
+        program.push([operation(opName), parameter, ...parseFields()]);
+      } break;
 
       default:
         fail(
@@ -161,3 +166,17 @@ export function parseScript(text) {
   });
   return program;
 }
+
+// Encode an audio program.
+function encodeProgram(data) {
+  return data.map(a => a.map(x => cmap[x]).join('')).join(',');
+}
+
+module.exports = {
+  cmap,
+  operations,
+  oscillators,
+  ParseError,
+  parseScript,
+  encodeProgram,
+};

@@ -3,7 +3,12 @@ const path = require('path');
 const { promisify } = require('util');
 
 const rollup = require('rollup');
+// const commonjs = require('rollup-plugin-commonjs');
+// const cjs = require('rollup-plugin-cjs-es');
+const cjsEs = require('cjs-es');
+const acorn = require('acorn');
 const replace = require('rollup-plugin-replace');
+const stripCode = require('rollup-plugin-strip-code');
 const { CLIEngine } = require('eslint');
 const minimist = require('minimist');
 const terser = require('terser');
@@ -192,7 +197,7 @@ function inlineConstants(tree) {
 }
 
 function constToLet(tree) {
-  return tree.transform(new terser.TreeTransformer(function before(node) {
+  return tree.transform(new terser.TreeTransformer((node) => {
     if ((node instanceof terser.AST_Const)) {
       return new terser.AST_Let(node);
     }
@@ -252,15 +257,49 @@ async function compile(config) {
       },
     });
   }
+  if (config.config == 'debug') {
+    inputOptions.plugins.push({
+      async transform(source, id) {
+        if (!id.startsWith('tools/')) {
+          return null;
+        }
+        let ast = acorn.parse(source, { ecmaVersion: 8 });
+        return cjsEs.transform({
+          code: source,
+          ast,
+          sourceMap: true,
+          warn(message) {
+            diagnostics[id].push({
+              severity: 1,
+              message: message,
+            })
+          },
+        });
+      }
+    });
+  }
   inputOptions.plugins.push({
     // Run ad-hoc source code generators.
     async transform(source, id) {
       if (!source.startsWith('// @generate_source\n')) {
         return null;
       }
+      let generator;
       try {
-        const generator = evalModule(source, id, null, true);
-        const newSource = await generator(Object.assign({
+        generator = evalModule(source, id, null, true);
+      } catch (e) {
+        console.error(e);
+        diagnostics[id].push({
+          fatal: true,
+          severity: 2,
+          message: `Could not evaluate module: ${e.message}`,
+          stack: e.stack,
+        });
+        return '';
+      }
+      let newSource;
+      try {
+        newSource = await generator(Object.assign({
           load(name) {
             return files.load(name);
           },
@@ -268,8 +307,6 @@ async function compile(config) {
             transformers.push(transform);
           },
         }, config.defines));
-        generated[id] = newSource;
-        return { code: newSource, map: null };
       } catch (e) {
         diagnostics[id].push({
           fatal: true,
@@ -279,12 +316,21 @@ async function compile(config) {
         });
         return '';
       }
+      generated[id] = newSource;
+      return { code: newSource, map: null };
     },
   });
-  inputOptions.plugins.push(replace({
-    // The replace plugin modifies the values, so we need to copy them.
-    values: Object.assign({}, config.defines),
-  }));
+  const stripName = config.config == 'debug' ? 'RELEASE_ONLY' : 'DEBUG_ONLY';
+  inputOptions.plugins.push(
+    stripCode({
+      start_comment: `START.${stripName}`,
+      end_comment: `END.${stripName}`,
+    }),
+    replace({
+      // The replace plugin modifies the values, so we need to copy them.
+      values: Object.assign({}, config.defines),
+    }),
+  );
   if (config.minify) {
     const reserved = [];
     reserved.push(...domprops);

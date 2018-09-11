@@ -1,6 +1,5 @@
 import { gl } from '/game/cyber/global';
 import '/game/cyber/graphics';
-import { loadedShaderSource } from '/game/cyber/shader';
 import {
   initInput, clearInput, updateInput,
 } from '/game/cyber/input';
@@ -13,6 +12,14 @@ import { render } from '/game/cyber/render';
 import { updateWorld } from '/game/cyber/world';
 import '/game/cyber/person';
 import '/game/cyber/monster';
+import { sfxNames } from '/game/cyber/sfx';
+
+/* START.DEBUG_ONLY */
+import { loadedShaderSource } from '/game/cyber/shader';
+import {
+  loadedSFXSource, startAudio, playSFX,
+} from '/game/cyber/audio';
+/* END.DEBUG_ONLY */
 
 // Handle to RequestAnimationFrame request.
 let handle;
@@ -52,6 +59,16 @@ export function unpause() {
   startTime();
 }
 
+if (gl) {
+  initInput();
+  startPlayer();
+  window.addEventListener('focus', unpause);
+  window.addEventListener('blur', pause);
+  unpause();
+}
+
+/* START.DEBUG_ONLY */
+
 // Callback for when data is loaded dynamically by the development server. Not
 // used in the release version.
 export function loadedData(name, data) {
@@ -64,17 +81,19 @@ export function loadedData(name, data) {
         loadedShaderSource(base, data);
         render();
         return;
+      case 'sfx':
+        loadedSFXSource(base, data);
+        return;
     }
   }
   console.error(`Unknown file: ${JSON.stringify(name)}`);
 }
 
-if (gl) {
-  initInput();
-  startPlayer();
-  window.addEventListener('focus', unpause);
-  window.addEventListener('blur', pause);
-  unpause();
-}
+export {
+  gl,
+  sfxNames,
+  startAudio,
+  playSFX,
+};
 
-export { gl };
+/* END.DEBUG_ONLY */

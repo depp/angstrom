@@ -174,7 +174,10 @@ func (b *builder) scriptRunner(ch chan<- *script.Script) {
 	}
 }
 
-const shaderDir = "game/cyber/shader"
+const (
+	shaderDir = "game/cyber/shader"
+	sfxDir    = "game/cyber/sfx"
+)
 
 func (b *builder) watcher() {
 	w, err := fsnotify.NewWatcher()
@@ -183,20 +186,22 @@ func (b *builder) watcher() {
 		return
 	}
 	defer w.Close()
-	if err := w.Add(shaderDir); err != nil {
-		log.Println("Error: Could not add watch:", err)
-		return
-	}
-	sts, err := ioutil.ReadDir(shaderDir)
-	if err != nil {
-		log.Println("Error: Could not list directory:", err)
-		return
-	}
-	for _, st := range sts {
-		b.watchEvent(fsnotify.Event{
-			Name: filepath.Join(shaderDir, st.Name()),
-			Op:   fsnotify.Create,
-		})
+	for _, dir := range []string{shaderDir, sfxDir} {
+		if err := w.Add(dir); err != nil {
+			log.Println("Error: Could not add watch:", err)
+			return
+		}
+		sts, err := ioutil.ReadDir(dir)
+		if err != nil {
+			log.Println("Error: Could not list directory:", err)
+			return
+		}
+		for _, st := range sts {
+			b.watchEvent(fsnotify.Event{
+				Name: filepath.Join(dir, st.Name()),
+				Op:   fsnotify.Create,
+			})
+		}
 	}
 	for e := range w.Events {
 		b.watchEvent(e)
@@ -205,14 +210,23 @@ func (b *builder) watcher() {
 
 func (b *builder) watchEvent(e fsnotify.Event) {
 	dir := filepath.Dir(e.Name)
-	if dir != shaderDir {
-		return
-	}
 	fname := filepath.Base(e.Name)
 	if strings.HasPrefix(fname, ".") || strings.HasPrefix(fname, "#") {
 		return
 	}
-	if !strings.HasSuffix(fname, ".glsl") {
+	var outDir string
+	switch dir {
+	case shaderDir:
+		if !strings.HasSuffix(fname, ".glsl") {
+			return
+		}
+		outDir = "shader"
+	case sfxDir:
+		if !strings.HasSuffix(fname, ".txt") {
+			return
+		}
+		outDir = "sfx"
+	default:
 		return
 	}
 	if e.Op&(fsnotify.Create|fsnotify.Write|fsnotify.Remove|fsnotify.Rename) == 0 {
@@ -237,7 +251,7 @@ func (b *builder) watchEvent(e fsnotify.Event) {
 		}
 	}
 	b.setFiles([]fileset.FileVersion{{
-		Name:    path.Join("shader", fname),
+		Name:    path.Join(outDir, fname),
 		Version: ver,
 	}})
 }

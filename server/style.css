@@ -1,3 +1,7 @@
+h1, h2, h3, h4 {
+  margin: 0;
+}
+
 body {
   margin: 1rem;
   font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -5,7 +9,6 @@ body {
 }
 
 h1 {
-  margin: 0;
   margin-bottom: 1rem;
   color: white;
 }
@@ -14,6 +17,13 @@ h1 {
   border: 2px solid #333;
   margin: 0.5rem auto;
   display: block;
+}
+
+.box {
+  background: #ddd;
+  border: 1px solid #bbb;
+  margin: 1rem 0;
+  padding: 0 0.5rem;
 }
 
 /* ========================================================================== */
@@ -49,14 +59,8 @@ h1 {
 
 /* ========================================================================== */
 
-#diagnostics {
-  background: #ddd;
-  border: 1px solid #bbb;
-}
 #diagnostics h2 {
   background: #ddd;
-  margin: 0;
-  padding: 0 0.5rem;
 }
 
 .file {
@@ -64,16 +68,12 @@ h1 {
 }
 .file h3 {
   margin: 0;
-  padding: 0 0.5rem;
 }
 .file ul {
   margin: 0;
   list-style: none;
 }
 
-.message h4 {
-  margin: 0;
-}
 .message p {
   margin: 0;
 }
@@ -88,4 +88,14 @@ h1 {
 }
 .code-error {
   text-decoration: red double underline;
+}
+
+/* ========================================================================== */
+
+#sfx ul {
+  margin: 0.5rem 0;
+  padding: 0;
+}
+#sfx li {
+  display: inline-block;
 }

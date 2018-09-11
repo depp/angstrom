@@ -11,7 +11,15 @@
     <div id="status" :class="'status-'+status">
       <p>{{ message }}</p>
     </div>
-    <div id="diagnostics">
+    <div id="sfx" v-if="sfx.length" class="box">
+      <h2>SFX</h2>
+      <ul>
+        <li v-for="(snd, index) in sfx">
+          <button v-on:click="play(index)">{{ snd }}</button>
+        </li>
+      </ul>
+    </div>
+    <div id="diagnostics" class="box">
       <h2>Errors and Warnings</h2>
       <file-messages v-for="file in files"
                      :file="file"

@@ -169,6 +169,38 @@
   }());
 
   // ===========================================================================
+  // SFX
+  // ===========================================================================
+  const sfx = (function sfx() {
+    const cmp = new Vue({
+      el: '#sfx',
+      data: {
+        sfx: [],
+      },
+      methods: {
+        play(sfxID) {
+          const g = window.Game;
+          if (g) {
+            g.startAudio();
+            g.playSFX(sfxID);
+          }
+        }
+      },
+    });
+
+    function loadedScript() {
+      const g = window.Game;
+      if (g) {
+        cmp.sfx = [...g.sfxNames];
+      }
+    }
+
+    return {
+      loadedScript,
+    };
+  }());
+
+  // ===========================================================================
   // Data files
   // ===========================================================================
   const datafiles = (function datafiles() {
@@ -245,6 +277,7 @@
       scriptElt.addEventListener('load', () => {
         status.set('ok', 'Loaded');
         datafiles.loadedScript();
+        sfx.loadedScript();
       });
       document.head.appendChild(scriptElt);
     }
@@ -275,6 +308,7 @@
             diagnostics.changed(file, stamp);
             break;
           case 'shader':
+          case 'sfx':
             datafiles.changed(file, stamp);
             break;
           default:

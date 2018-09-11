@@ -1,6 +1,7 @@
 gain = gain
-  .gain = env 63 20 0
+  .gain = env 63 30 0
+  .out = out
 
 osc1 = osc sawtooth
-  .frequency = env 63 20 0
+  .frequency = env 30 30 0
   .out = gain

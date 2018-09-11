@@ -1,3 +1,21 @@
+import {
+  cmap,
+  oscillatorTypes,
+
+  opGain,
+  opOscillator,
+  opOutput,
+  opEnvFrequency,
+  opEnvGain,
+
+  sfxData,
+  sfxNames,
+} from '/game/cyber/sfx';
+
+/* START.DEBUG_ONLY */
+import { ParseError, parseScript } from '/tools/lib/parse_sfx';
+/* END.DEBUG_ONLY */
+
 let audioCtx;
 
 // Start the audio system, if it is not already started. This must be called
@@ -11,8 +29,7 @@ export function startAudio() {
 
   const t0 = audioCtx.currentTime;
   const g = audioCtx.createGain();
-  // g.gain.setValueAtTime(0.01, t0);
-  makeADSR(g.gain, [t0, t0 + 0.5], [30, 30, 30, 30]);
+  g.gain.setValueAtTime(0.01, t0);
   g.connect(audioCtx.destination);
   const osc = audioCtx.createOscillator();
   osc.connect(g);
@@ -20,43 +37,115 @@ export function startAudio() {
   osc.stop(audioCtx.currentTime + 0.05);
 }
 
+const sfxPrograms = sfxData.split(' ').map(
+  prog => prog.split(',').map(op => Array.from(op).map(c => cmap.indexOf(c))),
+);
+
 // Convert time from parameter value to seconds.
-export function convertTime(n) {
-  return n && 0.005 * (1.08 ** n);
+//
+// Range: 0, 5-2000ms.
+function convertTime(n) {
+  return n && 0.005 * (1.1 ** n);
 }
 
 // Convert gain from parameter value to scalar value.
-export function convertGain(n) {
-  return n && (0.7 ** (9 - n));
+//
+// Range: -infinity, -60..0 dB.
+function convertGain(n) {
+  return n && (0.9 ** (63 - n));
 }
 
-// Set the parameter to follow an ADSR envelope.
+// Convert auido frequency from parameter value to scalar value.
 //
-// param: AudioParam
-// gateOn: Gate on timestamp
-// gateOff: Gate off timestamp
-// adsr: ADSR parameters
-// offset: Offset to apply to envelope output
-// scale: Scale to apply to envelope output
-function makeADSR(param, [gateOn, gateOff], adsr, offset = 0, scale = 1) {
-  const t = convertTime(adsr[0]);
-  // Attack
-  if (t > 0) {
-    param.value = offset;
-    param.setValueAtTime(offset, gateOn);
-    param.linearRampToValueAtTime(offset + scale, gateOn + t);
-  } else {
-    param.value = offset + scale;
-    param.setValueAtTime(offset + scale, gateOn);
-  }
-  // Decay
-  param.setTargetAtTime(
-    offset + scale * convertGain(adsr[2]),
-    gateOn + t,
-    convertTime(adsr[1]),
-  );
-  // Sustain
-  param.cancelScheduledValues(gateOff);
-  // Release
-  param.linearRampToValueAtTime(offset, gateOff + convertTime(adsr[3]));
+// Range: 40-16000 Hz.
+function convertFreq(n) {
+  return 40 * (1.1 ** n);
 }
+
+function envelope(param, values, convert) {
+  param.value = convert(values[2]);
+  let curTime = audioCtx.currentTime;
+  for (let i = 3; i < values.length; i += 2) {
+    param.linearRampToValueAtTime(
+      convert(values[i+1]),
+      curTime += convertTime(values[i]),
+    );
+  }
+  return curTime;
+}
+
+export function playSFX(sfxID) {
+  const prog = sfxPrograms[sfxID];
+  if (!prog || !audioCtx) {
+    return;
+  }
+  const playable = [];
+  const items = [audioCtx.destination];
+  let node;
+  let endTime = audioCtx.currentTime;
+  let itemEndTime;
+  for (const operation of prog) {
+    itemEndTime = endTime;
+    switch (operation[0]) {
+      case opGain:
+        node = audioCtx.createGain();
+        items.push(node, node.gain);
+        break;
+      case opOscillator:
+        node = audioCtx.createOscillator();
+        node.type = oscillatorTypes[operation[1]];
+        items.push(node, node.frequency);
+        playable.push(node);
+        break;
+      case opOutput:
+        node.connect(items[operation[1]]);
+        break;
+      case opEnvFrequency:
+        itemEndTime = envelope(items[operation[1]], operation, convertFreq);
+        break;
+      case opEnvGain:
+        itemEndTime = envelope(items[operation[1]], operation, convertGain);
+        break;
+    }
+    endTime = Math.max(endTime, itemEndTime);
+  }
+  for (node of playable) {
+    node.start();
+    node.stop(endTime);
+  }
+}
+
+// =============================================================================
+// Debug build support
+// =============================================================================
+
+/* START.DEBUG_ONLY */
+
+export function loadedSFXSource(name, data) {
+  if (!name.endsWith('.txt')) {
+    console.warn(`Unknown SFX type ${JSON.stringify(name)}`);
+    return;
+  }
+  if (data == null) {
+    return;
+  }
+  const idx = sfxNames.indexOf(name.substring(0, name.length - 4));
+  if (idx === -1) {
+    console.warn(`Unknown SFX ${JSON.stringify(name)}`);
+    return;
+  }
+  let prog;
+  try {
+    prog = parseScript(data);
+  } catch (e) {
+    if (e instanceof ParseError) {
+      console.error(`${name}:${e.line}: ${e.message}`);
+      return;
+    }
+    throw e;
+  }
+  sfxPrograms[idx] = prog;
+  console.log(`Reloaded SFX ${name}`);
+}
+
+/* END.DEBUG_ONLY */
