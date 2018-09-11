@@ -22,10 +22,15 @@ let audioCtx;
 // from an event handler in order to get audio permissions across most browsers
 // (especially Safari, but Chrome 70 will also need this).
 export function startAudio() {
-  if (audioCtx) {
+  if (audioCtx != null) {
     return;
   }
-  audioCtx = new AudioContext();
+  try {
+    audioCtx = new AudioContext();
+  } catch (e) {
+    audioCtx = false;
+    return;
+  }
 
   const t0 = audioCtx.currentTime;
   const g = audioCtx.createGain();
