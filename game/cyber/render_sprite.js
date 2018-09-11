@@ -30,23 +30,13 @@ import {
   spriteProperties,
 } from '/game/cyber/graphics';
 import { entities } from '/game/cyber/world';
+import { quad } from '/game/cyber/render_util';
 
 const vertexBuffer = gl.createBuffer();
-
-// A unit quad as two triangles. XY and UV coordinates.
-const quad = [
-  [-1, -1, 0, 1],
-  [ 1, -1, 1, 1],
-  [-1,  1, 0, 0],
-  [-1,  1, 0, 0],
-  [ 1, -1, 1, 1],
-  [ 1,  1, 1, 0],
-];
 
 export function renderSprite() {
   const V = 6; // vertex size
   const S = 6 * 6; // sprite size
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   const spriteCounts = [0, 0, 0, 0, 0]; // mode count
   const flat = [...entities];
   for (let i = 0; i < flat.length; i++) {
@@ -127,6 +117,7 @@ export function renderSprite() {
       }
     }
   }
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STREAM_DRAW);
 
   function drawGroup(g) {
@@ -148,8 +139,8 @@ export function renderSprite() {
   gl.vertexAttribPointer(1, 2, gl.FLOAT, false, V * 4, 12);
   gl.vertexAttribPointer(2, 4, gl.UNSIGNED_BYTE, true, V * 4, 20);
 
-  let p1 = spriteOpaqueProgram;
-  let p2 = spriteTransparentProgram;
+  const p1 = spriteOpaqueProgram;
+  const p2 = spriteTransparentProgram;
 
   gl.enable(gl.DEPTH_TEST);
 

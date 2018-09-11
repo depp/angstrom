@@ -1,6 +1,7 @@
 // Module render contains the top-level rendering code.
 import { gl } from '/game/cyber/global';
 import { renderSprite } from '/game/cyber/render_sprite';
+import { renderText } from '/game/cyber/render_text';
 import { renderTile } from '/game/cyber/render_tile';
 
 export function render() {
@@ -10,4 +11,5 @@ export function render() {
 
   renderTile();
   renderSprite();
+  renderText();
 }

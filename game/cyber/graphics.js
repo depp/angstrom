@@ -4,7 +4,10 @@ import { vec3Distance } from '/game/cyber/vec';
 
 const tilesX = 8;
 const tilesY = 8;
+// Size of an individual sprite tile.
 const tileSize = 64;
+// Size of the text texture.
+const textTextureSize = 512;
 
 export const spriteTexture = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, spriteTexture);
@@ -18,10 +21,18 @@ gl.texParameteri(
 );
 gl.generateMipmap(gl.TEXTURE_2D);
 
+export const textTexture = gl.createTexture();
+gl.activeTexture(gl.TEXTURE2);
+gl.bindTexture(gl.TEXTURE_2D, textTexture);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(
+  gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR,
+);
+
 const offscreenCanvas = document.createElement('canvas');
 const ctx = offscreenCanvas.getContext('2d');
-offscreenCanvas.width = tileSize;
-offscreenCanvas.height = tileSize;
+offscreenCanvas.width = textTextureSize;
+offscreenCanvas.height = textTextureSize;
 
 // Get the image data for the sprite currently in the offscreen canvas.
 function getSpriteData() {
@@ -144,6 +155,8 @@ function makeGenderedEmojiSprites(list, sprites) {
 export const noiseTexture = gl.createTexture();
 
 export function loadGraphics() {
+  gl.activeTexture(gl.TEXTURE0);
+
   ctx.clearRect(0, 0, tileSize, tileSize);
   ctx.save();
   ctx.translate(32, 32);
@@ -307,3 +320,28 @@ export function makeColor(r, g, b, a = 1) {
           | (clamp((b * 256) | 0, 0, 255) << 16)
           | (clamp((a * 256) | 0, 0, 255) << 24));
 }
+
+function renderText(text) {
+  ctx.clearRect(0, 0, textTextureSize, textTextureSize);
+  ctx.save();
+  ctx.font = 'bold 24px sans';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#fff';
+  ctx.fillText(text, textTextureSize / 2, textTextureSize / 2);
+  ctx.restore();
+  const { data } = ctx.getImageData(0, 0, textTextureSize, textTextureSize);
+  if (DEBUG && data.length != 4 * textTextureSize * textTextureSize) {
+    console.error(`Invalid texture data size ${data.length}`);
+  }
+
+  gl.activeTexture(gl.TEXTURE2);
+  gl.bindTexture(gl.TEXTURE_2D, textTexture);
+  gl.texImage2D(
+    gl.TEXTURE_2D, 0, gl.RGBA, textTextureSize, textTextureSize, 0,
+    gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data.buffer),
+  );
+  gl.generateMipmap(gl.TEXTURE_2D);
+}
+
+renderText('Menu goes here.');
