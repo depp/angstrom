@@ -6,7 +6,7 @@ import {
 import { buttonState, buttonPress } from '/game/cyber/input';
 import { frameDT, levelTime } from '/game/cyber/time';
 import { vecZ, vec3Set, vec3MulAdd } from '/game/cyber/vec';
-import { clamp } from '/game/cyber/util';
+import { clamp, signedRandom } from '/game/cyber/util';
 import { spawnProjectile } from '/game/cyber/projectile';
 import {
   modeUIOpaque,
@@ -17,6 +17,7 @@ import {
 } from '/game/cyber/graphics';
 import { shotSFX } from '/game/cyber/sfx';
 import { playSFX } from '/game/cyber/audio';
+import { Bouncer } from '/game/cyber/chaff';
 
 // Maximum player speed, units per second.
 const playerSpeed = 3;
@@ -31,7 +32,7 @@ const playerTurnSensitivity = 3e-3;
 // Time after firing before weapon can be fired again, seconds.
 const weaponCooldownTime = 0.3;
 // Maximum number of hearts.
-const maxHearts = 4;
+const maxHearts = 1;
 
 // The player position [x, y, z] in the world.
 export let playerPos;
@@ -48,6 +49,13 @@ let playerAngleVel;
 let weaponCooldown;
 
 const vTemp = [];
+
+class DeadPlayer extends Bouncer {
+  constructor() {
+    super(0, 0.2, [signedRandom() * 2, signedRandom() * 2, Math.random() * 2]);
+    this.pos = playerPos;
+  }
+}
 
 class Player extends Entity {
   constructor() {
@@ -147,7 +155,15 @@ class Player extends Entity {
   }
 
   damage() {
+    if (this.dead) {
+      // Paranoid safety check.
+      return;
+    }
     this.health--;
+    if (this.health <= 0) {
+      this.dead = true;
+      new DeadPlayer().spawn();
+    }
   }
 }
 

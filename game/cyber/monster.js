@@ -8,57 +8,18 @@ import { chooseRandom, signedRandom } from '/game/cyber/util';
 import {
   brainSprite,
   evilSmileySprites,
-  makeColor,
 } from '/game/cyber/graphics';
 import {
   vecZero,
-  vecZ,
   vec3Set,
   vec3MulAdd,
   vec3Norm,
-  vec3SetMulAdd,
 } from '/game/cyber/vec';
 import {
   playerPos,
 } from '/game/cyber/player';
 import { spawnProjectile } from '/game/cyber/projectile';
-
-class Chaff extends Entity {
-  constructor(src, velocity = vecZero) {
-    const [s] = src.sprites;
-    super(src.pos, src.radius, s);
-    this.expiry = levelTime + 5;
-    this.vel = [...velocity];
-    this.bounce = 0;
-    this.rspeed = signedRandom(0.5) * 1000;
-  }
-
-  update() {
-    const [s] = this.sprites;
-    this.dead = levelTime > this.expiry;
-    const frac = (this.expiry - levelTime) / 5;
-    s.color = makeColor(frac * 3, frac, frac, frac * 4 - 3);
-    s.size = this.radius * Math.min(1, frac * 5);
-    if (!this.sleeping) {
-      s.rotate = ((s.rotate || 0) + this.rspeed * frameDT) % 360;
-      vec3SetMulAdd(this.pos, this.vel, frameDT);
-      vec3SetMulAdd(this.vel, vecZ, -10 * frameDT);
-    }
-  }
-
-  collideWorld() {
-    this.bounce++;
-    if (this.bounce > 2) {
-      this.sleeping = 1;
-      this.pos[2] = this.radius;
-    } else {
-      this.pos[2] = this.radius * 2 - this.pos[2];
-      this.vel[2] *= -1;
-      this.rspeed *= -0.5;
-      vec3MulAdd(this.vel, vecZero, this.vel, 0.5);
-    }
-  }
-}
+import { Chaff } from '/game/cyber/chaff';
 
 class EvilBrain extends Entity {
   constructor(swarm) {
