@@ -84,9 +84,10 @@ export const spriteProperties = [];
 // Predefined sprite indexes.
 export const shotSprite = 0;
 export const crosshairSprite = 1;
+export const heartSprite = 2;
 
 // Current sprite index (must start after predefined sprites).
-let curSprite = 2;
+let curSprite = 3;
 
 // Emoji sprites.
 export let brainSprite;
@@ -168,6 +169,21 @@ export function loadGraphics() {
   ctx.stroke();
   ctx.restore();
   loadSprite(crosshairSprite, getSpriteData());
+
+  ctx.clearRect(0, 0, tileSize, tileSize);
+  ctx.save();
+  ctx.beginPath();
+  ctx.translate(32, 32);
+  ctx.strokeStyle = '#ddd';
+  ctx.fillStyle = '#d00';
+  ctx.lineWidth = 2;
+  ctx.font = '60px sans';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('\u{2665}', 0, 0);
+  ctx.strokeText('\u{2665}', 0, 0);
+  ctx.restore();
+  loadSprite(heartSprite, getSpriteData());
 
   // Some emoji have very different colors in different fonts, we can take the
   // average color to detect the font.

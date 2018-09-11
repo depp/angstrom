@@ -12,6 +12,7 @@ import {
   modeUIOpaque,
   modeUITransparent,
   crosshairSprite,
+  heartSprite,
 } from '/game/cyber/graphics';
 import { shotSFX } from '/game/cyber/sfx';
 import { playSFX } from '/game/cyber/audio';
@@ -55,33 +56,29 @@ class Player extends Entity {
       mode: modeUITransparent,
       size: 0.1,
     }, {
-      n: crosshairSprite + 1,
+      n: heartSprite,
       pos: [0.1, 0.1, 0],
       mode: modeUIOpaque,
       size: 0.1,
       anchor: [-1, -1],
-      color: 0xa00000ff,
     }, {
-      n: crosshairSprite + 2,
-      pos: [-0.1, 0.1, 0],
+      n: heartSprite,
+      pos: [0.3, 0.1, 0],
       mode: modeUIOpaque,
       size: 0.1,
-      anchor: [1, -1],
-      color: 0xa000ffff,
+      anchor: [-1, -1],
     }, {
-      n: crosshairSprite + 3,
-      pos: [0.1, -0.1, 0],
+      n: heartSprite,
+      pos: [0.5, 0.1, 0],
       mode: modeUIOpaque,
       size: 0.1,
-      anchor: [-1, 1],
-      color: 0xa000ff00,
+      anchor: [-1, -1],
     }, {
-      n: crosshairSprite + 4,
-      pos: [-0.1, -0.1, 0],
+      n: heartSprite,
+      pos: [0.7, 0.1, 0],
       mode: modeUIOpaque,
       size: 0.1,
-      anchor: [1, 1],
-      color: 0xa0ff0000,
+      anchor: [-1, -1],
     }];
   }
 
