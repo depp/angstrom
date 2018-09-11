@@ -54,6 +54,21 @@ class DeadPlayer extends Bouncer {
   constructor() {
     super(0, 0.2, [signedRandom() * 2, signedRandom() * 2, Math.random() * 2]);
     this.pos = playerPos;
+    this.deathTime = levelTime;
+    this.initAngle = [...playerAngle];
+    this.deltaAngle = [
+      signedRandom(),
+      -playerAngle[1],
+      1 - playerAngle[2],
+    ];
+  }
+
+  update() {
+    super.update();
+    vec3MulAdd(
+      playerAngle, this.initAngle, this.deltaAngle,
+      clamp(levelTime - this.deathTime),
+    );
   }
 }
 
