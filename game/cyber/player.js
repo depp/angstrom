@@ -30,6 +30,8 @@ const playerTurnAccel = 15;
 const playerTurnSensitivity = 3e-3;
 // Time after firing before weapon can be fired again, seconds.
 const weaponCooldownTime = 0.3;
+// Maximum number of hearts.
+const maxHearts = 4;
 
 // The player position [x, y, z] in the world.
 export let playerPos;
@@ -51,36 +53,23 @@ class Player extends Entity {
   constructor() {
     super(0, 0.5);
     this.pos = playerPos;
+    this.hearts = [];
+    for (let i = 0; i < maxHearts; i++) {
+      this.hearts.push({
+        n: heartSprite,
+        pos: [0.1 + 0.2 * i, 0.1, 0],
+        mode: modeUIOpaque,
+        size: 0.1,
+        anchor: [-1, -1],
+      });
+    }
     this.sprites = [{
       n: crosshairSprite,
       pos: [0, 0, 0],
       mode: modeUITransparent,
       size: 0.1,
-    }, {
-      n: heartSprite,
-      pos: [0.1, 0.1, 0],
-      mode: modeUIOpaque,
-      size: 0.1,
-      anchor: [-1, -1],
-    }, {
-      n: heartSprite,
-      pos: [0.3, 0.1, 0],
-      mode: modeUIOpaque,
-      size: 0.1,
-      anchor: [-1, -1],
-    }, {
-      n: heartSprite,
-      pos: [0.5, 0.1, 0],
-      mode: modeHidden,
-      size: 0.1,
-      anchor: [-1, -1],
-    }, {
-      n: heartSprite,
-      pos: [0.7, 0.1, 0],
-      mode: modeUIOpaque,
-      size: 0.1,
-      anchor: [-1, -1],
-    }];
+    }, ...this.hearts];
+    this.health = 4;
   }
 
   update() {
@@ -149,6 +138,16 @@ class Player extends Entity {
         weaponCooldown = 0;
       }
     }
+
+    // Update UI.
+    for (let i = 0; i < maxHearts; i++) {
+      const heart = this.hearts[i];
+      heart.mode = i < this.health ? modeUIOpaque : modeHidden;
+    }
+  }
+
+  damage() {
+    this.health--;
   }
 }
 
