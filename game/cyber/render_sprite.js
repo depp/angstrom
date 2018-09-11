@@ -26,6 +26,7 @@ import {
   modeTransparent,
   modeUIOpaque,
   modeUITransparent,
+  modeHidden,
   spriteProperties,
 } from '/game/cyber/graphics';
 import { entities } from '/game/cyber/world';
@@ -46,7 +47,7 @@ export function renderSprite() {
   const V = 6; // vertex size
   const S = 6 * 6; // sprite size
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  const spriteCounts = [0, 0, 0, 0]; // mode count
+  const spriteCounts = [0, 0, 0, 0, 0]; // mode count
   const flat = [...entities];
   for (let i = 0; i < flat.length; i++) {
     const { children, sprites } = flat[i];
@@ -84,6 +85,9 @@ export function renderSprite() {
         color = 0xffffffff,
         anchor,
       } = sprite;
+      if (mode == modeHidden) {
+        continue;
+      }
       if (DEBUG && size == null) {
         throw new Error('Sprite is missing size');
       }

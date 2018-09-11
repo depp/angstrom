@@ -76,6 +76,7 @@ export const modeOpaque = 0;
 export const modeTransparent = 1;
 export const modeUIOpaque = 2;
 export const modeUITransparent = 3;
+export const modeHidden = 4;
 
 export let isAppleEmoji;
 export let isGoogleEmoji;

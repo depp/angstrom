@@ -11,6 +11,7 @@ import { spawnProjectile } from '/game/cyber/projectile';
 import {
   modeUIOpaque,
   modeUITransparent,
+  modeHidden,
   crosshairSprite,
   heartSprite,
 } from '/game/cyber/graphics';
@@ -70,7 +71,7 @@ class Player extends Entity {
     }, {
       n: heartSprite,
       pos: [0.5, 0.1, 0],
-      mode: modeUIOpaque,
+      mode: modeHidden,
       size: 0.1,
       anchor: [-1, -1],
     }, {
