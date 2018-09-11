@@ -54,11 +54,10 @@ class Player extends Entity {
     super(0, 0.5);
     this.pos = playerPos;
     this.hearts = [];
-    for (let i = 0; i < maxHearts; i++) {
+    for (let i = 0; i < maxHearts * 2; i++) {
       this.hearts.push({
-        n: heartSprite,
-        pos: [0.1 + 0.2 * i, 0.1, 0],
-        mode: modeUIOpaque,
+        n: heartSprite + (i & 1),
+        pos: [0.1 + 0.2 * (i >> 1), 0.1, 0],
         size: 0.1,
         anchor: [-1, -1],
       });
@@ -69,7 +68,7 @@ class Player extends Entity {
       mode: modeUITransparent,
       size: 0.1,
     }, ...this.hearts];
-    this.health = 4;
+    this.health = maxHearts * 2;
   }
 
   update() {
@@ -140,9 +139,10 @@ class Player extends Entity {
     }
 
     // Update UI.
-    for (let i = 0; i < maxHearts; i++) {
-      const heart = this.hearts[i];
-      heart.mode = i < this.health ? modeUIOpaque : modeHidden;
+    for (let i = 0; i < maxHearts * 2; i += 2) {
+      this.hearts[i].mode = i + 2 > this.health ? modeUIOpaque : modeHidden;
+      this.hearts[i+1].mode = i < this.health ? modeUIOpaque : modeHidden;
+      this.hearts[i+1].size = i == this.health - 1 ? 0.05 : 0.1;
     }
   }
 

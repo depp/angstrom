@@ -1,5 +1,5 @@
 // Return a number clamped to the given range.
-export function clamp(x, min, max) {
+export function clamp(x, min = 0, max = 1) {
   return Math.max(min, Math.min(max, x));
 }
 
