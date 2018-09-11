@@ -148,7 +148,7 @@ export function loadGraphics() {
   ctx.save();
   ctx.translate(32, 32);
   const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 28);
-  g.addColorStop(0, 'white');
+  g.addColorStop(0, '#fff');
   g.addColorStop(1, 'transparent');
   ctx.fillStyle = g;
   ctx.arc(0, 0, 28, 0, 2 * Math.PI);
@@ -160,7 +160,7 @@ export function loadGraphics() {
   ctx.save();
   ctx.beginPath();
   ctx.translate(32, 32);
-  ctx.strokeStyle = 'white';
+  ctx.strokeStyle = '#fff';
   ctx.lineWidth = 4;
   for (let i = 0; i < 4; i++) {
     ctx.rotate(Math.PI / 2);
