@@ -9,6 +9,10 @@ const tileSize = 64;
 // Size of the text texture.
 const textTextureSize = 512;
 
+// Drop shadow for text.
+const shadowX = 2;
+const shadowY = 2;
+
 export const spriteTexture = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, spriteTexture);
 gl.texImage2D(
@@ -327,10 +331,17 @@ function renderText(text) {
   ctx.font = 'bold 32px sans';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = '#000';
   ctx.strokeStyle = '#000';
   ctx.lineWidth = 3;
+  ctx.strokeText(
+    text, textTextureSize / 2 + shadowX, textTextureSize / 2 + shadowY,
+  );
+  ctx.fillText(
+    text, textTextureSize / 2 + shadowX, textTextureSize / 2 + shadowY,
+  );
   ctx.strokeText(text, textTextureSize / 2, textTextureSize / 2);
+  ctx.fillStyle = '#fff';
   ctx.fillText(text, textTextureSize / 2, textTextureSize / 2);
   ctx.restore();
   const { data } = ctx.getImageData(0, 0, textTextureSize, textTextureSize);
