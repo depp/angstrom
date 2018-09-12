@@ -174,6 +174,11 @@ export const levels = [];
   // ===========================================================================
 
   defineLevel(levelStart, () => {
+    height = 3;
+    addTile(1, 1);
+    addTile(5, 1);
+    addTile(1, 5);
+    addTile(5, 5);
     height = 0;
     pyramid(0, 0, 7, 7, 3, 0.2);
   });

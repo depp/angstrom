@@ -22,7 +22,7 @@ vec4 voronoi(in vec2 v) {
     }
     dist = sqrt(d2.z - d1.z);
     if (dist < 0.5) {
-        n = normalize(vec3(normalize(d2.xy - d1.xy), 6.0));
+        n = normalize(vec3(normalize(d2.xy - d1.xy), 3.0));
     } else {
         n = vec3(0.0, 0.0, 1.0);
     }
