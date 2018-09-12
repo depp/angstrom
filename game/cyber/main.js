@@ -31,6 +31,7 @@ import { render } from '/game/cyber/render';
 import { resetWorld, updateWorld } from '/game/cyber/world';
 import { levels } from '/game/cyber/level';
 import { sfxNames } from '/game/cyber/sfx';
+import { updateLight } from '/game/cyber/light';
 import {
   startAudio,
   /* START.DEBUG_ONLY */
@@ -188,6 +189,7 @@ function main(curTimeMS) {
   if (currentState == stateGame) {
     updateTime(curTimeMS);
     updateWorld();
+    updateLight();
     endFrameInput();
   } else {
     updateMenu();

@@ -3,5 +3,5 @@ varying vec4 TexPos;
 varying mat3 NormalSpace;
 
 uniform sampler2D Texture;
-uniform vec3 LightPos[4];
-uniform vec3 LightColor[4];
+uniform vec4 LightPos[8];
+uniform vec4 LightColor[8];
