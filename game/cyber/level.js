@@ -47,43 +47,6 @@ export const levels = [];
 (function makeLevels() {
   let tiles;
 
-  // Add a single tile, if it's not already set.
-  function addTile(...pos) {
-    if (tiles[pos]) {
-      return;
-    }
-    tiles[pos] = -Math.random();
-  }
-
-  // Get the value of a single tile.
-  function getTile(...pos) {
-    return tiles[pos];
-  }
-
-  // Make a rectangle floor.
-  function floorRect(xo, yo, xs, ys) {
-    for (let y = 0; y < ys; y++) {
-      for (let x = 0; x < xs; x++) {
-        addTile(xo + x, yo + y);
-      }
-    }
-  }
-
-  // Define a level, given its number and a function to construct it.
-  function defineLevel(levelNumber, constructor) {
-    if (DEBUG) {
-      if (levels[levelNumber]) {
-        throw new Error(`Duplicate level definition ${levelNumber}`);
-      }
-    }
-    const level = new Level(() => {
-      tiles = {};
-      constructor();
-      return createMesh();
-    });
-    levels[levelNumber] = level;
-  }
-
   const neighbors = [-1, 0, 1, 0, -1];
 
   function createMesh() {
@@ -140,15 +103,15 @@ export const levels = [];
         const v0 = ((side + 0) >> 1) & 1; // y0
         const v1 = ((side + 1) >> 1) & 1; // x0, y1
         const v2 = ((side + 2) >> 1) & 1; // x1
-        emit(
-          0, 1, 1,
-          [v1, v0, z],
-          [v2, v1, z],
-          [vc, vc, z + 0.2],
-        );
-        const nz = getTile(
+        const nz = tiles[[
           x + neighbors[side + 1],
           y + neighbors[side],
+        ]];
+        emit(
+          0, 1, nz != null && nz != z,
+          [v1, v0, z],
+          [v2, v1, z],
+          [vc, vc, z],
         );
         if (nz != null && nz < z) {
           emit(
@@ -176,12 +139,59 @@ export const levels = [];
   }
 
   // ===========================================================================
+  // Prefabs
+  // ===========================================================================
+
+  let height;
+
+  // Add a single tile, if it's not already set.
+  function addTile(x, y) {
+    if (tiles[[x, y]] != null) {
+      return;
+    }
+    tiles[[x, y]] = height;
+  }
+
+  // Make a rectangle floor.
+  function floorRect(xo, yo, xs, ys) {
+    for (let y = 0; y < ys; y++) {
+      for (let x = 0; x < xs; x++) {
+        addTile(xo + x, yo + y);
+      }
+    }
+  }
+
+  function pyramid(xo, yo, xs, ys, n, delta) {
+    const base = height;
+    for (let i = n - 1; i >= 0; i--) {
+      height = base + delta * i;
+      floorRect(xo + i, yo + i, xs - 2 * i, ys - 2 * i);
+    }
+  }
+
+  // ===========================================================================
   // Start
   // ===========================================================================
 
   defineLevel(levelStart, () => {
-    floorRect(0, 0, 7, 7);
+    height = 0;
+    pyramid(0, 0, 7, 7, 3, 0.2);
   });
 
   // ===========================================================================
+
+  // Define a level, given its number and a function to construct it.
+  function defineLevel(levelNumber, constructor) {
+    if (DEBUG) {
+      if (levels[levelNumber]) {
+        throw new Error(`Duplicate level definition ${levelNumber}`);
+      }
+    }
+    const level = new Level(() => {
+      tiles = {};
+      constructor();
+      return createMesh();
+    });
+    levels[levelNumber] = level;
+  }
 }());
