@@ -6,6 +6,9 @@ import {
   stateDeadMenu,
   currentState,
   setState,
+  easy,
+  medium,
+  hard,
 } from '/game/cyber/global';
 import '/game/cyber/graphics';
 import {
@@ -80,6 +83,30 @@ function showInstructions() {
   });
 }
 
+function chooseDifficulty() {
+  pushMenu({
+    text: 'New Game',
+    y: 0.25,
+    size: 0.07,
+  }, {
+    text: 'Choose Difficulty',
+  }, {
+    y: 0.5,
+    text: 'Easy Peasy',
+    action() { newGame(easy); },
+  }, {
+    text: 'Live a Little',
+    action() { newGame(medium); },
+  }, {
+    text: 'I Want to Suffer',
+    action() { newGame(hard); },
+  }, {
+    text: 'Back',
+    y: 0.9,
+    action: popMenu,
+  });
+}
+
 // Main loop.
 function main(curTimeMS) {
   if (currentState != lastState) {
@@ -96,12 +123,14 @@ function main(curTimeMS) {
       case stateMainMenu:
         startMenu({
           text: 'Welcome to Cyberspace',
+          // Beware of low-flying DSL routers.
+          // The only winning move is not to play.
           y: 0.1,
           size: 0.07,
         }, {
           text: 'New Game',
           y: 0.5,
-          action: newGame,
+          action: chooseDifficulty,
         }, {
           text: 'Continue',
           action: continueGame,

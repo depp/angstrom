@@ -35,3 +35,7 @@ export function eventLocation(event) {
   }
   return [canvasX, canvasY];
 }
+
+export const easy = 0;
+export const medium = 1;
+export const hard = 2;
