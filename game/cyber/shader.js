@@ -121,7 +121,7 @@ class ShaderProgramDefinition {
     this.fname = `${fname}.frag.glsl`;
     this.func = func;
     this.program = null;
-    this.sources = [this.vname, this.fname];
+    this.sources = [];
   }
 
   compile() {
