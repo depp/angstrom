@@ -33,9 +33,9 @@ const shaders = {
       'Color',
     ],
   },
-  tileProgram: {
-    vname: 'tile',
-    fname: 'tile',
+  levelProgram: {
+    vname: 'level',
+    fname: 'level',
     attributes: [
       'Pos',
     ],

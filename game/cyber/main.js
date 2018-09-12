@@ -17,12 +17,11 @@ import {
 import { updateCamera } from '/game/cyber/camera';
 import { resetPlayer } from '/game/cyber/player';
 import {
-  frameDT, resetTime, startTime, updateTime,
+  frameDT, startTime, updateTime, resetTime,
 } from '/game/cyber/time';
 import { render } from '/game/cyber/render';
 import { resetWorld, updateWorld } from '/game/cyber/world';
-import { Person } from '/game/cyber/person';
-import { Swarm } from '/game/cyber/monster';
+import { levels } from '/game/cyber/level';
 import { sfxNames } from '/game/cyber/sfx';
 import {
   startAudio,
@@ -40,17 +39,15 @@ import { loadedShaderSource } from '/game/cyber/shader';
 let lastState;
 
 function continueGame() {
+  resetTime();
+  resetPlayer();
   startAudio();
   setState(stateGame);
   inputClick();
+  levels[0].startLevel();
 }
 
 function newGame() {
-  resetTime();
-  resetWorld();
-  resetPlayer();
-  new Swarm(20).spawn();
-  new Person(0).spawn();
   continueGame();
 }
 
@@ -97,7 +94,7 @@ function main(curTimeMS) {
           y: 0.25,
           size: 0.07,
         }, {
-          text: 'Continue',
+          text: 'Resume',
           y: 0.5,
           action: continueGame,
         }, {
