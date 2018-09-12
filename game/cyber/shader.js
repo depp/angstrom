@@ -11,7 +11,7 @@ import { gl } from '/game/cyber/global';
 // Release build
 // =============================================================================
 
-/* START.RELEASE_ONLY */
+/* START.RELEASE _ONLY */
 
 // Compile a shader program.
 //
@@ -53,7 +53,7 @@ export function compileShaderProgram(
   return obj;
 }
 
-/* END.RELEASE_ONLY */
+/* END.RELEASE _ONLY */
 
 // =============================================================================
 // Debug build
@@ -78,6 +78,33 @@ const handler = {
   },
 };
 
+function expandIncludes(sources, src) {
+  const include = /^\s*#\s*include\s+"(.*)"\s*/mg;
+  let match;
+  let body = '';
+  let success = true;
+  let pos = 0;
+  /* eslint-disable no-cond-assign */
+  while ((match = include.exec(src))) {
+    /* eslint-enable no-cond-assign */
+    body += src.substring(pos, match.index);
+    pos = include.lastIndex;
+    const iname = match[1];
+    const isrc = shaderSource[iname];
+    sources.push(iname);
+    if (isrc == null) {
+      success = false;
+    } else {
+      body += isrc;
+      if (body != '' && !body.endsWith('\n')) {
+        body += '\n';
+      }
+    }
+  }
+  body += src.substring(pos);
+  return success ? body : null;
+}
+
 // Shader program definition so the program can be recompiled as the source
 // changes.
 class ShaderProgramDefinition {
@@ -94,11 +121,36 @@ class ShaderProgramDefinition {
     this.fname = `${fname}.frag.glsl`;
     this.func = func;
     this.program = null;
+    this.sources = [this.vname, this.fname];
   }
 
   compile() {
-    const vSource = shaderSource[this.vname];
-    const fSource = shaderSource[this.fname];
+    let vSource = shaderSource[this.vname];
+    let fSource = shaderSource[this.fname];
+    if (vSource == null || fSource == null) {
+      return;
+    }
+    const sources = [];
+    vSource = expandIncludes(sources, vSource);
+    fSource = expandIncludes(sources, fSource);
+    for (const name of this.sources) {
+      const list = shaderDefs[name];
+      const idx = list.indexOf(this);
+      if (idx == -1) {
+        console.error('Missing dependency');
+      } else {
+        list.splice(idx, 1);
+      }
+    }
+    for (const name of sources) {
+      let list = shaderDefs[name];
+      if (!list) {
+        list = [];
+        shaderDefs[name] = list;
+      }
+      list.push(this);
+    }
+    this.sources = sources;
     if (vSource == null || fSource == null) {
       return;
     }
@@ -160,7 +212,8 @@ class ShaderProgramDefinition {
       gl.deleteProgram(this.program);
     }
     this.program = program;
-    console.log(`Reloaded shader ${this.vname} ${this.fname}`);
+    console.log(`Reloaded shader ${this.vname} ${this.fname} `
+                + `${this.sources.join(' ')}`);
   }
 }
 
@@ -184,7 +237,7 @@ export function defineShaderProgram(options) {
 
 // Callback for when shader source code is loaded.
 export function loadedShaderSource(name, data) {
-  if (!name.endsWith('.vert.glsl') && !name.endsWith('.frag.glsl')) {
+  if (!name.endsWith('.glsl')) {
     console.warn(`Unknown shader type ${JSON.stringify(name)}`);
     return;
   }
@@ -194,12 +247,10 @@ export function loadedShaderSource(name, data) {
   }
   shaderSource[name] = data;
   const defs = shaderDefs[name];
-  if (!defs) {
-    console.warn(`Unused shader source ${JSON.stringify(name)}`);
-    return;
-  }
-  for (const def of defs) {
-    def.compile();
+  if (defs) {
+    for (const def of defs) {
+      def.compile();
+    }
   }
 }
 

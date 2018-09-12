@@ -44,6 +44,38 @@ const shaders = {
   },
 };
 
+const includes = [
+  'voronoi.glsl',
+];
+
+function expandIncludes(sources, name) {
+  const source = sources[name];
+  if (source == null) {
+    throw new Error(`Unknown shader: ${JSON.stringify(name)}`);
+  }
+  const include = /^[ \t]*#[ \t]*include[ \t]+"(.*)"[ \t]*$/mg;
+  let match;
+  let body = '';
+  let pos = 0;
+  /* eslint-disable no-cond-assign */
+  while ((match = include.exec(source))) {
+    /* eslint-enable no-cond-assign */
+    body += source.substring(pos, match.index);
+    pos = include.lastIndex;
+    const name = match[1];
+    const isource = sources[name];
+    if (isource == null) {
+      throw new Error(`Unknown shader include: ${JSON.stringify(name)}`);
+    }
+    body += isource;
+    if (body != '' && !body.endsWith('\n')) {
+      body += '\n';
+    }
+  }
+  body += source.substring(pos);
+  return body;
+}
+
 module.exports = async function generate(build) {
   const { DEBUG, load } = build;
   let body = '';
@@ -55,8 +87,27 @@ module.exports = async function generate(build) {
   const filename = /^[-_a-zA-Z0-9]+(?:\.[-_a-zA-Z0-9]+)?$/;
   const identifier = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
 
-  const promises = [];
+  const sources = {};
+  if (!DEBUG) {
+    for (const { vname, fname } of Object.values(shaders)) {
+      sources[`${vname}.vert.glsl`] = null;
+      sources[`${fname}.frag.glsl`] = null;
+    }
+    for (const include of includes) {
+      sources[include] = null;
+    }
+    await Promise.all(Object.keys(sources).map(async (name) => {
+      const data = await load(`game/cyber/shader/${name}`);
+      if (data == null) {
+        throw new Error(`Missing shader ${name}`);
+      }
+      sources[name] = data;
+    }));
+  }
+
   const uniformMap = {};
+  const localMap = {};
+  const varyingMap = {};
   for (const [name, shader] of Object.entries(shaders)) {
     const {
       vname, fname, attributes,
@@ -92,39 +143,28 @@ module.exports = async function generate(build) {
       body += `  func(prog) { ${name} = prog; },\n`;
       body += '});\n';
     } else {
-      promises.push(Promise.all([
-        load(`game/cyber/shader/${vname}.vert.glsl`),
-        load(`game/cyber/shader/${fname}.frag.glsl`),
-      ]).then((srcs) => {
-        if (srcs[0] == null) {
-          throw new Error('could not load vertex shader');
-        }
-        if (srcs[1] == null) {
-          throw new Error('could not load fragment shader');
-        }
-        const attributeMap = {};
-        for (let i = 0; i < attributes.length; i++) {
-          attributeMap[attributes[i]] = `A${i}`;
-        }
-        const varyingMap = {};
-        const vsource = minify(srcs[0], {
-          attributeMap,
-          uniformMap,
-          varyingMap,
-        });
-        const fsource = minify(srcs[1], {
-          uniformMap,
-          varyingMap,
-        });
-        const args = [attributes.length, vsource, fsource];
-        return `export const ${name} = compileShaderProgram(\n`
-          + `  ${args.map(a => JSON.stringify(a)).join(',\n  ')},\n`
-          + ');\n';
-      }));
+      let vsource = expandIncludes(sources, `${vname}.vert.glsl`);
+      let fsource = expandIncludes(sources, `${fname}.frag.glsl`);
+      const attributeMap = {};
+      for (let i = 0; i < attributes.length; i++) {
+        attributeMap[attributes[i]] = `A${i}`;
+      }
+      vsource = minify(vsource, {
+        attributeMap,
+        uniformMap,
+        varyingMap,
+        localMap,
+      });
+      fsource = minify(fsource, {
+        uniformMap,
+        varyingMap,
+        localMap,
+      });
+      const args = [attributes.length, vsource, fsource];
+      body += `export const ${name} = compileShaderProgram(\n`
+        + `  ${args.map(a => JSON.stringify(a)).join(',\n  ')},\n`
+        + ');\n';
     }
-  }
-  for (const chunk of await Promise.all(promises)) {
-    body += chunk;
   }
   build.addTransformer((node) => {
     //    .

@@ -73,6 +73,7 @@ function mapNames(ast, options) {
     attributeMap = {},
     uniformMap = {},
     varyingMap = {},
+    localMap = {},
   } = options || {};
   const nodes = listNodes(ast);
   const decls = listDecls(nodes);
@@ -116,6 +117,8 @@ function mapNames(ast, options) {
         }
         if (type === 'varying') {
           varyingMap[name] = name2;
+        } else {
+          localMap[name] = name2;
         }
         break;
     }
