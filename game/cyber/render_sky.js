@@ -2,6 +2,10 @@
 import { gl } from '/game/cyber/global';
 import { skyProgram } from '/game/cyber/shaders';
 import { inverseCameraMatrix } from '/game/cyber/camera';
+import {
+  lightColor,
+  lightPosition,
+} from '/game/cyber/light';
 
 const vertexBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -27,6 +31,8 @@ export function renderSky() {
   gl.uniformMatrix4fv(
     p.uniforms.InverseCameraMatrix, false, inverseCameraMatrix,
   );
+  gl.uniform4fv(p.uniforms.LightPos, lightPosition.subarray(6 * 4));
+  gl.uniform4fv(p.uniforms.LightColor, lightColor.subarray(6 * 4));
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 
   gl.disable(gl.DEPTH_TEST);
