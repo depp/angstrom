@@ -33,11 +33,11 @@ export function updateLight() {
     }
   }
   lightSources.sort((a, b) => a.lightPriority - b.lightPriority);
-  lightPosition.fill(1);
   lightColor.fill(0);
   for (let i = 0; i < Math.min(rem, lightSources.length); i++) {
     const { entity } = lightSources[i];
     lightPosition.set(entity.pos, i * 4);
+    lightPosition[i * 4 + 3] = 1;
     lightColor.set(entity.light, i * 4);
   }
   lightColor.set(ambient[0], (8 - n) * 4);
