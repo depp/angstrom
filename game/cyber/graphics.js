@@ -325,7 +325,9 @@ export function makeColor(r, g, b, a = 1) {
           | (clamp((a * 256) | 0, 0, 255) << 24));
 }
 
-function renderText(text) {
+export let hasText;
+
+export function renderText(text) {
   ctx.clearRect(0, 0, textTextureSize, textTextureSize);
   ctx.save();
   ctx.font = 'bold 32px sans';
@@ -356,6 +358,10 @@ function renderText(text) {
     gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(data.buffer),
   );
   gl.generateMipmap(gl.TEXTURE_2D);
+
+  hasText = 1;
 }
 
-renderText('Menu goes here.');
+export function clearText() {
+  hasText = 0;
+}

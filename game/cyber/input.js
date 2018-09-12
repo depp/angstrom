@@ -1,5 +1,11 @@
-import { canvas } from '/game/cyber/global';
-import { startAudio } from '/game/cyber/audio';
+// Input handling for the game. This does not handle input outside of actual
+// gameplay, such as if the player is in the menu.
+
+import {
+  canvas,
+  statePauseMenu,
+  setState,
+} from '/game/cyber/global';
 
 // Compatibility note: We use UI Events here to bind keys, since they give us
 // consistent values regardless of layout. This does not work in Edge.
@@ -35,25 +41,31 @@ function zeroButtons(buttons) {
   }
 }
 
+// Handle a button or key down event.
 function buttonDown(event) {
   let binding;
-  if (event.type === 'keydown') {
+  if (event.type == 'keydown') {
+    if (event.code == 'Escape') {
+      setState(statePauseMenu);
+      event.preventDefault();
+      return;
+    }
     binding = buttonBindings[event.code];
   } else {
-    window.focus();
+    // window.focus();
     binding = buttonBindings['m' + event.button];
   }
   if (binding) {
-    startAudio();
     buttonPress[binding] = 1;
     buttonState[binding] = 1;
     event.preventDefault();
   }
 }
 
+// Handle a button or key up event.
 function buttonUp(event) {
   let binding;
-  if (event.type === 'keyup') {
+  if (event.type == 'keyup') {
     binding = buttonBindings[event.code];
   } else {
     binding = buttonBindings['m' + event.button];
@@ -81,22 +93,31 @@ function pointerLockChange() {
   }
 }
 
-export function initInput() {
-  canvas.addEventListener('click', () => {
-    startAudio();
-    canvas.requestPointerLock();
-  });
-  window.addEventListener('keydown', buttonDown);
-  window.addEventListener('keyup', buttonUp);
-  document.addEventListener('pointerlockchange', pointerLockChange);
-  clearInput();
+// Handle a click on the canvas during gameplay.
+export function inputClick() {
+  canvas.requestPointerLock();
 }
 
-export function clearInput() {
+// Start listening to player input for game.
+export function startInput() {
+  canvas.addEventListener('click', inputClick);
+  window.addEventListener('keydown', buttonDown);
+  window.addEventListener('keyup', buttonUp);
   zeroButtons(buttonPress);
   zeroButtons(buttonState);
 }
 
-export function updateInput() {
+// Handle the end of the frame.
+export function endFrameInput() {
   zeroButtons(buttonPress);
 }
+
+// Stop listening to player input for game.
+export function stopInput() {
+  canvas.removeEventListener('click', inputClick);
+  window.removeEventListener('keydown', buttonDown);
+  window.removeEventListener('keyup', buttonUp);
+  document.exitPointerLock();
+}
+
+document.addEventListener('pointerlockchange', pointerLockChange);

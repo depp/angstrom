@@ -4,10 +4,15 @@ import { clamp } from '/game/cyber/util';
 export let frameDT;
 
 // Time since the start of the level, seconds.
-export let levelTime = 0;
+export let levelTime;
 
 // Animation time of last update, milliseconds.
 let lastTimeMS;
+
+// Reset the level time.
+export function resetTime() {
+  levelTime = 0;
+}
 
 // Initialize the time system so the next frame update will have a DT of 0.
 export function startTime() {

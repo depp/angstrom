@@ -87,7 +87,7 @@ class EvilFace extends Entity {
 const swarmLight = [1, 0.6, 1.0];
 const tempVec = [];
 
-class Swarm extends Entity {
+export class Swarm extends Entity {
   constructor(count) {
     super([0, 2, 1], 0.9);
     this.count = count;
@@ -120,6 +120,6 @@ class Swarm extends Entity {
       this.shotTime += 1;
     }
   }
-}
 
-new Swarm(20).spawn(hitMonster);
+  spawn() { super.spawn(hitMonster); }
+}

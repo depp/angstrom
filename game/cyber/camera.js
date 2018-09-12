@@ -1,5 +1,5 @@
 import { canvas } from '/game/cyber/global';
-import { vec3SetMulAdd } from '/game/cyber/vec';
+import { vecZero, vec3SetMulAdd } from '/game/cyber/vec';
 import { playerPos, playerAngle } from '/game/cyber/player';
 
 // ========================================
@@ -82,13 +82,14 @@ export function updateCamera() {
   cameraMatrix[14] = 2 * zNear * zFar / (zNear - zFar);
 
   // Rotate
-  rotate(1, playerAngle[2]);
-  rotate(0, playerAngle[1] + 0.5 * Math.PI);
-  rotate(1, playerAngle[0] - 0.5 * Math.PI);
+  const angle = playerAngle || vecZero;
+  rotate(1, angle[2]);
+  rotate(0, angle[1] + 0.5 * Math.PI);
+  rotate(1, angle[0] - 0.5 * Math.PI);
 
   // Translate
   identity();
-  vec3SetMulAdd(componentMatrix, playerPos, -1, 12);
+  vec3SetMulAdd(componentMatrix, playerPos || vecZero, -1, 12);
   matMul(cameraMatrix);
 
   // Set up orthographic projection matrix.

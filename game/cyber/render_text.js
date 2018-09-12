@@ -3,10 +3,15 @@ import { gl } from '/game/cyber/global';
 import { uiMatrix } from '/game/cyber/camera';
 import { spriteCompositeProgram } from '/game/cyber/shaders';
 import { quad } from '/game/cyber/render_util';
+import { hasText } from '/game/cyber/graphics';
 
 const vertexBuffer = gl.createBuffer();
 
 export function renderText() {
+  if (!hasText) {
+    return;
+  }
+
   const arr = new Float32Array(6 * 5);
   let i = 0;
   for (const vertex of quad) {

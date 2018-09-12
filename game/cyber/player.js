@@ -1,4 +1,8 @@
 import {
+  stateDeadMenu,
+  setState,
+} from '/game/cyber/global';
+import {
   hitPlayer,
   hitPlayerShot,
   Entity,
@@ -69,6 +73,9 @@ class DeadPlayer extends Bouncer {
       playerAngle, this.initAngle, this.deltaAngle,
       clamp(levelTime - this.deathTime),
     );
+    if (levelTime > this.deathTime + 1) {
+      setState(stateDeadMenu);
+    }
   }
 }
 
@@ -182,7 +189,7 @@ class Player extends Entity {
   }
 }
 
-export function startPlayer() {
+export function resetPlayer() {
   playerPos = [0, -1, 0.5];
   playerVel = [0, 0, 0];
   playerAngle = [1.5, 0, 0];

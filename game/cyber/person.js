@@ -77,7 +77,3 @@ export class Person extends Entity {
     ]);
   }
 }
-
-for (let i = 0; i < 0; i++) {
-  new Person(i).spawn();
-}

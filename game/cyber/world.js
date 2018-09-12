@@ -104,6 +104,15 @@ export function testCollisions(group1, group2) {
   }
 }
 
+// Reset the world, removing all entities.
+export function resetWorld() {
+  entities.length = 0;
+  for (const group of hitGroups) {
+    group.length = 0;
+  }
+}
+
+// Advante the world simulation.
 export function updateWorld() {
   updateList(entities);
   testCollisions(hitPlayerShot, hitMonster);

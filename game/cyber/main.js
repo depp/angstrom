@@ -1,17 +1,28 @@
-import { gl } from '/game/cyber/global';
+import {
+  gl,
+  stateGame,
+  stateMainMenu,
+  statePauseMenu,
+  stateDeadMenu,
+  currentState,
+  setState,
+} from '/game/cyber/global';
 import '/game/cyber/graphics';
 import {
-  initInput, clearInput, updateInput,
+  startInput, endFrameInput, stopInput,
 } from '/game/cyber/input';
-import { updateCamera } from '/game/cyber/camera';
-import { startPlayer } from '/game/cyber/player';
 import {
-  frameDT, startTime, updateTime,
+  startMenu, stopMenu,
+} from '/game/cyber/menu';
+import { updateCamera } from '/game/cyber/camera';
+import { resetPlayer } from '/game/cyber/player';
+import {
+  frameDT, resetTime, startTime, updateTime,
 } from '/game/cyber/time';
 import { render } from '/game/cyber/render';
-import { updateWorld } from '/game/cyber/world';
-import '/game/cyber/person';
-import '/game/cyber/monster';
+import { resetWorld, updateWorld } from '/game/cyber/world';
+import { Person } from '/game/cyber/person';
+import { Swarm } from '/game/cyber/monster';
 import { sfxNames } from '/game/cyber/sfx';
 
 /* START.DEBUG_ONLY */
@@ -21,50 +32,65 @@ import {
 } from '/game/cyber/audio';
 /* END.DEBUG_ONLY */
 
-// Handle to RequestAnimationFrame request.
-let handle;
+// Game state as of the last call to main.
+let lastState;
 
 // Main loop.
 function main(curTimeMS) {
-  handle = 0;
+  if (currentState != lastState) {
+    if (lastState == stateGame) {
+      stopInput();
+    } else {
+      stopMenu();
+    }
+    switch (currentState) {
+      case stateGame:
+        if (lastState != statePauseMenu) {
+          resetTime();
+          resetWorld();
+          resetPlayer();
+          new Swarm(20).spawn();
+          new Person(0).spawn();
+        }
+        startInput();
+        startTime();
+        break;
+      case stateMainMenu:
+        startMenu('Main menu');
+        break;
+      case statePauseMenu:
+        startMenu('Paused');
+        break;
+      case stateDeadMenu:
+        startMenu('Dead');
+        break;
+    }
+    lastState = currentState;
+  }
 
-  updateTime(curTimeMS);
-  if (frameDT) {
-    updateWorld();
-    updateInput();
+  if (currentState == stateGame) {
+    updateTime(curTimeMS);
+    if (frameDT) {
+      updateWorld();
+      endFrameInput();
+    }
   }
   updateCamera();
 
   render();
 
-  handle = window.requestAnimationFrame(main);
+  // We put this at the bottom, this way we don't continue after an exception.
+  window.requestAnimationFrame(main);
 }
 
 // Pause the game.
 export function pause() {
-  if (!handle) {
-    return;
-  }
-  clearInput();
-  window.cancelAnimationFrame(handle);
-  handle = 0;
-}
-
-// Unpause the game.
-export function unpause() {
-  if (handle) {
-    return;
-  }
-  handle = window.requestAnimationFrame(main);
-  startTime();
+  setState(statePauseMenu, stateGame);
 }
 
 if (gl) {
-  initInput();
-  startPlayer();
-  window.addEventListener('focus', unpause);
+  window.requestAnimationFrame(main);
   window.addEventListener('blur', pause);
-  unpause();
 }
 
 /* START.DEBUG_ONLY */
@@ -89,11 +115,16 @@ export function loadedData(name, data) {
   console.error(`Unknown file: ${JSON.stringify(name)}`);
 }
 
+function playSFXInteractive(sfxID) {
+  startAudio();
+  playSFX(sfxID);
+}
+
 export {
   gl,
   sfxNames,
   startAudio,
-  playSFX,
+  playSFXInteractive,
 };
 
 /* END.DEBUG_ONLY */
