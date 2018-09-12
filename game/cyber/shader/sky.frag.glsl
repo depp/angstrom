@@ -1,7 +1,7 @@
 precision lowp float;
 
-varying vec2 TexPos;
+varying vec3 Direction;
 
 void main() {
-    gl_FragColor = vec4(TexPos, 0.0, 1.0);
+    gl_FragColor = vec4(Direction * 0.5 + 0.5, 1.0);
 }

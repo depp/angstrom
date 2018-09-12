@@ -1,8 +1,11 @@
 attribute vec2 aPos;
 
-varying vec2 TexPos;
+varying vec3 Direction;
+
+uniform mat4 InverseCameraMatrix;
 
 void main() {
-    TexPos = aPos * 0.5 + 0.4;
+    vec4 p = InverseCameraMatrix * vec4(aPos, 0.0, 1.0);
+    Direction = p.xyz;
     gl_Position = vec4(aPos, 0.99, 1.0);
 }

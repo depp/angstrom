@@ -13,6 +13,8 @@ import { vecZero, vec3SetMulAdd } from '/game/cyber/vec';
 
 // The model view projection matrix.
 export const cameraMatrix = new Float32Array(16);
+// The inverse of the model view projection matrix.
+export const inverseCameraMatrix = new Float32Array(16);
 // The model view projection matrix for the UI.
 export const uiMatrix = new Float32Array(16);
 // Matrix to be multiplied into the camera matrix.
@@ -36,14 +38,14 @@ export function setCamera(entity) {
 // Matrix multiplication
 //
 // Computes out = out * componentMatrix, uses scratch for scratch space
-function matMul(out) {
+function matMul(out, x, y) {
   let i, j, k, s;
   // c_ij = a_ik * b_kj
   for (j = 0; j < 4; j++) {
     for (i = 0; i < 4; i++) {
       s = 0;
       for (k = 0; k < 4; k++) {
-        s += out[i+k*4] * componentMatrix[k+j*4];
+        s += x[i+k*4] * y[k+j*4];
       }
       scratchMatrix[i+j*4] = s;
     }
@@ -68,7 +70,9 @@ function rotate(axis, angle) {
   identity();
   componentMatrix[c1] = componentMatrix[c2] = Math.cos(angle);
   componentMatrix[s1] = -(componentMatrix[s2] = Math.sin(angle));
-  matMul(cameraMatrix);
+  matMul(cameraMatrix, cameraMatrix, componentMatrix);
+  componentMatrix[s2] = -(componentMatrix[s1] = Math.sin(angle));
+  matMul(inverseCameraMatrix, componentMatrix, inverseCameraMatrix);
 }
 
 // Update the camera matrices.
@@ -113,6 +117,14 @@ export function updateCamera() {
   cameraMatrix[11] = -1;
   cameraMatrix[14] = 2 * zNear * zFar / (zNear - zFar);
 
+  inverseCameraMatrix.fill(0);
+  inverseCameraMatrix[0] = 1 / cameraMatrix[0];
+  inverseCameraMatrix[5] = 1 / cameraMatrix[5];
+  inverseCameraMatrix[11] = 1 / cameraMatrix[14];
+  inverseCameraMatrix[14] = 1 / cameraMatrix[11];
+  inverseCameraMatrix[15] = -cameraMatrix[10]
+    / (cameraMatrix[11] * cameraMatrix[14]);
+
   // Rotate
   rotate(1, angle[2]);
   rotate(0, angle[1] + 0.5 * Math.PI);
@@ -121,5 +133,8 @@ export function updateCamera() {
   // Translate
   identity();
   vec3SetMulAdd(componentMatrix, pos, -1, 12);
-  matMul(cameraMatrix);
+  matMul(cameraMatrix, cameraMatrix, componentMatrix);
+  // identity();
+  // vec3SetMulAdd(componentMatrix, pos, 1, 12);
+  // matMul(inverseCameraMatrix, componentMatrix, inverseCameraMatrix);
 }

@@ -1,6 +1,7 @@
 // Module render_text contains the text rendering code.
 import { gl } from '/game/cyber/global';
 import { skyProgram } from '/game/cyber/shaders';
+import { inverseCameraMatrix } from '/game/cyber/camera';
 
 const vertexBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -23,6 +24,9 @@ export function renderSky() {
   gl.depthMask(false);
 
   gl.useProgram(p.program);
+  gl.uniformMatrix4fv(
+    p.uniforms.InverseCameraMatrix, false, inverseCameraMatrix,
+  );
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 
   gl.disable(gl.DEPTH_TEST);
