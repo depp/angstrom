@@ -27,6 +27,8 @@ export function renderLevel() {
     lightPos.set(s.pos, i * 3);
     lightColor.set(s.light, i * 3);
   }
+  lightPos.set([0, 0, 1]);
+  lightColor.set([1, 1, 1]);
 
   gl.enable(gl.DEPTH_TEST);
   gl.useProgram(p.program);
