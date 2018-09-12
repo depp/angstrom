@@ -23,12 +23,11 @@ export class Bouncer extends PhysicsEntity {
     this.updateBody(0);
   }
 
-  collideWorld(sepDir, overlap) {
+  collideWorld(sepDir) {
+    console.log(sepDir);
     if (sepDir[2] > 0.7 && ++this.bounceCount > 2) {
       this.sleeping = 1;
-      vec3SetMulAdd(this.pos, sepDir, overlap);
     } else {
-      vec3SetMulAdd(this.pos, sepDir, overlap * 1.5);
       vec3SetMulAdd(this.vel, sepDir, -vec3Dot(sepDir, this.vel) * 1.5);
       this.bounce();
     }
