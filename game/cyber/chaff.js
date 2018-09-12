@@ -24,7 +24,6 @@ export class Bouncer extends PhysicsEntity {
   }
 
   collideWorld(sepDir) {
-    console.log(sepDir);
     if (sepDir[2] > 0.7 && ++this.bounceCount > 2) {
       this.sleeping = 1;
     } else {
