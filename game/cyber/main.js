@@ -12,7 +12,11 @@ import {
   startInput, endFrameInput, stopInput, inputClick,
 } from '/game/cyber/input';
 import {
-  startMenu, stopMenu, updateMenu,
+  startMenu,
+  stopMenu,
+  pushMenu,
+  popMenu,
+  updateMenu,
 } from '/game/cyber/menu';
 import { updateCamera } from '/game/cyber/camera';
 import { Player } from '/game/cyber/player';
@@ -58,6 +62,24 @@ function endGame() {
   setState(stateMainMenu);
 }
 
+function showInstructions() {
+  pushMenu({
+    text: 'Instructions',
+    y: 0.1,
+  }, {
+    y: 0.5,
+    text: 'Move: WASD',
+  }, {
+    text: 'Turn: Mouse',
+  }, {
+    text: 'Shoot: Ctrl, Mouse',
+  }, {
+    text: 'Back',
+    y: 0.9,
+    action: popMenu,
+  });
+}
+
 // Main loop.
 function main(curTimeMS) {
   if (currentState != lastState) {
@@ -84,6 +106,9 @@ function main(curTimeMS) {
           text: 'Continue',
           action: continueGame,
         }, {
+          text: 'Instructions',
+          action: showInstructions,
+        }, {
           text: 'Made for JS13K 2018 by @DietrichEpp',
           y: 0.98,
           size: 0.03,
@@ -100,7 +125,11 @@ function main(curTimeMS) {
           y: 0.5,
           action: continueGame,
         }, {
+          text: 'Instructions',
+          action: showInstructions,
+        }, {
           text: 'End Game',
+          y: 0.9,
           action: endGame,
         });
         break;
@@ -114,7 +143,11 @@ function main(curTimeMS) {
           y: 0.5,
           action: continueGame,
         }, {
+          text: 'Instructions',
+          action: showInstructions,
+        }, {
           text: 'End Game',
+          y: 0.9,
           action: endGame,
         });
         break;

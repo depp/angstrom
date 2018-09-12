@@ -7,6 +7,7 @@ import {
   clearText,
 } from '/game/cyber/graphics';
 
+const menuStack = [];
 let currentMenu;
 let hoverItem;
 
@@ -41,11 +42,23 @@ function menuMouseLeave() {
 }
 
 export function startMenu(...items) {
+  menuStack.length = 0;
   renderText(items);
   currentMenu = items;
   canvas.addEventListener('click', menuClick);
   canvas.addEventListener('mousemove', menuMouseMove);
   canvas.addEventListener('mouseleave', menuMouseLeave);
+}
+
+export function pushMenu(...items) {
+  menuStack.push(currentMenu);
+  renderText(items);
+  currentMenu = items;
+}
+
+export function popMenu() {
+  currentMenu = menuStack.pop();
+  renderText(currentMenu);
 }
 
 export function stopMenu() {
