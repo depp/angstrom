@@ -242,7 +242,8 @@ export function loadGraphics() {
 
   makeEmojiSpriteList(
     '\u{1F608}\u{1F62D}\u{1F631}\u{1F911}'
-      + '\u{1F92A}\u{1F92C}\u{1F92E}\u{1F92F}',
+      + '\u{1F92A}\u{1F92C}\u{1F92E}\u{1F92F}'
+      + '\u{1F974}\u{1F975}',
     evilSmileySprites,
   );
 
