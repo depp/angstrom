@@ -123,9 +123,11 @@ export class Swarm extends Entity {
           target = entity;
         }
       }
-      vec3Norm(vec3MulAdd(tempVec, target.pos, this.pos, -1));
-      if (this.shotTime == -1) {
-        new Projectile(this.pos, tempVec, 1 << hitPlayer).spawn();
+      if (target) {
+        vec3Norm(vec3MulAdd(tempVec, target.pos, this.pos, -1));
+        if (this.shotTime < levelTime) {
+          new Projectile(this.pos, tempVec, 1 << hitPlayer).spawn();
+        }
       }
       this.shotTime += 1;
     }

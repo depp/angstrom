@@ -192,7 +192,7 @@ export class Player extends PhysicsEntity {
     this.health--;
     if (this.health <= 0) {
       this.dead = true;
-      new DeadPlayer().spawn();
+      new DeadPlayer(this).spawn();
     }
   }
 
