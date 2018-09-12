@@ -48,6 +48,7 @@ let lastState;
 
 function continueGame() {
   resetTime();
+  resetWorld();
   new Player().spawn();
   new Swarm(20).spawn();
   startAudio();
