@@ -12,7 +12,7 @@ import {
   startInput, endFrameInput, stopInput, inputClick,
 } from '/game/cyber/input';
 import {
-  startMenu, stopMenu,
+  startMenu, stopMenu, updateMenu,
 } from '/game/cyber/menu';
 import { updateCamera } from '/game/cyber/camera';
 import { resetPlayer } from '/game/cyber/player';
@@ -124,6 +124,8 @@ function main(curTimeMS) {
       updateWorld();
       endFrameInput();
     }
+  } else {
+    updateMenu();
   }
   updateCamera();
 

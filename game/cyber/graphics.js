@@ -325,7 +325,7 @@ export function makeColor(r, g, b, a = 1) {
           | (clamp((a * 256) | 0, 0, 255) << 24));
 }
 
-export let hasText;
+export let currentText;
 
 export function renderText(items) {
   let yPos = 0;
@@ -368,9 +368,9 @@ export function renderText(items) {
   );
   gl.generateMipmap(gl.TEXTURE_2D);
 
-  hasText = 1;
+  currentText = items;
 }
 
 export function clearText() {
-  hasText = 0;
+  currentText = null;
 }

@@ -8,6 +8,7 @@ import {
 } from '/game/cyber/graphics';
 
 let currentMenu;
+let hoverItem;
 
 /* eslint-disable consistent-return */
 function itemUnderCursor(event) {
@@ -31,14 +32,34 @@ function menuClick(event) {
   }
 }
 
+function menuMouseMove(event) {
+  hoverItem = itemUnderCursor(event);
+}
+
+function menuMouseLeave() {
+  hoverItem = null;
+}
+
 export function startMenu(...items) {
   renderText(items);
   currentMenu = items;
   canvas.addEventListener('click', menuClick);
+  canvas.addEventListener('mousemove', menuMouseMove);
+  canvas.addEventListener('mouseleave', menuMouseLeave);
 }
 
 export function stopMenu() {
   clearText();
   currentMenu = null;
   canvas.removeEventListener('click', menuClick);
+  canvas.removeEventListener('mousemove', menuMouseMove);
+  canvas.removeEventListener('mouseleave', menuMouseLeave);
+}
+
+export function updateMenu() {
+  for (const item of currentMenu) {
+    if (item.action) {
+      item.color = item == hoverItem ? 0xff0000ff : 0xffcccccc;
+    }
+  }
 }
