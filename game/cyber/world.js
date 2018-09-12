@@ -3,6 +3,7 @@ import {
   vecZ,
   vec2Distance,
   vec3Scale,
+  vec3Dot,
   vec3Sub,
   vec3Norm,
   vec3Distance,
@@ -25,6 +26,12 @@ export const hitMonster = 1;
 export const hitGroupCount = 2;
 
 export const hitGroups = [[], []];
+
+// The size of the world grid.
+let worldSizeX;
+let worldSizeY;
+// Array of heights for each grid cell.
+let worldHeight;
 
 export class Entity {
   constructor(pos, radius, ...sprites) {
@@ -83,6 +90,19 @@ function collideList(entity, list) {
   return 0;
 }
 
+// Get the time at which collision occurs on a given axis. The previous and
+// current position, ignoring collision, is pos0 and pos1. The position where
+// the collision occurs is coll.
+function collisionTime(pos0, pos1, coll) {
+  if (pos0 == coll) {
+    return 0;
+  }
+  if ((coll - pos0) * (pos1 - pos0) <= 0) {
+    return -1;
+  }
+  return (coll - pos0) / (pos1 - pos0);
+}
+
 // A physics entity is an entity is affected by forces and collisions.
 export class PhysicsEntity extends Entity {
   constructor(pos, radius, ...sprites) {
@@ -96,6 +116,7 @@ export class PhysicsEntity extends Entity {
     if (this.sleeping) {
       return;
     }
+    const [xPos0, yPos0] = this.pos;
     const v = vec3Distance(this.vel);
     if (v > maxVelocity) {
       console.log('VEL', v);
@@ -112,18 +133,88 @@ export class PhysicsEntity extends Entity {
         }
       }
     }
-    if (this.pos[2] < this.radius) {
-      this.collideWorld(vecZ, this.radius - this.pos[2]);
+    const [xPos1, yPos1] = this.pos;
+    const xr = this.radius * Math.sign(xPos1 - xPos0);
+    const yr = this.radius * Math.sign(yPos1 - yPos0);
+    // Tiles covering movement.
+    const xt0 = (xPos0 - xr) | 0;
+    const xt1 = (xPos1 + xr) | 0;
+    const yt0 = (yPos0 - yr) | 0;
+    const yt1 = (yPos1 + yr) | 0;
+    // Whethe we hit tiles in the X and Y directions.
+    let xHit = getTileHeight(xt1, yt0) > 1;
+    let yHit = getTileHeight(xt0, yt1) > 1;
+    // Position where collision happens.
+    const xColl = xt1 + (xPos1 < xPos0 ? 1 + this.radius : -this.radius);
+    const yColl = yt1 + (yPos1 < yPos0 ? 1 + this.radius : -this.radius);
+    if (xt0 != xt1) {
+      if (yt0 != yt1) {
+        if (!(xHit || yHit) && getTileHeight(xt1, yt1) > 1) {
+          yHit = collisionTime(xPos0, xPos1, xColl)
+            < collisionTime(yPos0, yPos1, yColl);
+          xHit = !yHit;
+        }
+      } else {
+        yHit = false;
+      }
+    } else {
+      xHit = false;
+      yHit = yHit && yt0 != yt1;
+    }
+    if (DEBUG) {
+      const xVel = (xPos1 - xPos0) / frameDT;
+      const yVel = (yPos1 - yPos0) / frameDT;
+      const badX = xHit && !((xPos0 <= xColl && xColl <= xPos1)
+                             || (xPos0 >= xColl && xColl >= xPos1));
+      const badY = yHit && !((yPos0 <= yColl && yColl <= yPos1)
+                             || (yPos0 >= yColl && yColl >= yPos1));
+      if (badX || badY) {
+        const xHit0 = getTileHeight(xt1, yt0) > 1;
+        const yHit0 = getTileHeight(xt0, yt1) > 1;
+        console.warn(
+          'Bad collision\n'
+            + `    Velocity=(${xVel}, ${yVel})\n`
+            + '\n'
+            + `    XHit=(${xHit0}, ${xHit}) XBad=${badX}\n`
+            + `    XPos=(${xPos0}, ${xColl}, ${xPos1})\n`
+            + `    XTile=(${xt0}, ${xt1})\n`
+            + '\n'
+            + `    YHit=(${yHit0}, ${yHit}) YBad=${badY}\n`
+            + `    YPos=(${yPos0}, ${yColl}, ${yPos1})\n`
+            + `    YTile=(${yt0}, ${yt1})`,
+        );
+      }
+    }
+    if (xHit) {
+      this.collideWorld(
+        [Math.sign(xColl - xPos1), 0, 0],
+        Math.abs(xColl - xPos1),
+      );
+    }
+    if (yHit) {
+      this.collideWorld(
+        [0, Math.sign(yColl - yPos1), 0],
+        Math.abs(yColl - yPos1),
+      );
+    }
+    const z = getTileHeight(xPos0 | 0, yPos0 | 0);
+    if (this.pos[2] < z + this.radius) {
+      this.collideWorld(vecZ, z + this.radius - this.pos[2]);
     }
   }
 
   pushBody(dir, amt) {
     vec3SetMulAdd(this.pos, dir, amt);
-    vec3SetMulAdd(this.vel, dir, 2 * amt / frameDT);
+    const v = vec3Dot(dir, this.vel);
+    if (v < 0) {
+      vec3SetMulAdd(this.vel, dir, -v);
+    }
   }
 
   // Called when the entity collides with the world.
-  collideWorld() {}
+  collideWorld(sepDir, amt) {
+    this.pushBody(sepDir, amt);
+  }
 
   // Called when the entity collides with another entity.
   collideEntity() {}
@@ -176,4 +267,16 @@ export function updateWorld() {
   for (const group of hitGroups) {
     removeDead(group);
   }
+}
+
+export function setWorldGrid(sizeX, sizeY, heightGrid) {
+  worldSizeX = sizeX;
+  worldSizeY = sizeY;
+  worldHeight = heightGrid;
+}
+
+function getTileHeight(x, y) {
+  return x >= 0 && y >= 0 && x < worldSizeX && y < worldSizeY
+    ? worldHeight[y * worldSizeX + x]
+    : 0;
 }

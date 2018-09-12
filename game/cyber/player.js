@@ -89,6 +89,7 @@ export class Player extends PhysicsEntity {
     this.weaponCooldown = 0;
     // Current health.
     this.health = maxHearts * 2;
+    this.gravity = 1;
 
     // Appearance.
     this.hearts = [];

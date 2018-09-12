@@ -24,8 +24,7 @@ export class Bouncer extends PhysicsEntity {
   }
 
   collideWorld(sepDir, overlap) {
-    this.bounceCount++;
-    if (this.bounceCount > 2) {
+    if (sepDir[2] > 0.7 && ++this.bounceCount > 2) {
       this.sleeping = 1;
       vec3SetMulAdd(this.pos, sepDir, overlap);
     } else {

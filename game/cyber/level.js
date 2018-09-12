@@ -11,6 +11,9 @@ import {
   mat3SetVec,
   mat3Inverse,
 } from '/game/cyber/vec';
+import {
+  setWorldGrid,
+} from '/game/cyber/world';
 
 // Level names.
 const levelStart = 0;
@@ -20,25 +23,30 @@ export const levelVertexSize = 16;
 class Level {
   constructor(meshBuildFunc) {
     this.meshBuildFunc = meshBuildFunc;
-    this.meshDirty = true;
+  }
+
+  buildMesh() {
+    if (!this.heightGrid) {
+      this.meshBuildFunc(this);
+    }
   }
 
   bindMeshBuffer() {
     if (!this.meshBuffer) {
+      this.buildMesh();
       this.meshBuffer = gl.createBuffer();
-    }
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.meshBuffer);
-    if (this.meshDirty) {
-      const mesh = this.meshBuildFunc();
-      this.vertexCount = mesh.length / levelVertexSize;
-      gl.bufferData(gl.ARRAY_BUFFER, mesh, gl.STATIC_DRAW);
-      this.meshDirty = false;
-      // console.log(`Generated ${this.vertexCount} vertices`);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.meshBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, this.mesh, gl.STATIC_DRAW);
+    } else {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.meshBuffer);
     }
     return this.vertexCount;
   }
 
-  startLevel() {}
+  startLevel() {
+    this.buildMesh();
+    setWorldGrid(this.sizeX, this.sizeY, this.heightGrid);
+  }
 }
 
 // Array of all levels.
@@ -49,8 +57,11 @@ export const levels = [];
 
   const neighbors = [-1, 0, 1, 0, -1];
 
-  function createMesh() {
-    let arr = new Float32Array(256);
+  function createMesh(level) {
+    const sizeX = maxX + 1 - minX;
+    const sizeY = maxY + 1 - minY;
+    const grid = new Float32Array(sizeX * sizeY);
+    let mesh = new Float32Array(256);
     let pos = 0;
     let x;
     let y;
@@ -60,10 +71,10 @@ export const levels = [];
     const mat = new Float32Array(9);
     // Emit a single mesh triangle.
     function emit(uAxis, vAxis, isEdge, ...verts) {
-      if (levelVertexSize * 3 > arr.length - pos) {
-        const narr = new Float32Array(arr.length * 2);
-        narr.set(arr);
-        arr = narr;
+      if (levelVertexSize * 3 > mesh.length - pos) {
+        const narr = new Float32Array(mesh.length * 2);
+        narr.set(mesh);
+        mesh = narr;
       }
       vec3Sub(vx, verts[1], verts[0]);
       vec3Sub(vy, verts[2], verts[0]);
@@ -80,14 +91,14 @@ export const levels = [];
       mat3Inverse(mat);
       for (let i = 0; i < 3; i++) {
         const vert = verts[i];
-        vert[0] += x;
-        vert[1] += y;
-        arr.set(vert, pos);
-        arr[pos + 3] = vert[uAxis];
-        arr[pos + 4] = vert[vAxis];
-        arr[pos + 5] = isEdge ? (i == 2 ? edgeDist : 0) : 1;
-        arr.set(vert, pos);
-        arr.set(mat, pos + 7);
+        vert[0] += x - minX;
+        vert[1] += y - minY;
+        mesh.set(vert, pos);
+        mesh[pos + 3] = vert[uAxis];
+        mesh[pos + 4] = vert[vAxis];
+        mesh[pos + 5] = isEdge ? (i == 2 ? edgeDist : 0) : 1;
+        mesh.set(vert, pos);
+        mesh.set(mat, pos + 7);
         pos += levelVertexSize;
       }
     }
@@ -99,6 +110,7 @@ export const levels = [];
       [x, y] = key.split(',');
       x = +x;
       y = +y;
+      grid[(y - minY) * sizeY + x - minX] = z;
       for (let side = 0; side < 4; side++) {
         const v0 = ((side + 0) >> 1) & 1; // y0
         const v1 = ((side + 1) >> 1) & 1; // x0, y1
@@ -135,7 +147,12 @@ export const levels = [];
         }
       }
     }
-    return arr.slice(0, pos);
+
+    level.sizeX = sizeX;
+    level.sizeY = sizeY;
+    level.heightGrid = grid;
+    level.mesh = mesh.slice(0, pos);
+    level.vertexCount = pos / levelVertexSize;
   }
 
   // ===========================================================================
@@ -143,12 +160,17 @@ export const levels = [];
   // ===========================================================================
 
   let height;
+  let minX, minY, maxX, maxY;
 
   // Add a single tile, if it's not already set.
   function addTile(x, y) {
     if (tiles[[x, y]] != null) {
       return;
     }
+    minX = Math.min(x, minX);
+    minY = Math.min(y, minY);
+    maxX = Math.max(x, maxX);
+    maxY = Math.max(y, maxY);
     tiles[[x, y]] = height;
   }
 
@@ -161,6 +183,8 @@ export const levels = [];
     }
   }
 
+  // Make a pyramid, a sequence of 'n' rectangles, each 1 unit smaller and
+  // 'delta' taller.
   function pyramid(xo, yo, xs, ys, n, delta) {
     const base = height;
     for (let i = n - 1; i >= 0; i--) {
@@ -194,8 +218,10 @@ export const levels = [];
     }
     const level = new Level(() => {
       tiles = {};
+      minX = minY = 100;
+      maxX = maxY = -100;
       constructor();
-      return createMesh();
+      createMesh(level);
     });
     levels[levelNumber] = level;
   }

@@ -42,4 +42,8 @@ export class Projectile extends PhysicsEntity {
     other.damage();
     this.dead = 1;
   }
+
+  collideWorld() {
+    this.dead = 1;
+  }
 }
