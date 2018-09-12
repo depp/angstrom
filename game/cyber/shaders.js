@@ -5,46 +5,44 @@
 const terser = require('terser');
 const minify = require('../../tools/lib/glsl-minify');
 
+const spriteAttr = [
+  'Pos',
+  'TexCoord',
+  'Color',
+];
+
+const levelAttr = [
+  'aPos',
+  'aTexPos',
+  'aNormalSpace',
+];
+
 const shaders = {
   spriteOpaqueProgram: {
     vname: 'sprite',
     fname: 'sprite_opaque',
-    attributes: [
-      'Pos',
-      'TexCoord',
-      'Color',
-    ],
+    attributes: spriteAttr,
   },
   spriteTransparentProgram: {
     vname: 'sprite',
     fname: 'sprite_transparent',
-    attributes: [
-      'Pos',
-      'TexCoord',
-      'Color',
-    ],
+    attributes: spriteAttr,
   },
   spriteCompositeProgram: {
     vname: 'sprite',
     fname: 'sprite_composite',
-    attributes: [
-      'Pos',
-      'TexCoord',
-      'Color',
-    ],
+    attributes: spriteAttr,
   },
-  levelProgram: {
+  levelStoneProgram: {
     vname: 'level',
-    fname: 'level',
-    attributes: [
-      'aPos',
-      'aTexPos',
-      'aNormalSpace',
-    ],
+    fname: 'level_stone',
+    attributes: levelAttr,
   },
 };
 
 const includes = [
+  'levelfrag.glsl',
+  'lighting.glsl',
   'voronoi.glsl',
 ];
 
