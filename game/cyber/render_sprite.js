@@ -6,6 +6,7 @@ import {
 } from '/game/cyber/camera';
 import {
   spriteOpaqueProgram,
+  spriteCompositeProgram,
   spriteTransparentProgram,
 } from '/game/cyber/shaders';
 import { playerPos } from '/game/cyber/player';
@@ -130,7 +131,6 @@ export function renderSprite() {
     }
   }
 
-  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
   gl.enableVertexAttribArray(0);
   gl.enableVertexAttribArray(1);
   gl.enableVertexAttribArray(2);
@@ -140,6 +140,7 @@ export function renderSprite() {
 
   const p1 = spriteOpaqueProgram;
   const p2 = spriteTransparentProgram;
+  const p3 = spriteCompositeProgram;
 
   gl.enable(gl.DEPTH_TEST);
 
@@ -149,31 +150,36 @@ export function renderSprite() {
     drawGroup(modeOpaque);
   }
 
+  gl.enable(gl.BLEND);
+
   if (!DEBUG || p2) {
     gl.useProgram(p2.program);
     gl.depthMask(false);
-    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
     gl.uniformMatrix4fv(p2.uniforms.ModelViewProjection, false, cameraMatrix);
     drawGroup(modeTransparent);
-    gl.disable(gl.BLEND);
     gl.depthMask(true);
   }
 
   gl.disable(gl.DEPTH_TEST);
 
-  if (!DEBUG || p1) {
-    gl.useProgram(p1.program);
-    gl.uniformMatrix4fv(p1.uniforms.ModelViewProjection, false, uiMatrix);
+  if (!DEBUG || p3) {
+    gl.useProgram(p3.program);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.uniformMatrix4fv(p3.uniforms.ModelViewProjection, false, uiMatrix);
     drawGroup(modeUIOpaque);
   }
 
   if (!DEBUG || p2) {
     gl.useProgram(p2.program);
     gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
     gl.uniformMatrix4fv(p2.uniforms.ModelViewProjection, false, uiMatrix);
     drawGroup(modeUITransparent);
     gl.disable(gl.BLEND);
   }
+
+  gl.disable(gl.BLEND);
 
   gl.disableVertexAttribArray(1);
   gl.disableVertexAttribArray(2);
