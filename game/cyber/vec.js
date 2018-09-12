@@ -24,6 +24,10 @@ export function vec2Rect([x1, y1], [x2, y2, w2, h2]) {
           && y1 >= y2 && y1 < (y2 + h2));
 }
 
+export function vec2Distance(x, y) {
+  return ((x[0] - y[0]) ** 2) + ((x[1] - y[1]) ** 2);
+}
+
 // Assigns [x, y, z] to out[offset..offset+2].
 export function vec3Set(out, x, y, z, offset=0) {
   out[offset+0] = x;

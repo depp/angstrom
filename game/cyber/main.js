@@ -15,9 +15,10 @@ import {
   startMenu, stopMenu, updateMenu,
 } from '/game/cyber/menu';
 import { updateCamera } from '/game/cyber/camera';
-import { resetPlayer } from '/game/cyber/player';
+import { Player } from '/game/cyber/player';
+import { Swarm } from '/game/cyber/monster';
 import {
-  frameDT, startTime, updateTime, resetTime,
+  startTime, updateTime, resetTime,
 } from '/game/cyber/time';
 import { render } from '/game/cyber/render';
 import { resetWorld, updateWorld } from '/game/cyber/world';
@@ -40,7 +41,8 @@ let lastState;
 
 function continueGame() {
   resetTime();
-  resetPlayer();
+  new Player().spawn();
+  new Swarm(20).spawn();
   startAudio();
   setState(stateGame);
   inputClick();
@@ -122,10 +124,8 @@ function main(curTimeMS) {
 
   if (currentState == stateGame) {
     updateTime(curTimeMS);
-    if (frameDT) {
-      updateWorld();
-      endFrameInput();
-    }
+    updateWorld();
+    endFrameInput();
   } else {
     updateMenu();
   }

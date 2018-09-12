@@ -4,14 +4,19 @@ import {
 } from '/game/cyber/global';
 import {
   hitPlayer,
-  hitPlayerShot,
-  Entity,
+  hitMonster,
+  PhysicsEntity,
 } from '/game/cyber/world';
 import { buttonState, buttonPress } from '/game/cyber/input';
 import { frameDT, levelTime } from '/game/cyber/time';
-import { vecZ, vec3Set, vec3MulAdd } from '/game/cyber/vec';
+import {
+  vecZero,
+  vecZ,
+  vec3Set,
+  vec3MulAdd,
+} from '/game/cyber/vec';
 import { clamp, signedRandom } from '/game/cyber/util';
-import { spawnProjectile } from '/game/cyber/projectile';
+import { Projectile } from '/game/cyber/projectile';
 import {
   modeUIOpaque,
   modeUITransparent,
@@ -22,6 +27,7 @@ import {
 import { shotSFX } from '/game/cyber/sfx';
 import { playSFX } from '/game/cyber/audio';
 import { Bouncer } from '/game/cyber/chaff';
+import { setCamera } from '/game/cyber/camera';
 
 // Maximum player speed, units per second.
 const playerSpeed = 3;
@@ -38,39 +44,27 @@ const weaponCooldownTime = 0.3;
 // Maximum number of hearts.
 const maxHearts = 1;
 
-// The player position [x, y, z] in the world.
-export let playerPos;
-// Current player velocity [x, y, z], units per second.
-let playerVel;
-// Curent angle the player is looking at, [yaw, pitch, roll].
-// Yaw: 0: +X, pi/2: +Y.
-// Pitch: 0: horizontal, pi/2: +Z.
-export let playerAngle;
-// Unit direction vector for where the player is facing.
-export const playerDirection = [];
-// Current angular velocity, yaw only.
-let playerAngleVel;
-let weaponCooldown;
-
 const vTemp = [];
 
 class DeadPlayer extends Bouncer {
-  constructor() {
-    super(0, 0.2, [signedRandom() * 2, signedRandom() * 2, Math.random() * 2]);
-    this.pos = playerPos;
+  constructor(player) {
+    super(player.pos, 0.2,
+      [signedRandom() * 2, signedRandom() * 2, Math.random() * 2]);
     this.deathTime = levelTime;
-    this.initAngle = [...playerAngle];
+    this.initAngle = [...player.angle];
     this.deltaAngle = [
       signedRandom(),
-      -playerAngle[1],
-      1 - playerAngle[2],
+      -player.angle[1],
+      1 - player.angle[2],
     ];
+    this.angle = [...vecZero];
   }
 
   update() {
     super.update();
+    setCamera(this);
     vec3MulAdd(
-      playerAngle, this.initAngle, this.deltaAngle,
+      this.angle, this.initAngle, this.deltaAngle,
       clamp(levelTime - this.deathTime),
     );
     if (levelTime > this.deathTime + 1) {
@@ -79,10 +73,24 @@ class DeadPlayer extends Bouncer {
   }
 }
 
-class Player extends Entity {
+export class Player extends PhysicsEntity {
   constructor() {
-    super(0, 0.5);
-    this.pos = playerPos;
+    super([0, 0, 0.5], 0.5);
+
+    // Curent angle the player is looking at, [yaw, pitch, roll].
+    // Yaw: 0: +X, pi/2: +Y.
+    // Pitch: 0: horizontal, pi/2: +Z.
+    this.angle = [...vecZero];
+    // Angular velocity, yaw only.
+    this.angleVel = 0;
+    // Unit direction vector for where the player is facing.
+    this.direction = [...vecZero];
+    // Level time when the weapon can be fired again.
+    this.weaponCooldown = 0;
+    // Current health.
+    this.health = maxHearts * 2;
+
+    // Appearance.
     this.hearts = [];
     for (let i = 0; i < maxHearts * 2; i++) {
       this.hearts.push({
@@ -98,7 +106,6 @@ class Player extends Entity {
       mode: modeUITransparent,
       size: 0.1,
     }, ...this.hearts];
-    this.health = maxHearts * 2;
   }
 
   update() {
@@ -108,16 +115,16 @@ class Player extends Entity {
       const yLook = playerTurnSensitivity * buttonPress['y'];
       let rMove = (buttonState['L'] - buttonState['R']) * playerTurnSpeed;
       let accelDV = frameDT * playerTurnAccel;
-      playerAngleVel = Math.abs(rMove - playerAngleVel) <= accelDV
+      this.angleVel = Math.abs(rMove - this.angleVel) <= accelDV
         ? rMove
-        : playerAngleVel + accelDV * Math.sign(rMove - playerAngleVel);
-      let xAngle = playerAngle[0] = (
-        (playerAngle[0] + playerAngleVel * frameDT - xLook)
+        : this.angleVel + accelDV * Math.sign(rMove - this.angleVel);
+      let xAngle = this.angle[0] = (
+        (this.angle[0] + this.angleVel * frameDT - xLook)
           % (2 * Math.PI)
       );
-      let yAngle = playerAngle[1] = clamp(playerAngle[1] + yLook, -1.5, 1.5);
+      let yAngle = this.angle[1] = clamp(this.angle[1] + yLook, -1.5, 1.5);
       vec3Set(
-        playerDirection,
+        this.direction,
         Math.cos(yAngle) * Math.cos(xAngle),
         Math.cos(yAngle) * Math.sin(xAngle),
         Math.sin(yAngle),
@@ -126,14 +133,14 @@ class Player extends Entity {
 
     // Update player velocity.
     /* eslint prefer-const: off */
-    let [xVel, yVel, zVel] = playerVel;
+    let [xVel, yVel, zVel] = this.vel;
     {
       const forwardMove = buttonState['f'] - buttonState['b'];
       const strafeMove = buttonState['r'] - buttonState['l'];
       const scale = playerSpeed
             / Math.max(1, Math.hypot(forwardMove, strafeMove));
-      const c = Math.cos(playerAngle[0]) * scale;
-      const s = Math.sin(playerAngle[0]) * scale;
+      const c = Math.cos(this.angle[0]) * scale;
+      const s = Math.sin(this.angle[0]) * scale;
       const xMove = c * forwardMove + s * strafeMove;
       const yMove = s * forwardMove - c * strafeMove;
       const accelDV = playerAccel * frameDT;
@@ -148,23 +155,22 @@ class Player extends Entity {
         yVel += yDV * accelDV / magDV;
       }
     }
-    vec3Set(playerVel, xVel, yVel, zVel);
+    vec3Set(this.vel, xVel, yVel, zVel);
 
-    // Update player position
-    let [xPos, yPos, zPos] = playerPos;
-    xPos += xVel * frameDT;
-    yPos += yVel * frameDT;
-    vec3Set(playerPos, xPos, yPos, zPos);
+    this.updateBody(0); // 1 << hitMonster);
 
     // Fire the weapon.
-    if (levelTime > weaponCooldown) {
+    if (levelTime > this.weaponCooldown) {
       if (buttonState['s'] || buttonPress['s']) {
-        vec3MulAdd(vTemp, playerPos, vecZ, -0.1);
-        weaponCooldown = (weaponCooldown || levelTime) + weaponCooldownTime;
+        this.weaponCooldown = (
+          this.weaponCooldown || levelTime) + weaponCooldownTime;
         playSFX(shotSFX);
-        spawnProjectile(vTemp, playerDirection, hitPlayerShot);
+        new Projectile(
+          vec3MulAdd(vTemp, this.pos, vecZ, -0.1),
+          this.direction, 1 << hitMonster,
+        ).spawn();
       } else {
-        weaponCooldown = 0;
+        this.weaponCooldown = 0;
       }
     }
 
@@ -187,13 +193,9 @@ class Player extends Entity {
       new DeadPlayer().spawn();
     }
   }
-}
 
-export function resetPlayer() {
-  playerPos = [0, -1, 0.5];
-  playerVel = [0, 0, 0];
-  playerAngle = [1.5, 0, 0];
-  playerAngleVel = 0;
-  weaponCooldown = 0;
-  new Player().spawn(hitPlayer);
+  spawn() {
+    super.spawn(hitPlayer);
+    setCamera(this);
+  }
 }

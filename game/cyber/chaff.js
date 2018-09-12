@@ -1,40 +1,36 @@
 import { frameDT, levelTime } from '/game/cyber/time';
-import { Entity } from '/game/cyber/world';
+import { PhysicsEntity } from '/game/cyber/world';
 import {
   makeColor,
 } from '/game/cyber/graphics';
 import {
   vecZero,
-  vecZ,
-  vec3MulAdd,
+  vec3Copy,
+  vec3Dot,
   vec3SetMulAdd,
 } from '/game/cyber/vec';
 import { signedRandom } from '/game/cyber/util';
 
-export class Bouncer extends Entity {
+export class Bouncer extends PhysicsEntity {
   constructor(pos, radius, velocity = vecZero) {
     super(pos, radius);
-    this.vel = [...velocity];
+    vec3Copy(this.vel, velocity);
     this.bounceCount = 0;
+    this.gravity = 1;
   }
 
   update() {
-    if (!this.sleeping) {
-      vec3SetMulAdd(this.pos, this.vel, frameDT);
-      vec3SetMulAdd(this.vel, vecZ, -10 * frameDT);
-    }
+    this.updateBody(0);
   }
 
-  collideWorld() {
+  collideWorld(sepDir, overlap) {
     this.bounceCount++;
     if (this.bounceCount > 2) {
       this.sleeping = 1;
-      this.pos[2] = this.radius;
+      vec3SetMulAdd(this.pos, sepDir, overlap);
     } else {
-      this.pos[2] = this.radius * 2 - this.pos[2];
-      this.vel[2] *= -1;
-      this.rspeed *= -0.5;
-      vec3MulAdd(this.vel, vecZero, this.vel, 0.5);
+      vec3SetMulAdd(this.pos, sepDir, overlap * 1.5);
+      vec3SetMulAdd(this.vel, sepDir, -vec3Dot(sepDir, this.vel) * 1.5);
       this.bounce();
     }
   }

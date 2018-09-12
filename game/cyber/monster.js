@@ -1,6 +1,7 @@
 import {
   hitMonster,
-  hitMonsterShot,
+  hitPlayer,
+  hitGroups,
   Entity,
 } from '/game/cyber/world';
 import { frameDT, levelTime } from '/game/cyber/time';
@@ -11,14 +12,12 @@ import {
 } from '/game/cyber/graphics';
 import {
   vecZero,
+  vec3Distance,
   vec3Set,
   vec3MulAdd,
   vec3Norm,
 } from '/game/cyber/vec';
-import {
-  playerPos,
-} from '/game/cyber/player';
-import { spawnProjectile } from '/game/cyber/projectile';
+import { Projectile } from '/game/cyber/projectile';
 import { Chaff } from '/game/cyber/chaff';
 
 class EvilBrain extends Entity {
@@ -115,8 +114,19 @@ export class Swarm extends Entity {
       return;
     }
     if (this.shotTime < levelTime) {
-      vec3Norm(vec3MulAdd(tempVec, playerPos, this.pos, -1));
-      spawnProjectile(this.pos, tempVec, hitMonsterShot);
+      let distance = 100;
+      let target = null;
+      for (const entity of hitGroups[hitPlayer]) {
+        const eDistance = vec3Distance(entity.pos, this.pos);
+        if (eDistance < distance) {
+          distance = eDistance;
+          target = entity;
+        }
+      }
+      vec3Norm(vec3MulAdd(tempVec, target.pos, this.pos, -1));
+      if (this.shotTime == -1) {
+        new Projectile(this.pos, tempVec, 1 << hitPlayer).spawn();
+      }
       this.shotTime += 1;
     }
   }

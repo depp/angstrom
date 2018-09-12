@@ -1,6 +1,8 @@
 // Module render_sprite contains the sprite rendering code.
 import { canvas, gl } from '/game/cyber/global';
 import {
+  cameraEntity,
+  cameraPos,
   cameraMatrix,
   uiMatrix,
 } from '/game/cyber/camera';
@@ -9,7 +11,6 @@ import {
   spriteCompositeProgram,
   spriteTransparentProgram,
 } from '/game/cyber/shaders';
-import { playerPos } from '/game/cyber/player';
 import {
   vecZero,
   vecX,
@@ -93,7 +94,7 @@ export function renderSprite() {
       let forward = vecZ;
       if (mode < modeUIOpaque) {
         pos = vec3MulAdd(tempVec[0], entity.pos, pos);
-        forward = vec3Norm(vec3MulAdd(tempVec[1], pos, playerPos, -1));
+        forward = vec3Norm(vec3MulAdd(tempVec[1], pos, cameraPos, -1));
         right = vec3Norm(vec3Cross(tempVec[2], forward, vecZ));
         up = vec3Norm(vec3Cross(tempVec[3], right, forward));
       } else if (anchor) {
@@ -144,7 +145,7 @@ export function renderSprite() {
 
   gl.enable(gl.DEPTH_TEST);
 
-  if (!DEBUG || p1) {
+  if (cameraEntity && (!DEBUG || p1)) {
     gl.useProgram(p1.program);
     gl.uniformMatrix4fv(p1.uniforms.ModelViewProjection, false, cameraMatrix);
     drawGroup(modeOpaque);
@@ -152,7 +153,7 @@ export function renderSprite() {
 
   gl.enable(gl.BLEND);
 
-  if (!DEBUG || p2) {
+  if (cameraEntity && (!DEBUG || p2)) {
     gl.useProgram(p2.program);
     gl.depthMask(false);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);

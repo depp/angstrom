@@ -1,17 +1,17 @@
-import { frameDT, levelTime } from '/game/cyber/time';
+import { levelTime } from '/game/cyber/time';
 import {
   modeTransparent,
   makeColor,
   shotSprite,
 } from '/game/cyber/graphics';
-import { vecZero, vec3SetMulAdd, vec3MulAdd } from '/game/cyber/vec';
-import { Entity } from '/game/cyber/world';
+import { vec3SetMulAdd, vec3Scale } from '/game/cyber/vec';
+import { PhysicsEntity } from '/game/cyber/world';
 
-class Projectile extends Entity {
-  constructor(origin, direction) {
+export class Projectile extends PhysicsEntity {
+  constructor(origin, direction, targetMask) {
     super(origin, 0.1);
-    this.velocity = [];
-    vec3MulAdd(this.velocity, vecZero, direction, 4);
+    this.targetMask = targetMask;
+    vec3Scale(this.vel, direction, 4);
     const nSprite = 15;
     const spos = new Float32Array(nSprite * 3);
     for (let i = 0; i < nSprite; i++) {
@@ -33,16 +33,13 @@ class Projectile extends Entity {
   update() {
     if (levelTime > this.expiry) {
       this.dead = 1;
+      return;
     }
-    vec3SetMulAdd(this.pos, this.velocity, frameDT);
+    this.updateBody(this.targetMask);
   }
 
   collideEntity(other) {
     other.damage();
     this.dead = 1;
   }
-}
-
-export function spawnProjectile(origin, direction, hitGroup) {
-  new Projectile(origin, direction).spawn(hitGroup);
 }

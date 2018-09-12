@@ -1,6 +1,6 @@
 // Module render_level contains the level tile rendering code.
 import { gl } from '/game/cyber/global';
-import { cameraMatrix } from '/game/cyber/camera';
+import { cameraEntity, cameraMatrix } from '/game/cyber/camera';
 import { levelProgram } from '/game/cyber/shaders';
 import { entities } from '/game/cyber/world';
 import {
@@ -14,7 +14,7 @@ const lightSources = [];
 
 export function renderLevel() {
   const p = levelProgram;
-  if (DEBUG && !p) {
+  if (!cameraEntity || (DEBUG && !p)) {
     return;
   }
 
@@ -30,8 +30,6 @@ export function renderLevel() {
     lightPos.set(s.pos, i * 3);
     lightColor.set(s.light, i * 3);
   }
-  lightPos.set([0, 0, 1]);
-  lightColor.set([1, 1, 1]);
 
   gl.enableVertexAttribArray(0);
   gl.enableVertexAttribArray(1);

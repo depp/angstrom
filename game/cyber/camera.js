@@ -1,6 +1,5 @@
 import { canvas } from '/game/cyber/global';
 import { vecZero, vec3SetMulAdd } from '/game/cyber/vec';
-import { playerPos, playerAngle } from '/game/cyber/player';
 
 // ========================================
 // Matrix layout
@@ -20,6 +19,19 @@ export const uiMatrix = new Float32Array(16);
 const componentMatrix = new Float32Array(16);
 // Scratch matrix for multiplication.
 const scratchMatrix = new Float32Array(16);
+
+// The entity which is the current camera.
+export let cameraEntity;
+
+// Position of camera, do not modify, it aliases things.
+export let cameraPos;
+
+// Set the current camera. The camera must have an angle attribute:
+//
+// angle: [yaw, pitch, roll]
+export function setCamera(entity) {
+  cameraEntity = entity;
+}
 
 // Matrix multiplication
 //
@@ -61,6 +73,26 @@ function rotate(axis, angle) {
 
 // Update the camera matrices.
 export function updateCamera() {
+  // Set up orthographic projection matrix.
+  uiMatrix.fill(0);
+  uiMatrix[0] = canvas.clientHeight / canvas.clientWidth;
+  uiMatrix[5] = 1;
+  uiMatrix[10] = 1;
+  uiMatrix[15] = 1;
+
+  cameraPos = vecZero;
+
+  // Set up the main camera.
+  if (!cameraEntity) {
+    return;
+  }
+  if (cameraEntity.dead) {
+    cameraEntity = null;
+    return;
+  }
+  const { pos, angle } = cameraEntity;
+  cameraPos = pos;
+
   // Set up projection matrix.
   //
   // zNear: near Z clip plane
@@ -82,20 +114,12 @@ export function updateCamera() {
   cameraMatrix[14] = 2 * zNear * zFar / (zNear - zFar);
 
   // Rotate
-  const angle = playerAngle || vecZero;
   rotate(1, angle[2]);
   rotate(0, angle[1] + 0.5 * Math.PI);
   rotate(1, angle[0] - 0.5 * Math.PI);
 
   // Translate
   identity();
-  vec3SetMulAdd(componentMatrix, playerPos || vecZero, -1, 12);
+  vec3SetMulAdd(componentMatrix, pos, -1, 12);
   matMul(cameraMatrix);
-
-  // Set up orthographic projection matrix.
-  uiMatrix.fill(0);
-  uiMatrix[0] = canvas.clientHeight / canvas.clientWidth;
-  uiMatrix[5] = 1;
-  uiMatrix[10] = 1;
-  uiMatrix[15] = 1;
 }
