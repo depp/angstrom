@@ -40,6 +40,7 @@ export function renderLevel() {
   gl.enableVertexAttribArray(4);
 
   gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.CULL_FACE);
   gl.useProgram(p.program);
   gl.uniformMatrix4fv(p.uniforms.ModelViewProjection, false, cameraMatrix);
   gl.uniform1i(p.uniforms.Texture, 1);
@@ -61,6 +62,7 @@ export function renderLevel() {
   }
 
   gl.disable(gl.DEPTH_TEST);
+  gl.disable(gl.CULL_FACE);
 
   gl.disableVertexAttribArray(1);
   gl.disableVertexAttribArray(2);
