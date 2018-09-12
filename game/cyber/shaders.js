@@ -6,9 +6,9 @@ const terser = require('terser');
 const minify = require('../../tools/lib/glsl-minify');
 
 const spriteAttr = [
-  'Pos',
-  'TexCoord',
-  'Color',
+  'aPos',
+  'aTexPos',
+  'aColor',
 ];
 
 const levelAttr = [

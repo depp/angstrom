@@ -1,6 +1,6 @@
-attribute vec3 Pos;
-attribute vec2 TexCoord;
-attribute vec4 Color;
+attribute vec3 aPos;
+attribute vec2 aTexPos;
+attribute vec4 aColor;
 
 varying vec2 TexPos;
 varying vec4 BlendColor;
@@ -8,7 +8,7 @@ varying vec4 BlendColor;
 uniform mat4 ModelViewProjection;
 
 void main() {
-    TexPos = TexCoord;
-    BlendColor = Color;
-    gl_Position = ModelViewProjection * vec4(Pos, 1.0);
+    TexPos = aTexPos;
+    BlendColor = aColor;
+    gl_Position = ModelViewProjection * vec4(aPos, 1.0);
 }
