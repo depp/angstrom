@@ -138,7 +138,7 @@ function inlineConstants(tree) {
   function before(node) {
     if (node instanceof terser.AST_SymbolRef) {
       const { name, thedef } = node;
-      const list = defs[name];
+      const list = defs[`_${name}`];
       if (list) {
         for (const def of list) {
           if (def.thedef === thedef) {
@@ -160,10 +160,10 @@ function inlineConstants(tree) {
         if ((name instanceof terser.AST_SymbolConst)
             && ((value instanceof terser.AST_Number)
                 || (value instanceof terser.AST_String))) {
-          let list = defs[name.name];
+          let list = defs[`_${name.name}`];
           if (!list) {
             list = [];
-            defs[name.name] = list;
+            defs[`_${name.name}`] = list;
           }
           list.push({
             value,
