@@ -56,13 +56,13 @@ function main(curTimeMS) {
         startTime();
         break;
       case stateMainMenu:
-        startMenu('Main menu');
+        startMenu('Welcome to Cyberspace');
         break;
       case statePauseMenu:
         startMenu('Paused');
         break;
       case stateDeadMenu:
-        startMenu('Dead');
+        startMenu('You died.');
         break;
     }
     lastState = currentState;
