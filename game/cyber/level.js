@@ -2,6 +2,9 @@ import { gl } from '/game/cyber/global';
 import {
   unitVecs,
   vec3Sub,
+  vec3Distance,
+  vec3MulAdd,
+  vec3Dot,
   vec3Cross,
   vec3Norm,
   vec3Scale,
@@ -93,31 +96,33 @@ export const levels = [];
     const vz = [];
     const mat = new Float32Array(9);
     // Emit a single mesh triangle.
-    function emit(uAxis, vAxis, ...verts) {
+    function emit(uAxis, vAxis, isEdge, ...verts) {
       if (levelVertexSize * 3 > arr.length - pos) {
         const narr = new Float32Array(arr.length * 2);
         narr.set(arr);
         arr = narr;
       }
-      vec3Norm(vec3Cross(
-        vz,
-        vec3Sub(vx, verts[1], verts[0]),
-        vec3Sub(vy, verts[2], verts[0]),
+      vec3Sub(vx, verts[1], verts[0]);
+      vec3Sub(vy, verts[2], verts[0]);
+      // Distance from edge to interior point (point #2).
+      const edgeDist = vec3Distance(vec3MulAdd(
+        vz, vy, vx, -vec3Dot(vx, vy) / vec3Dot(vx, vx),
       ));
+      vec3Norm(vec3Cross(vz, vx, vy));
       vec3Cross(vx, unitVecs[vAxis], vz);
       vec3Scale(vx, vx, 1 / vx[uAxis]);
       vec3Cross(vy, vz, unitVecs[uAxis]);
       vec3Scale(vy, vy, 1 / vy[vAxis]);
       mat3SetVec(mat, vx, vy, vz);
-      // const m = mat3ToString(mat);
       mat3Inverse(mat);
-      // const inv = mat3ToString(mat);
-      // console.log(`MAT\n${m}\nINV\n${inv}`);
-      for (const vert of verts) {
+      for (let i = 0; i < 3; i++) {
+        const vert = verts[i];
         vert[0] += x;
         vert[1] += y;
-        vert[3] = vert[uAxis];
-        vert[4] = vert[vAxis];
+        arr.set(vert, pos);
+        arr[pos + 3] = vert[uAxis];
+        arr[pos + 4] = vert[vAxis];
+        arr[pos + 5] = isEdge ? (i == 2 ? edgeDist : 0) : 1;
         arr.set(vert, pos);
         arr.set(mat, pos + 7);
         pos += levelVertexSize;
@@ -136,7 +141,7 @@ export const levels = [];
         const v1 = ((side + 1) >> 1) & 1; // x0, y1
         const v2 = ((side + 2) >> 1) & 1; // x1
         emit(
-          0, 1,
+          0, 1, 1,
           [v1, v0, z],
           [v2, v1, z],
           [vc, vc, z + 0.2],
@@ -147,16 +152,22 @@ export const levels = [];
         );
         if (nz != null && nz < z) {
           emit(
-            side & 1, 2,
-            [v1, v0, z],
-            [v1, v0, nz],
+            side & 1, 2, 1,
             [v2, v1, z],
+            [v1, v0, z],
+            [(v1 + v2) / 2, (v0 + v1) / 2, nz],
           );
           emit(
-            side & 1, 2,
-            [v2, v1, z],
+            side & 1, 2, 1,
+            [v1, v0, z],
             [v1, v0, nz],
+            [(v1 + v2) / 2, (v0 + v1) / 2, nz],
+          );
+          emit(
+            side & 1, 2, 1,
             [v2, v1, nz],
+            [v2, v1, z],
+            [(v1 + v2) / 2, (v0 + v1) / 2, nz],
           );
         }
       }

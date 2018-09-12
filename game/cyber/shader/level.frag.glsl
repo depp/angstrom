@@ -45,6 +45,8 @@ void main() {
             lighting += d / dot(light, light) * LightColor[i];
         }
     }
-    gl_FragColor =
-        vec4((1.0 - 1.0 / (lighting + 1.0)) * min(1.0, vor.w * 5.0), 1.0);
+//     lighting = vec3(1.0);
+    gl_FragColor = vec4((1.0 - 1.0 / (lighting + 1.0)) * min(1.0, vor.w * 1.0) *
+                            min(1.0, TexPos.z * 10.0),
+                        1.0);
 }
