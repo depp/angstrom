@@ -63,7 +63,6 @@ export function renderSprite() {
   const aspect = canvas.clientWidth / canvas.clientHeight;
   for (const entity of flat) {
     for (const sprite of entity.sprites) {
-      /* eslint prefer-const: off */
       let {
         n,
         size,

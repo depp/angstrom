@@ -57,7 +57,7 @@ module.exports = {
     'one-var-declaration-per-line': 'off',
 
     // A bit too annoying to leave as an error.
-    'prefer-const': 'warn',
+    'prefer-const': ['warn', { destructuring: 'all' }],
 
     // Annoying.
     'prefer-template': 'off',
