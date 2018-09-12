@@ -84,6 +84,11 @@ function main(curTimeMS) {
         }, {
           text: 'Continue',
           action: continueGame,
+        }, {
+          text: 'Made for JS13K 2018 by @DietrichEpp',
+          y: 0.98,
+          size: 0.03,
+          color: 0xffaaaaaa,
         });
         break;
       case statePauseMenu:
