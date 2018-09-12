@@ -19,7 +19,7 @@ export function renderText() {
   let i = 0;
   let j = 6 * 4 * n;
   for (let { size, y, color = -1 } of currentText) {
-    size += 0.05;
+    size += 0.04;
     for (const [xx, yy, u] of quad) {
       arr.set([
         xx,

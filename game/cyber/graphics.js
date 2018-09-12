@@ -332,11 +332,15 @@ export function renderText(items) {
   let yPos = 0;
   ctx.clearRect(0, 0, textTextureSize, textTextureSize);
   for (const item of items) {
-    const {
+    let {
+      action,
       text,
       y = yPos,
       size = 0.05,
     } = item;
+    if (action) {
+      text = `[${text}]`;
+    }
     ctx.save();
     ctx.translate(textTextureSize / 2, (y * textTextureSize) | 0);
     ctx.font = `bold ${(size*textTextureSize)|0}px sans`;
