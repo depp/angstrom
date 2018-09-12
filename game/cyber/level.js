@@ -1,7 +1,18 @@
 import { gl } from '/game/cyber/global';
+import {
+  unitVecs,
+  vec3Sub,
+  vec3Cross,
+  vec3Norm,
+  vec3Scale,
+  mat3SetVec,
+  mat3Inverse,
+} from '/game/cyber/vec';
 
 // Level names.
 const levelStart = 0;
+
+export const levelVertexSize = 16;
 
 class Level {
   constructor(meshBuildFunc) {
@@ -16,7 +27,7 @@ class Level {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.meshBuffer);
     if (this.meshDirty) {
       const mesh = this.meshBuildFunc();
-      this.vertexCount = mesh.length / 5;
+      this.vertexCount = mesh.length / levelVertexSize;
       gl.bufferData(gl.ARRAY_BUFFER, mesh, gl.STATIC_DRAW);
       this.meshDirty = false;
       // console.log(`Generated ${this.vertexCount} vertices`);
@@ -77,20 +88,39 @@ export const levels = [];
     let pos = 0;
     let x;
     let y;
+    const vx = [];
+    const vy = [];
+    const vz = [];
+    const mat = new Float32Array(9);
     // Emit a single mesh triangle.
     function emit(uAxis, vAxis, ...verts) {
-      if (5 * verts.length > arr.length - pos) {
+      if (levelVertexSize * 3 > arr.length - pos) {
         const narr = new Float32Array(arr.length * 2);
         narr.set(arr);
         arr = narr;
       }
+      vec3Norm(vec3Cross(
+        vz,
+        vec3Sub(vx, verts[1], verts[0]),
+        vec3Sub(vy, verts[2], verts[0]),
+      ));
+      vec3Cross(vx, unitVecs[vAxis], vz);
+      vec3Scale(vx, vx, 1 / vx[uAxis]);
+      vec3Cross(vy, vz, unitVecs[uAxis]);
+      vec3Scale(vy, vy, 1 / vy[vAxis]);
+      mat3SetVec(mat, vx, vy, vz);
+      // const m = mat3ToString(mat);
+      mat3Inverse(mat);
+      // const inv = mat3ToString(mat);
+      // console.log(`MAT\n${m}\nINV\n${inv}`);
       for (const vert of verts) {
         vert[0] += x;
         vert[1] += y;
         vert[3] = vert[uAxis];
         vert[4] = vert[vAxis];
         arr.set(vert, pos);
-        pos += 5;
+        arr.set(mat, pos + 7);
+        pos += levelVertexSize;
       }
     }
     const vc = 0.5;
@@ -121,6 +151,9 @@ export const levels = [];
             [v1, v0, z],
             [v1, v0, nz],
             [v2, v1, z],
+          );
+          emit(
+            side & 1, 2,
             [v2, v1, z],
             [v1, v0, nz],
             [v2, v1, nz],

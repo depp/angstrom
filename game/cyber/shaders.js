@@ -37,7 +37,9 @@ const shaders = {
     vname: 'level',
     fname: 'level',
     attributes: [
-      'Pos',
+      'aPos',
+      'aTexPos',
+      'aNormalSpace',
     ],
   },
 };

@@ -1,6 +1,8 @@
 precision lowp float;
 
-varying vec3 TexPos;
+varying vec3 Pos;
+varying vec4 TexPos;
+varying mat3 NormalSpace;
 
 uniform sampler2D Texture;
 uniform vec3 LightPos[4];
@@ -34,11 +36,11 @@ vec4 voronoi(in vec2 v) {
 }
 
 void main() {
-    vec4 vor = voronoi(TexPos.xy);
-    vec3 lighting, light;
+    vec4 vor = voronoi(TexPos.xy * 2.0);
+    vec3 lighting, light, norm = normalize(NormalSpace * vor.xyz);
     for (int i = 0; i < 4; i++) {
-        light = LightPos[i] - TexPos;
-        float d = dot(vor.xyz, light);
+        light = LightPos[i] - Pos;
+        float d = dot(norm, light);
         if (d > 0.0) {
             lighting += d / dot(light, light) * LightColor[i];
         }

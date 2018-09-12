@@ -7,6 +7,7 @@ export const vecZero = [0, 0, 0];
 export const vecX = [1, 0, 0];
 export const vecY = [0, 1, 0];
 export const vecZ = [0, 0, 1];
+export const unitVecs = [vecX, vecY, vecZ];
 
 // Assigns [x, y] to out[offset..offset+1].
 export function vec2Set(out, x, y, offset=0) {
@@ -34,6 +35,22 @@ export function vec3Set(out, x, y, z, offset=0) {
 export function vec3Copy(out, x) {
   for (let i = 0; i < 3; i++) {
     out[i] = x[i] || 0;
+  }
+  return out;
+}
+
+// Compute out = x * a, returns out.
+export function vec3Scale(out, x, a) {
+  for (let i = 0; i < 3; i++) {
+    out[i] = x[i] * a;
+  }
+  return out;
+}
+
+// Compute out = x - y, returns out.
+export function vec3Sub(out, x, y) {
+  for (let i = 0; i < 3; i++) {
+    out[i] = x[i] - y[i];
   }
   return out;
 }
@@ -144,4 +161,56 @@ export function traceSphere(origin, direction, length, center, radius2) {
   }
   const d = Math.max(0, op - Math.sqrt(qp2));
   return d > length ? Infinity : d;
+}
+
+// Set a 3x3 matrix from the column vectors x, y, z.
+export function mat3SetVec(out, x, y, z) {
+  out.set(x, 0);
+  out.set(y, 3);
+  out.set(z, 6);
+  return out;
+}
+
+// 0 3 6
+// 1 4 7
+// 2 5 8
+
+const tempMatrix = new Float32Array(9);
+export function mat3Inverse(out, x) {
+  x = x || out;
+  // Calculate cofactors.
+  for (let i = 0; i < 3; i++) {
+    const i1 = (i + 1) % 3;
+    const i2 = (i + 2) % 3;
+    for (let j = 0; j < 3; j++) {
+      const j1 = (j + 1) % 3;
+      const j2 = (j + 2) % 3;
+      tempMatrix[i * 3 + j] = (
+        x[i1 * 3 + j1] * x[i2 * 3 + j2]
+          + x[i1 * 3 + j2] * x[i2 * 3 + j1]);
+    }
+  }
+  const scale = 1 / (
+    x[0] * tempMatrix[0]
+      + x[1] * tempMatrix[1]
+      + x[2] * tempMatrix[2]);
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      out[i * 3 + j] = tempMatrix[i * 3 + j] * scale;
+    }
+  }
+  return out;
+}
+
+export function mat3ToString(x) {
+  const rows = [];
+  const row = [];
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      row.push(x[j * 3 + i]);
+    }
+    rows.push(row.join(' '));
+    row.length = 0;
+  }
+  return rows.join('\n');
 }

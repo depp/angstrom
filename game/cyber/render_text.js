@@ -58,4 +58,7 @@ export function renderText() {
   gl.uniform1i(p.uniforms.Texture, 0);
 
   gl.disable(gl.BLEND);
+
+  gl.disableVertexAttribArray(1);
+  gl.disableVertexAttribArray(2);
 }
