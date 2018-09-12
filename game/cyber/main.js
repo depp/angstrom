@@ -28,7 +28,7 @@ import {
   startAudio,
   /* START.DEBUG_ONLY */
   loadedSFXSource,
-  playSFX,
+  playSFX as playSFXImpl,
   /* END.DEBUG_ONLY */
 } from '/game/cyber/audio';
 
@@ -165,16 +165,16 @@ export function loadedData(name, data) {
   console.error(`Unknown file: ${JSON.stringify(name)}`);
 }
 
-function playSFXInteractive(sfxID) {
+function playSFX(sfxID) {
   startAudio();
-  playSFX(sfxID);
+  playSFXImpl(sfxID);
 }
 
 export {
   gl,
   sfxNames,
   startAudio,
-  playSFXInteractive,
+  playSFX,
 };
 
 /* END.DEBUG_ONLY */
