@@ -38,6 +38,11 @@ const shaders = {
     fname: 'level_stone',
     attributes: levelAttr,
   },
+  skyProgram: {
+    vname: 'sky',
+    fname: 'sky',
+    attributes: ['aPos'],
+  },
 };
 
 const includes = [
