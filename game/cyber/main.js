@@ -9,7 +9,7 @@ import {
 } from '/game/cyber/global';
 import '/game/cyber/graphics';
 import {
-  startInput, endFrameInput, stopInput,
+  startInput, endFrameInput, stopInput, inputClick,
 } from '/game/cyber/input';
 import {
   startMenu, stopMenu,
@@ -24,16 +24,40 @@ import { resetWorld, updateWorld } from '/game/cyber/world';
 import { Person } from '/game/cyber/person';
 import { Swarm } from '/game/cyber/monster';
 import { sfxNames } from '/game/cyber/sfx';
+import {
+  startAudio,
+  /* START.DEBUG_ONLY */
+  loadedSFXSource,
+  playSFX,
+  /* END.DEBUG_ONLY */
+} from '/game/cyber/audio';
 
 /* START.DEBUG_ONLY */
 import { loadedShaderSource } from '/game/cyber/shader';
-import {
-  loadedSFXSource, startAudio, playSFX,
-} from '/game/cyber/audio';
 /* END.DEBUG_ONLY */
 
 // Game state as of the last call to main.
 let lastState;
+
+function continueGame() {
+  startAudio();
+  setState(stateGame);
+  inputClick();
+}
+
+function newGame() {
+  resetTime();
+  resetWorld();
+  resetPlayer();
+  new Swarm(20).spawn();
+  new Person(0).spawn();
+  continueGame();
+}
+
+function endGame() {
+  resetWorld();
+  setState(stateMainMenu);
+}
 
 // Main loop.
 function main(curTimeMS) {
@@ -45,24 +69,50 @@ function main(curTimeMS) {
     }
     switch (currentState) {
       case stateGame:
-        if (lastState != statePauseMenu) {
-          resetTime();
-          resetWorld();
-          resetPlayer();
-          new Swarm(20).spawn();
-          new Person(0).spawn();
-        }
         startInput();
         startTime();
         break;
       case stateMainMenu:
-        startMenu('Welcome to Cyberspace');
+        startMenu({
+          text: 'Welcome to Cyberspace',
+          y: 0.1,
+          size: 0.07,
+        }, {
+          text: 'New Game',
+          y: 0.5,
+          action: newGame,
+        }, {
+          text: 'Continue',
+          action: continueGame,
+        });
         break;
       case statePauseMenu:
-        startMenu('Paused');
+        startMenu({
+          text: 'Paused',
+          y: 0.25,
+          size: 0.07,
+        }, {
+          text: 'Continue',
+          y: 0.5,
+          action: continueGame,
+        }, {
+          text: 'End Game',
+          action: endGame,
+        });
         break;
       case stateDeadMenu:
-        startMenu('You died.');
+        startMenu({
+          text: 'You died.',
+          y: 0.25,
+          size: 0.07,
+        }, {
+          text: 'Continue',
+          y: 0.5,
+          action: continueGame,
+        }, {
+          text: 'End Game',
+          action: endGame,
+        });
         break;
     }
     lastState = currentState;

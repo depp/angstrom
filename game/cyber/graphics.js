@@ -327,25 +327,34 @@ export function makeColor(r, g, b, a = 1) {
 
 export let hasText;
 
-export function renderText(text) {
+export function renderText(items) {
+  let yPos = 0;
   ctx.clearRect(0, 0, textTextureSize, textTextureSize);
-  ctx.save();
-  ctx.font = 'bold 32px sans';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#000';
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 3;
-  ctx.strokeText(
-    text, textTextureSize / 2 + shadowX, textTextureSize / 2 + shadowY,
-  );
-  ctx.fillText(
-    text, textTextureSize / 2 + shadowX, textTextureSize / 2 + shadowY,
-  );
-  ctx.strokeText(text, textTextureSize / 2, textTextureSize / 2);
-  ctx.fillStyle = '#fff';
-  ctx.fillText(text, textTextureSize / 2, textTextureSize / 2);
-  ctx.restore();
+  for (const item of items) {
+    const {
+      text,
+      y = yPos,
+      size = 0.05,
+    } = item;
+    ctx.save();
+    ctx.translate(textTextureSize / 2, (y * textTextureSize) | 0);
+    ctx.font = `bold ${(size*textTextureSize)|0}px sans`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#000';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 3;
+    ctx.strokeText(text, shadowX, shadowY);
+    ctx.fillText(text, shadowX, shadowY);
+    ctx.strokeText(text, 0, 0);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(text, 0, 0);
+    ctx.restore();
+    item.y = y;
+    item.size = size;
+    yPos = y + size * 1.4;
+  }
+
   const { data } = ctx.getImageData(0, 0, textTextureSize, textTextureSize);
   if (DEBUG && data.length != 4 * textTextureSize * textTextureSize) {
     console.error(`Invalid texture data size ${data.length}`);
