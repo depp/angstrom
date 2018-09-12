@@ -34,7 +34,9 @@ ROOT_DIR = pathlib.Path(__file__).resolve().parent.parent
 
 HTML = """\
 <meta charset=utf-8>\
-<canvas id=g width=800 height=600></canvas>\
+<body style=background:#555>
+<canvas id=g width=800 height=600 \
+style="margin:0 auto;display:block"></canvas>\
 <script>\
 """
 
