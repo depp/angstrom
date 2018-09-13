@@ -18,7 +18,8 @@ import {
 
 export class Person extends PhysicsEntity {
   constructor(pos) {
-    super(pos, 0.5);
+    super(pos, 0.2);
+    this.zradius = 0.5;
     const female = randInt();
     const { head, hand } = chooseRandom(personSprites[female]);
     const shoe = chooseRandom(shoeSprites[female]);

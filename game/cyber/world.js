@@ -41,6 +41,7 @@ export class Entity {
   constructor(pos, radius, ...sprites) {
     this.pos = [...(pos || vecZero)];
     this.radius = radius;
+    this.zradius = radius;
     this.sprites = sprites;
   }
 
@@ -62,7 +63,8 @@ export class Entity {
   }
 
   drop() {
-    this.pos[2] = getTileHeight(this.pos[0] | 0, this.pos[1] | 0) + this.radius;
+    this.pos[2] = getTileHeight(this.pos[0] | 0, this.pos[1] | 0)
+      + this.zradius;
   }
 }
 
@@ -133,7 +135,7 @@ export class PhysicsEntity extends Entity {
     // Handle collisions with the walls.
     let [xPos1, yPos1, zPos1] = this.pos;
     const zReach = Math.max(zPos0, zPos1)
-          - this.radius + (this.doesStep ? stepHeight : 0.1);
+          - this.zradius + (this.doesStep ? stepHeight : 0.1);
     const xDir = xPos1 > xPos0 ? 1 : -1;
     const yDir = yPos1 > yPos0 ? 1 : -1;
     let xTile0 = (xPos1 - xDir * this.radius) | 0;
@@ -170,7 +172,7 @@ export class PhysicsEntity extends Entity {
     }
 
     // Handle collisions with the floor.
-    const zFeet = zPos1 - this.radius;
+    const zFeet = zPos1 - this.zradius;
     if (this.doesStep) {
       let zFloor = getTileHeight(xPos1 | 0, yPos1 | 0);
       xTile0 = (xPos1 - 0.5) | 0;
@@ -205,7 +207,7 @@ export class PhysicsEntity extends Entity {
       }
       */
       if (this.floorLocked) {
-        this.pos[2] = zFloor + this.radius;
+        this.pos[2] = zFloor + this.zradius;
         this.vel[2] = 0;
       }
     } else {
@@ -227,7 +229,7 @@ export class PhysicsEntity extends Entity {
       // Failsafe in case we get punched through the floor.
       zFloor = Math.max(zFloor, zMin);
       if (zFeet < zFloor) {
-        this.pos[2] = zFloor + this.radius;
+        this.pos[2] = zFloor + this.zradius;
         this.collideWorld(vecZ);
       }
     }
