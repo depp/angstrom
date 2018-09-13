@@ -2,6 +2,16 @@
 
 Experiments in small packages.
 
+**BEWARE** this repository is just a mish-mash of random personal work. It is disastrosly unsorted and uncategorized, and everything is completely nonstandard and experimental.
+
+Just look at the number of different programming languages that are being used here. This is some kind of project made by a crazy mountain man.
+
+## Welcome to Cyberspace
+
+A... bit of a JS13K game for 2018. But August and Sepetember turned out to be really bad months for project work, because I moved.
+
+There is a nifty development server buried in here.
+
 ## Opuscraft
 
 Opuscraft creates Opus audio files that can be further compressed using general purpose compression algorithms like Deflate. This is done by making some of the packets in the Opus stream exact copies of other packets, byte for byte. These copies take up nearly no space in the final compressed file, allowing you to achieve bitrates far lower than Opus normally allows. Even though Opus normally uses at least 6 kbit/s, Opuscraft can produce files as low as 1.5 kbit/s that are still intelligible, although they will sound messy.
@@ -10,22 +20,4 @@ The simplest way to do this is to compress a file using Opus and then decimate i
 
 For better results, you can manually slice up an audio file into segments which are then compressed as Opus packets and arranged into an Opus file according to a script. Packet sizes can be adjusted (but only crudely) and audio can be pitch shifted to fit an even number of periods into an Opus packet.
 
-The program runs with a web browser interface in Flask. To run it, run:
-
-    export AUDIO_FILE=<input.wav>
-    export FLASK_APP=opuscraft.web
-    export FLASK_DEBUG=1
-    flask run
-
-Once running, you can browse to http://localhost:5000/spectrogram to see a spectrogram of the audio file.
-
-This requires a ton of stuff to be installed:
-
-* Python 3
-    * Flask
-    * NumPy
-    * SciPy
-    * Pillow
-* SoX (sound processing program)
-* LibOpus (with develompent headers)
-* LibOgg (with development headers)
+This program operates on a script, reads WAV files, and then ouputs the result as on Opus file.
