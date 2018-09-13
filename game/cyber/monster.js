@@ -87,8 +87,9 @@ const swarmLight = [1, 0.6, 1.0];
 const tempVec = [];
 
 export class Swarm extends Entity {
-  constructor(count) {
-    super([0, 2, 1], 0.9);
+  constructor(pos) {
+    super(pos, 0.9);
+    const count = 20;
     this.count = count;
     this.light = [];
     this.children = [new EvilBrain(this)];

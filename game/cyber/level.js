@@ -164,17 +164,18 @@ export const levels = [];
   // Spawners
   // ===========================================================================
 
-  function person(x, y) {
-    new Person([x - minX + 0.5, y - minY + 0.5, 0]).spawn();
+  function ctor(C) {
+    function create(x, y) {
+      const ent = new C([x - minX + 0.5, y - minY + 0.5, 0]);
+      ent.spawn();
+      ent.drop();
+    }
+    return create;
   }
 
-  function player(x, y) {
-    new Player([x - minX + 0.5, y - minY + 0.5, 0]).spawn();
-  }
-
-  function swarm(x, y) {
-    new Swarm([x - minX + 0.5, y - minY + 0.5, 0]).spawn();
-  }
+  const person = ctor(Person);
+  const player = ctor(Player);
+  const swarm = ctor(Swarm);
 
   // ===========================================================================
   // Prefabs

@@ -54,13 +54,14 @@ export class Entity {
 
   // Spawn the entity in the world.
   spawn(hitGroup) {
-    this.pos[2] = getTileHeight(this.pos[0] | 0, this.pos[1] | 0) + this.radius;
-    console.log(this.pos[2]);
-    console.log(this.pos);
     entities.push(this);
     if (hitGroup != null) {
       hitGroups[hitGroup].push(this);
     }
+  }
+
+  drop() {
+    this.pos[2] = getTileHeight(this.pos[0] | 0, this.pos[1] | 0) + this.radius;
   }
 }
 
