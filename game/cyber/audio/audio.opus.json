@@ -1,0 +1,25 @@
+{
+ "marks": [
+  0,
+  79680,
+  151680,
+  223680,
+  292800,
+  360000,
+  422880,
+  459360,
+  538080,
+  696000
+ ],
+ "names": [
+  "welcome",
+  "system_offline",
+  "connection_offline",
+  "firewall_offline",
+  "firewall_detected",
+  "virus_detected",
+  "danger",
+  "carrier_lost",
+  "mess_with_the_best"
+ ]
+}
