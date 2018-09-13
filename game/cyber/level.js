@@ -14,6 +14,9 @@ import {
 import {
   setWorldGrid,
 } from '/game/cyber/world';
+import { Person } from '/game/cyber/person';
+import { Player } from '/game/cyber/player';
+import { Swarm } from '/game/cyber/monster';
 
 // Level names.
 const levelStart = 0;
@@ -21,8 +24,9 @@ const levelStart = 0;
 export const levelVertexSize = 16;
 
 class Level {
-  constructor(meshBuildFunc) {
+  constructor(meshBuildFunc, spawnFunc) {
     this.meshBuildFunc = meshBuildFunc;
+    this.spawnFunc = spawnFunc;
   }
 
   buildMesh() {
@@ -46,6 +50,7 @@ class Level {
   startLevel() {
     this.buildMesh();
     setWorldGrid(this.sizeX, this.sizeY, this.heightGrid);
+    this.spawnFunc();
   }
 }
 
@@ -156,6 +161,22 @@ export const levels = [];
   }
 
   // ===========================================================================
+  // Spawners
+  // ===========================================================================
+
+  function person(x, y) {
+    new Person([x - minX + 0.5, y - minY + 0.5, 0]).spawn();
+  }
+
+  function player(x, y) {
+    new Player([x - minX + 0.5, y - minY + 0.5, 0]).spawn();
+  }
+
+  function swarm(x, y) {
+    new Swarm([x - minX + 0.5, y - minY + 0.5, 0]).spawn();
+  }
+
+  // ===========================================================================
   // Prefabs
   // ===========================================================================
 
@@ -224,12 +245,16 @@ export const levels = [];
 
     height = -0.2;
     floorRect(-8, -4, 20, 12);
+  }, () => {
+    player(12, 4);
+    person(3, 3);
+    swarm(3, -8);
   });
 
   // ===========================================================================
 
   // Define a level, given its number and a function to construct it.
-  function defineLevel(levelNumber, constructor) {
+  function defineLevel(levelNumber, constructor, spawner) {
     if (DEBUG) {
       if (levels[levelNumber]) {
         throw new Error(`Duplicate level definition ${levelNumber}`);
@@ -240,7 +265,12 @@ export const levels = [];
       minX = minY = 100;
       maxX = maxY = -100;
       constructor();
+      level.minX = minX;
+      level.minY = minY;
       createMesh(level);
+    }, () => {
+      ({ minX, minY } = level);
+      spawner();
     });
     levels[levelNumber] = level;
   }

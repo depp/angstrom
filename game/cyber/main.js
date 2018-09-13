@@ -22,8 +22,6 @@ import {
   updateMenu,
 } from '/game/cyber/menu';
 import { updateCamera } from '/game/cyber/camera';
-import { Player } from '/game/cyber/player';
-import { Swarm } from '/game/cyber/monster';
 import {
   startTime, updateTime, resetTime,
 } from '/game/cyber/time';
@@ -50,8 +48,6 @@ let lastState;
 function continueGame() {
   resetTime();
   resetWorld();
-  new Player().spawn();
-  new Swarm(20).spawn();
   startAudio();
   setState(stateGame);
   inputClick();

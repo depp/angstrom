@@ -11,22 +11,17 @@ import {
   signedRandom,
   chooseRandom,
 } from '/game/cyber/util';
-import { Entity } from '/game/cyber/world';
+import { PhysicsEntity } from '/game/cyber/world';
 
-export class Person extends Entity {
-  constructor(i) {
-    super();
+export class Person extends PhysicsEntity {
+  constructor(pos) {
+    super(pos, 0.5);
     const female = randInt();
     const { head, hand } = chooseRandom(personSprites[female]);
     const shoe = chooseRandom(shoeSprites[female]);
     this.phase = 0;
     this.stride = 2**(signedRandom() * 0.2);
     this.offsets = new Float32Array(8 * 3);
-    this.pos = [
-      i - 10, // 4 * signedRandom(),
-      0, // 4 * signedRandom(),
-      0.5,
-    ];
     this.sprites = [{
       n: head,
       size: 0.2,
@@ -63,6 +58,7 @@ export class Person extends Entity {
   }
 
   update() {
+    super.updateBody(0);
     this.phase = (this.phase + frameDT * 4 * this.stride) % (2 * Math.PI);
     const s = Math.sin(this.phase);
     this.offsets.set([

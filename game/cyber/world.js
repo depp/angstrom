@@ -54,6 +54,9 @@ export class Entity {
 
   // Spawn the entity in the world.
   spawn(hitGroup) {
+    this.pos[2] = getTileHeight(this.pos[0] | 0, this.pos[1] | 0) + this.radius;
+    console.log(this.pos[2]);
+    console.log(this.pos);
     entities.push(this);
     if (hitGroup != null) {
       hitGroups[hitGroup].push(this);
@@ -92,21 +95,6 @@ function collideList(entity, list) {
   }
   return 0;
 }
-
-/*
-// Get the time at which collision occurs on a given axis. The previous and
-// current position, ignoring collision, is pos0 and pos1. The position where
-// the collision occurs is coll.
-function collisionTime(pos0, pos1, coll) {
-  if (pos0 == coll) {
-    return 0;
-  }
-  if ((coll - pos0) * (pos1 - pos0) <= 0) {
-    return -1;
-  }
-  return (coll - pos0) / (pos1 - pos0);
-}
-*/
 
 // A physics entity is an entity is affected by forces and collisions.
 export class PhysicsEntity extends Entity {
@@ -243,150 +231,6 @@ export class PhysicsEntity extends Entity {
         this.collideWorld(vecZ);
       }
     }
-    /*
-    if (getTileHeight(xTile, yTile) > zReach) {
-      // We already intersect a wall, move back. Just move back in the stupid
-      // way: look at three adjacent tiles to the one we've clipped into.
-      const xAvail = getTileHeight(xTile - xDir, yTile) < zReach;
-      const yAvail = getTileHeight(xTile, yTile - yDir) < zReach;
-      console.log(`Dir: ${xDir},${yDir} Tile: ${xTile},${yTile}\n`
-                  + `xAvail: ${xAvail} yAvail: ${yAvail}\n`
-                  + `xDist: ${xOut - xPos0} yDist: ${yOut - yPos0}`);
-      if (xAvail && (!yAvail
-                     || Math.abs(xOut - xPos0) < Math.abs(yOut - yPos0))) {
-        this.pos[0] = xOut;
-        console.log(`Move x ${-xDir}`);
-      } else if (yAvail) {
-        this.pos[1] = yOut;
-        console.log(`Move y ${-yDir}`);
-      } else {
-        this.pos[0] = xOut;
-        this.pos[1] = yOut;
-        console.log(`Move x ${-xDir} y ${-yDir}`);
-      }
-    }
-    */
-    /*
-    while (true) {
-      getTile(xTile, yTile) > zReach;
-    }
-    // Scan all tiles in the direction of movement, compute the place where we
-    // would collide with those tiles (if there would be a collision).
-    const xr = this.radius * Math.sign(xPos1 - xPos0);
-    const yr = this.radius * Math.sign(yPos1 - yPos0);
-    const xt0 = (xPos0 - xr) | 0;
-    const yt0 = (yPos0 - yr) | 0;
-    const xt1 = (xPos1 + xr) | 0;
-    const yt1 = (yPos1 + yr) | 0;
-
-    const xt1 = (xPos1 + this.radius * Math.sign(xPos1 - xPos0)) | 0;
-    const yt1 = (yPos1 + this.radius * Math.sign(yPos1 - yPos0)) | 0;
-    // Whethe we hit tiles in the X and Y directions.
-    let xHit = getTileHeight(xt1, yt0) > zReach;
-    let yHit = getTileHeight(xt0, yt1) > zReach;
-    // Position where collision happens.
-    const xColl = xt1 + (xPos1 < xPos0 ? 1 + this.radius : -this.radius);
-    const yColl = yt1 + (yPos1 < yPos0 ? 1 + this.radius : -this.radius);
-    if (xt0 != xt1) {
-      if (yt0 != yt1) {
-        if (!(xHit || yHit) && getTileHeight(xt1, yt1) > zReach) {
-          yHit = collisionTime(xPos0, xPos1, xColl)
-            < collisionTime(yPos0, yPos1, yColl);
-          xHit = !yHit;
-        }
-      } else {
-        // yHit = false;
-      }
-    } else {
-      // xHit = false;
-      // yHit = yHit && yt0 != yt1;
-    }
-    if (DEBUG && RELEASE) {
-      const xVel = (xPos1 - xPos0) / frameDT;
-      const yVel = (yPos1 - yPos0) / frameDT;
-      const badX = xHit && !((xPos0 <= xColl && xColl <= xPos1)
-                             || (xPos0 >= xColl && xColl >= xPos1));
-      const badY = yHit && !((yPos0 <= yColl && yColl <= yPos1)
-                             || (yPos0 >= yColl && yColl >= yPos1));
-      if (badX || badY) {
-        const xHit0 = getTileHeight(xt1, yt0) > 1;
-        const yHit0 = getTileHeight(xt0, yt1) > 1;
-        console.warn(
-          'Bad collision\n'
-            + `    Velocity=(${xVel}, ${yVel})\n`
-            + '\n'
-            + `    XHit=(${xHit0}, ${xHit}) XBad=${badX}\n`
-            + `    XPos=(${xPos0}, ${xColl}, ${xPos1})\n`
-            + `    XTile=(${xt0}, ${xt1})\n`
-            + '\n'
-            + `    YHit=(${yHit0}, ${yHit}) YBad=${badY}\n`
-            + `    YPos=(${yPos0}, ${yColl}, ${yPos1})\n`
-            + `    YTile=(${yt0}, ${yt1})`,
-        );
-      }
-    }
-    if (xHit) {
-      this.collideWorld(
-        [Math.sign(xColl - xPos1), 0, 0],
-        Math.abs(xColl - xPos1),
-      );
-    }
-    if (yHit) {
-      this.collideWorld(
-        [0, Math.sign(yColl - yPos1), 0],
-        Math.abs(yColl - yPos1),
-      );
-    }
-    if (this.doesStep && false) {
-      const [xPos, yPos, zPos] = this.pos;
-      const zFeet = zPos - this.radius;
-      let zAccum = 0;
-      let zWeight = 0;
-      const x0 = (xPos - this.radius * 0.5) | 0;
-      const x1 = (xPos + this.radius * 0.5) | 0;
-      const y0 = (yPos - this.radius * 0.5) | 0;
-      const y1 = (yPos + this.radius * 0.5) | 0;
-      let zFloor = 0;
-      for (let y = y0; y <= y1; y++) {
-        for (let x = x0; x <= x1; x++) {
-          const z = getTileHeight(x, y);
-          if (Math.abs(z - zFeet) < stepHeight) {
-            const w = (0.5 - Math.abs(x - xPos - 0.5)) * 2 / this.radius;
-            zAccum += z;
-            zWeight += w * z;
-          }
-          zFloor = Math.max(zFloor, z);
-        }
-      }
-      const doLock = zWeight > 0
-            && this.vel[0] < 1
-            && (this.floorLocked || Math.abs(zAccum / zWeight - zFeet) < 0.1);
-      this.floorLocked = doLock;
-      if (DEBUG && doLock != this.floorLocked) {
-        console.log(`Floor lock: ${this.floorLocked}`);
-      }
-      if (doLock) {
-        const zTarget = zAccum / zWeight;
-        const zAccel = 10 * frameDT;
-        this.pos[2] = Math.abs(zTarget - zFeet) < zAccel
-          ? zTarget + this.radius
-          : this.pos[2] + Math.sign(zTarget - zFeet) * zAccel;
-      }
-      if (zWeight > 0 && this.vel) {
-        this.floorLocked = true;
-        console.log('FLOOR LOCKED');
-      } else {
-        this.floorLocked = false;
-        console.log('FLOOR unlocked');
-      }
-    }
-    if (!this.floorLocked || true) {
-      const z = getTileHeight(xPos0 | 0, yPos0 | 0);
-      if (this.pos[2] < z + this.radius) {
-        this.collideWorld(vecZ, z + this.radius - this.pos[2]);
-      }
-    }
-    */
   }
 
   pushBody(dir, amt) {

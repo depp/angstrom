@@ -74,8 +74,8 @@ class DeadPlayer extends Bouncer {
 }
 
 export class Player extends PhysicsEntity {
-  constructor() {
-    super([0, 0, 0.5], 0.5);
+  constructor(pos) {
+    super(pos, 0.5);
 
     // Curent angle the player is looking at, [yaw, pitch, roll].
     // Yaw: 0: +X, pi/2: +Y.
