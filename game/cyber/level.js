@@ -193,18 +193,37 @@ export const levels = [];
     }
   }
 
+  // xo,yo: origin
+  // xs,ys: spacing
+  // yn,sn: count
+  function columns(xo, yo, xs, ys, xn, yn) {
+    for (let y = 0; y < yn; y++) {
+      for (let x = 0; x < xn; x++) {
+        addTile(xo + xs * x, yo + ys * y);
+      }
+    }
+  }
+
   // ===========================================================================
   // Start
   // ===========================================================================
 
   defineLevel(levelStart, () => {
-    height = 3;
+    // Gazebo, 7x7
+    height = 5;
     addTile(1, 1);
     addTile(5, 1);
     addTile(1, 5);
     addTile(5, 5);
+
     height = 0;
     pyramid(0, 0, 7, 7, 3, 0.2);
+
+    height = 3;
+    columns(-7, 1, 4, 4, 8, 2);
+
+    height = -0.2;
+    floorRect(-8, -4, 20, 12);
   });
 
   // ===========================================================================
