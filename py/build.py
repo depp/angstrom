@@ -205,6 +205,9 @@ def main() -> None:
     filedir.mkdir()
     fs = FileSet(builddir / "js13k.zip", filedir)
     fs.add("index.html", html)
+    fs.add("audio.opus",
+           (ROOT_DIR / "game/cyber/audio/audio.opus").read_bytes())
+
     fs.save()
 
     print("Testing", file=sys.stderr)
