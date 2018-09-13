@@ -26,9 +26,10 @@ export const entities = [];
 // groups, depending on the entity's own group.
 export const hitPlayer = 0;
 export const hitMonster = 1;
-export const hitGroupCount = 2;
+export const hitPerson = 2;
+export const hitGroupCount = 3;
 
-export const hitGroups = [[], []];
+export const hitGroups = [[], [], []];
 
 // The size of the world grid.
 let worldSizeX;
@@ -81,11 +82,9 @@ function collideList(entity, list) {
               return 1;
             }
           } else {
-            vec3Sub(sepDir, pos2, pos2);
-            const d3 = vec3Distance(sepDir);
+            vec3Sub(sepDir, pos, pos2);
             vec3Norm(sepDir);
-            const sepDist = (d - radius - radius2) * d3 / d;
-            entity.collideEntity(other, sepDir, sepDist);
+            entity.collideEntity(other, sepDir);
             if (entity.dead) {
               return 1;
             }
@@ -246,7 +245,12 @@ export class PhysicsEntity extends Entity {
   collideWorld() {}
 
   // Called when the entity collides with another entity.
-  collideEntity() {}
+  collideEntity(other, sepDir) {
+    const a = vec3Dot(sepDir, this.vel);
+    if (a < 0) {
+      vec3SetMulAdd(this.vel, sepDir, -a * 2);
+    }
+  }
 }
 
 function updateList(list, parentPos) {

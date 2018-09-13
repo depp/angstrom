@@ -11,7 +11,10 @@ import {
   signedRandom,
   chooseRandom,
 } from '/game/cyber/util';
-import { PhysicsEntity } from '/game/cyber/world';
+import {
+  PhysicsEntity,
+  hitPerson,
+} from '/game/cyber/world';
 
 export class Person extends PhysicsEntity {
   constructor(pos) {
@@ -58,7 +61,7 @@ export class Person extends PhysicsEntity {
   }
 
   update() {
-    super.updateBody(0);
+    super.updateBody(1 << hitPerson);
     this.phase = (this.phase + frameDT * 4 * this.stride) % (2 * Math.PI);
     const s = Math.sin(this.phase);
     this.offsets.set([
@@ -72,4 +75,6 @@ export class Person extends PhysicsEntity {
       0.15, -0.25 - s * 0.04, 4,
     ]);
   }
+
+  spawn() { super.spawn(hitPerson); }
 }

@@ -5,6 +5,7 @@ import {
 import {
   hitPlayer,
   hitMonster,
+  hitPerson,
   PhysicsEntity,
 } from '/game/cyber/world';
 import { buttonState, buttonPress } from '/game/cyber/input';
@@ -159,7 +160,7 @@ export class Player extends PhysicsEntity {
     }
     vec3Set(this.vel, xVel, yVel, zVel);
 
-    this.updateBody(0); // 1 << hitMonster);
+    this.updateBody((1 << hitMonster) | (1 << hitPerson));
 
     // Fire the weapon.
     if (levelTime > this.weaponCooldown) {
