@@ -43,7 +43,7 @@ const playerTurnSensitivity = 3e-3;
 // Time after firing before weapon can be fired again, seconds.
 const weaponCooldownTime = 0.3;
 // Maximum number of hearts.
-const maxHearts = 1;
+const maxHearts = 3;
 
 const vTemp = [];
 

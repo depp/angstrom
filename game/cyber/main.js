@@ -128,11 +128,11 @@ function main(curTimeMS) {
         }, {
           text: 'New Game',
           y: 0.5,
-          action: chooseDifficulty,
-        }, {
+          action() { newGame() },
+        }, /* {
           text: 'Continue',
           action: continueGame,
-        }, {
+        }, */ {
           text: 'Instructions',
           action: showInstructions,
         }, {
@@ -165,12 +165,13 @@ function main(curTimeMS) {
           text: 'You died.',
           y: 0.25,
           size: 0.07,
-        }, {
+        }, /* {
           text: 'Continue',
           y: 0.5,
           action: continueGame,
-        }, {
+        }, */ {
           text: 'Instructions',
+          y: 0.5,
           action: showInstructions,
         }, {
           text: 'End Game',

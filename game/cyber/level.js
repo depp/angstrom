@@ -165,8 +165,11 @@ export const levels = [];
   // ===========================================================================
 
   function ctor(C) {
-    function create(x, y) {
+    function create(x, y, opts) {
       const ent = new C([x - minX + 0.5, y - minY + 0.5, 0]);
+      if (opts != null) {
+        Object.assign(ent, opts);
+      }
       ent.spawn();
       ent.drop();
     }
@@ -247,9 +250,14 @@ export const levels = [];
     height = -0.2;
     floorRect(-8, -4, 20, 12);
   }, () => {
-    player(12, 4);
+    player(-8, 4);
     person(3, 3);
-    swarm(3, -8);
+    person(5, 4);
+    person(6, 2);
+    person(11, 3);
+    person(11, 7);
+    swarm(3, -4);
+    swarm(6, 6);
   });
 
   // ===========================================================================
